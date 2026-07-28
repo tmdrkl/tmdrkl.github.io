@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tomi@drkl ~ </title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#2f343f; --panel:#383c4a; --border:#4b5162;
+    --text:#d3dae3; --muted:#8890a4; --blue:#5294e2;
+    --green:#a3be8c; --yellow:#e5c07b; --red:#e06c75;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:'JetBrains Mono', ui-monospace, monospace; font-size:15px;
+  }
+  body{ display:flex; justify-content:center; align-items:flex-start; padding:40px 16px; }
+  a{ color:var(--blue); }
+
+  .term{
+    width:100%; max-width:700px;
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35); overflow:hidden;
+  }
+  .titlebar{
+    display:flex; align-items:center; gap:8px; padding:10px 14px;
+    background:#363b46; border-bottom:1px solid var(--border);
+  }
+  .dot{ width:11px; height:11px; border-radius:50%; }
+  .dot.r{ background:#e06c75; } .dot.y{ background:#e5c07b; } .dot.g{ background:#98c379; }
+  .titlebar span{ margin-left:8px; color:var(--muted); font-size:13px; }
+
+  #screen{
+    height: 420px;
+    overflow-y:auto;
+    padding: 18px 20px;
+    line-height:1.6;
+  }
+  #screen::-webkit-scrollbar{ width:8px; }
+  #screen::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
+
+  .row{ white-space:pre-wrap; word-break:break-word; }
+  .prompt{ color:var(--green); }
+  .cmd{ color:var(--text); }
+  .muted{ color:var(--muted); }
+  .err{ color:var(--red); }
+  .ok{ color:var(--yellow); }
+
+  #inputline{ display:flex; align-items:center; gap:6px; }
+  #inputline .prompt{ flex-shrink:0; }
+  #cmdInput{
+    flex:1; background:transparent; border:none; outline:none;
+    color:var(--text); font-family:inherit; font-size:15px; caret-color:var(--blue);
+  }
+
+  ul.helplist{ margin:4px 0 0; padding-left:18px; }
+  ul.helplist li{ margin:2px 0; }
+</style>
+</head>
+<body>
+
+<div class="term" id="term">
+  <div class="titlebar">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <span>tomi@drkl: ~</span>
+  </div>
+  <div id="screen">
+    <div class="row muted">Selamat datang di terminal drkl.my.id. Ketik <span class="ok">help</span> untuk daftar perintah.</div>
+    <div id="log"></div>
+    <div class="row" id="inputline">
+      <span class="prompt">tomi@drkl:~$</span>
+      <input id="cmdInput" type="text" autocomplete="off" autofocus />
+    </div>
+  </div>
+</div>
+
+<script>
+const log = document.getElementById('log');
+const screen = document.getElementById('screen');
+const input = document.getElementById('cmdInput');
+
+function print(html, cls){
+  const div = document.createElement('div');
+  div.className = 'row' + (cls ? ' ' + cls : '');
+  div.innerHTML = html;
+  log.appendChild(div);
+  screen.scrollTop = screen.scrollHeight;
+}
+
+function echo(cmd){
+  print(`<span class="prompt">tomi@drkl:~$</span> <span class="cmd">${cmd}</span>`);
+}
+
+const commands = {
+  help(){
+    print(`Perintah yang tersedia:
+<ul class="helplist">
+  <li><span class="ok">about</span> — sedikit tentang saya</li>
+  <li><span class="ok">links</span> — kontak & github</li>
+  <li><span class="ok">tetris</span> — buka game Tetris</li>
+  <li><span class="ok">clear</span> — bersihkan layar</li>
+</ul>`);
+  },
+  about(){
+    print(`Tomi — suka mengorek internal Linux, ricing desktop, dan konfigurasi Void Linux dari nol di atas Niri + Noctalia.`);
+  },
+  links(){
+    print(`GitHub: <a href="https://github.com/tmdrkl" target="_blank" rel="noopener">github.com/tmdrkl</a>
+Email: <a href="mailto:hello@drkl.my.id">hello@drkl.my.id</a>`);
+  },
+  tetris(){
+    print(`Membuka <span class="ok">tetris.html</span> di tab baru... <a href="tetris.html" target="_blank" rel="noopener">klik di sini kalau tidak otomatis</a>`);
+    window.open('tetris.html', '_blank');
+  },
+  play(){ commands.tetris(); },
+  clear(){
+    log.innerHTML = '';
+  },
+  whoami(){ print('tomi'); },
+};
+
+input.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const raw = input.value.trim();
+  input.value = '';
+  if (!raw) return;
+  echo(raw);
+  const key = raw.toLowerCase();
+  if (commands[key]) {
+    commands[key]();
+  } else {
+    print(`command not found: ${raw}. Ketik <span class="ok">help</span>.`, 'err');
+  }
+});
+
+document.getElementById('term').addEventListener('click', () => input.focus());
+</script>
+
+</body>
+</html>
