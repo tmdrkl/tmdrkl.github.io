@@ -26,40 +26,7 @@
     justify-content: center;
   }
 
-  /* Touch controls, tersembunyi di desktop */
-  #touchControls {
-    display: none;
-    width: 100%;
-    max-width: 320px;
-    margin-top: 16px;
-    user-select: none;
-  }
-  .tc-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .tc-btn {
-    flex: 1;
-    background: #313244;
-    border: 2px solid #45475a;
-    border-radius: 10px;
-    color: #cdd6f4;
-    font-size: 22px;
-    padding: 14px 0;
-    text-align: center;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .tc-btn:active {
-    background: #45475a;
-  }
-  .tc-btn.wide { font-size: 15px; font-weight: bold; }
-  .tc-btn.rotate { color: #cba6f7; }
-  .tc-btn.drop { color: #f9e2af; }
-  .tc-btn.pause { color: #89b4fa; }
-
   @media (max-width: 640px) {
-    #touchControls { display: block; }
     #board { grid-template-columns: repeat(10, 26px); grid-template-rows: repeat(20, 26px); }
     .cell { width: 26px; height: 26px; }
     .panel .box.controls:not(#touchHint) { display: none; }
@@ -165,21 +132,6 @@
       Atau pakai tombol di bawah papan
     </div>
     <button id="startBtn">Mulai / Restart</button>
-  </div>
-</div>
-
-<div id="touchControls">
-  <div class="tc-row">
-    <div class="tc-btn wide pause" id="btnPause">⏸ Pause</div>
-    <div class="tc-btn rotate" id="btnRotate">⟳ Putar</div>
-  </div>
-  <div class="tc-row">
-    <div class="tc-btn" id="btnLeft">←</div>
-    <div class="tc-btn" id="btnDown">↓</div>
-    <div class="tc-btn" id="btnRight">→</div>
-  </div>
-  <div class="tc-row">
-    <div class="tc-btn wide drop" id="btnDrop">⤓ Jatuh Instan</div>
   </div>
 </div>
 
@@ -421,22 +373,9 @@ document.addEventListener('keydown', (e) => {
 
 document.getElementById('startBtn').addEventListener('click', startGame);
 
-// --- Touch buttons ---
-function bindTap(id, fn) {
-  const el = document.getElementById(id);
-  el.addEventListener('touchstart', (e) => { e.preventDefault(); fn(); }, { passive: false });
-  el.addEventListener('click', fn);
-}
-bindTap('btnLeft', () => move(0, -1));
-bindTap('btnRight', () => move(0, 1));
-bindTap('btnDown', () => move(1, 0));
-bindTap('btnRotate', () => doRotate());
-bindTap('btnDrop', () => hardDrop());
-bindTap('btnPause', () => togglePause());
-
-// --- Swipe gesture langsung di papan ---
+// --- Swipe gesture langsung di papan (untuk touchscreen) ---
 let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
-const SWIPE_THRESHOLD = 24;
+const SWIPE_THRESHOLD = 20;
 
 boardEl.addEventListener('touchstart', (e) => {
   const t = e.touches[0];
