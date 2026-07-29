@@ -19,6 +19,32 @@
   body{ display:flex; justify-content:center; align-items:flex-start; padding:40px 16px; }
   a{ color:var(--blue); }
 
+  .wrap{ width:100%; max-width:700px; }
+
+  header.site{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px; padding:0 2px;
+  }
+  header.site .brand{
+    color:var(--text); font-weight:700; font-size:15px;
+  }
+  header.site .brand .dim{ color:var(--muted); font-weight:400; }
+  header.site nav{ display:flex; gap:16px; }
+  header.site nav a{
+    color:var(--muted); font-size:13px; text-decoration:none;
+  }
+  header.site nav a:hover{ color:var(--blue); }
+
+  footer.site{
+    display:flex; align-items:center; justify-content:center; gap:18px;
+    margin-top:14px; padding:0 2px;
+  }
+  footer.site a{
+    color:var(--muted); font-size:13px; text-decoration:none;
+  }
+  footer.site a:hover{ color:var(--blue); }
+  footer.site .sep{ color:var(--border); }
+
   .term{
     width:100%; max-width:700px;
     background:var(--panel); border:1px solid var(--border); border-radius:8px;
@@ -61,19 +87,38 @@
 </head>
 <body>
 
-<div class="term" id="term">
-  <div class="titlebar">
-    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-    <span>tomi@drkl: ~</span>
-  </div>
-  <div id="screen">
-    <div class="row muted">Selamat datang di terminal drkl.my.id. Ketik <span class="ok">help</span> untuk daftar perintah.</div>
-    <div id="log"></div>
-    <div class="row" id="inputline">
-      <span class="prompt">tomi@drkl:~$</span>
-      <input id="cmdInput" type="text" autocomplete="off" autofocus />
+<div class="wrap">
+
+  <header class="site">
+    <div class="brand">drkl<span class="dim">.my.id</span></div>
+    <nav>
+      <a href="tetris.html" target="_blank" rel="noopener">tetris</a>
+    </nav>
+  </header>
+
+  <div class="term" id="term">
+    <div class="titlebar">
+      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      <span>tomi@drkl: ~</span>
+    </div>
+    <div id="screen">
+      <div class="row muted">Selamat datang di terminal drkl.my.id. Ketik <span class="ok">help</span> untuk daftar perintah.</div>
+      <div id="log"></div>
+      <div class="row" id="inputline">
+        <span class="prompt">tomi@drkl:~$</span>
+        <input id="cmdInput" type="text" autocomplete="off" autofocus />
+      </div>
     </div>
   </div>
+
+  <footer class="site">
+    <a href="https://github.com/tmdrkl" target="_blank" rel="noopener">github</a>
+    <span class="sep">|</span>
+    <a href="https://t.me/tmdrkl" target="_blank" rel="noopener">telegram</a>
+    <span class="sep">|</span>
+    <a href="mailto:hello@drkl.my.id">email</a>
+  </footer>
+
 </div>
 
 <script>
@@ -104,12 +149,12 @@ const commands = {
 </ul>`);
   },
   about(){
-    print(`Tomi - Suka semua hal yang baru dan seru.`);
+    print(`Tomi — suka semua hal yang baru dan seru.`);
   },
   links(){
     print(`GitHub: <a href="https://github.com/tmdrkl" target="_blank" rel="noopener">github.com/tmdrkl</a>
-Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>
-Telegram: <a href="http://t.me/tmdrkl" target="_blank" rel="noopener">@tmdrkl</a>`);
+Telegram: <a href="https://t.me/tmdrkl" target="_blank" rel="noopener">@tmdrkl</a>
+Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   },
   tetris(){
     print(`Membuka <span class="ok">tetris.html</span> di tab baru... <a href="tetris.html" target="_blank" rel="noopener">klik di sini kalau tidak otomatis</a>`);
