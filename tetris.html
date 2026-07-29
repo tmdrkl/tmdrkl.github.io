@@ -2,22 +2,68 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Tetris Sederhana</title>
 <style>
+  * { touch-action: manipulation; }
   body {
     margin: 0;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     background: #1e1e2e;
     font-family: 'Courier New', monospace;
     color: #cdd6f4;
+    padding: 16px;
+    box-sizing: border-box;
   }
   .container {
     display: flex;
     gap: 24px;
     align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Touch controls, tersembunyi di desktop */
+  #touchControls {
+    display: none;
+    width: 100%;
+    max-width: 320px;
+    margin-top: 16px;
+    user-select: none;
+  }
+  .tc-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .tc-btn {
+    flex: 1;
+    background: #313244;
+    border: 2px solid #45475a;
+    border-radius: 10px;
+    color: #cdd6f4;
+    font-size: 22px;
+    padding: 14px 0;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tc-btn:active {
+    background: #45475a;
+  }
+  .tc-btn.wide { font-size: 15px; font-weight: bold; }
+  .tc-btn.rotate { color: #cba6f7; }
+  .tc-btn.drop { color: #f9e2af; }
+  .tc-btn.pause { color: #89b4fa; }
+
+  @media (max-width: 640px) {
+    #touchControls { display: block; }
+    #board { grid-template-columns: repeat(10, 26px); grid-template-rows: repeat(20, 26px); }
+    .cell { width: 26px; height: 26px; }
+    .panel .box.controls:not(#touchHint) { display: none; }
+    #touchHint { display: block !important; }
   }
   #board {
     background: #181825;
@@ -111,7 +157,29 @@
       Spasi : jatuh instan<br>
       P : pause
     </div>
+    <div class="box controls" id="touchHint" style="display:none">
+      <h3>KONTROL TOUCH</h3>
+      Geser kiri/kanan di papan : pindah<br>
+      Tap papan : putar<br>
+      Geser bawah : turun / jatuh cepat<br>
+      Atau pakai tombol di bawah papan
+    </div>
     <button id="startBtn">Mulai / Restart</button>
+  </div>
+</div>
+
+<div id="touchControls">
+  <div class="tc-row">
+    <div class="tc-btn wide pause" id="btnPause">⏸ Pause</div>
+    <div class="tc-btn rotate" id="btnRotate">⟳ Putar</div>
+  </div>
+  <div class="tc-row">
+    <div class="tc-btn" id="btnLeft">←</div>
+    <div class="tc-btn" id="btnDown">↓</div>
+    <div class="tc-btn" id="btnRight">→</div>
+  </div>
+  <div class="tc-row">
+    <div class="tc-btn wide drop" id="btnDrop">⤓ Jatuh Instan</div>
   </div>
 </div>
 
@@ -352,6 +420,50 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.getElementById('startBtn').addEventListener('click', startGame);
+
+// --- Touch buttons ---
+function bindTap(id, fn) {
+  const el = document.getElementById(id);
+  el.addEventListener('touchstart', (e) => { e.preventDefault(); fn(); }, { passive: false });
+  el.addEventListener('click', fn);
+}
+bindTap('btnLeft', () => move(0, -1));
+bindTap('btnRight', () => move(0, 1));
+bindTap('btnDown', () => move(1, 0));
+bindTap('btnRotate', () => doRotate());
+bindTap('btnDrop', () => hardDrop());
+bindTap('btnPause', () => togglePause());
+
+// --- Swipe gesture langsung di papan ---
+let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+const SWIPE_THRESHOLD = 24;
+
+boardEl.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  touchStartTime = Date.now();
+}, { passive: true });
+
+boardEl.addEventListener('touchend', (e) => {
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  const dt = Date.now() - touchStartTime;
+  const absX = Math.abs(dx), absY = Math.abs(dy);
+
+  if (absX < 10 && absY < 10 && dt < 250) {
+    // tap singkat = putar
+    doRotate();
+    return;
+  }
+  if (absX > absY) {
+    if (absX > SWIPE_THRESHOLD) move(0, dx > 0 ? 1 : -1);
+  } else {
+    if (dy > SWIPE_THRESHOLD * 3) hardDrop();
+    else if (dy > SWIPE_THRESHOLD) move(1, 0);
+  }
+}, { passive: true });
 
 buildBoard();
 startGame();
