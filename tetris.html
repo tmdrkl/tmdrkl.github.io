@@ -184,6 +184,7 @@
       Atau pakai tombol di bawah papan
     </div>
     <button id="startBtn">Mulai / Restart</button>
+    <button id="musicBtn">🔊 Musik: ON</button>
   </div>
 </div>
 
@@ -205,6 +206,8 @@ const overlayText = document.getElementById('overlayText');
 const overlaySub = document.getElementById('overlaySub');
 const overlayBtn = document.getElementById('overlayBtn');
 const startBtn = document.getElementById('startBtn');
+const musicBtn = document.getElementById('musicBtn');
+musicBtn.textContent = localStorage.getItem('tetris_music_tmdrkl') !== '0' ? '🔊 Musik: ON' : '🔇 Musik: OFF';
 
 const HIGHSCORE_KEY = 'tetris_highscore_tmdrkl';
 const BASE_INTERVAL = 600;
@@ -239,6 +242,7 @@ function ensureAudio() {
     catch (e) { audioCtx = null; }
   }
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (musicOn && running && !musicTimer && audioCtx) startMusic();
 }
 function blip(freq, dur = 0.06, type = 'square', vol = 0.04) {
   if (!audioCtx) return;
@@ -264,6 +268,81 @@ function sfxClear(n) {
 }
 function sfxGameOver() { blip(220, 0.15, 'sawtooth', 0.05); setTimeout(() => blip(160, 0.2, 'sawtooth', 0.05), 150); }
 function sfxLevelUp() { blip(600, 0.08, 'sine', 0.05); setTimeout(() => blip(800, 0.1, 'sine', 0.05), 80); }
+
+// --- Background music (chiptune loop) ---
+let musicOn = localStorage.getItem('tetris_music_tmdrkl') !== '0';
+let musicTimer = null;
+let musicNext = 0;
+let musicStep = 0;
+let musicGain = null;
+const midi2freq = m => 440 * Math.pow(2, (m - 69) / 12);
+const BASS = [
+  45,45,-1,45, 45,45,43,45,  41,41,-1,41, 41,41,43,41,
+  48,48,-1,48, 48,48,47,48,  43,43,-1,43, 43,43,45,43
+];
+const LEAD = [
+  69,-1,72,-1, 74,-1,72,-1,  69,-1,72,-1, 76,-1,74,-1,
+  69,-1,72,-1, 74,-1,72,-1,  76,-1,74,-1, 72,-1,71,-1,
+  72,-1,76,-1, 79,-1,76,-1,  77,-1,76,-1, 74,-1,72,-1,
+  69,-1,72,-1, 74,-1,72,-1,  71,-1,72,-1, 71,-1,69,-1
+];
+const STEP = 60 / 150 / 2;
+
+function playNote(midi, t, dur, type, vol, dest) {
+  if (midi < 0) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = midi2freq(midi);
+  gain.gain.setValueAtTime(vol, t);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(gain);
+  gain.connect(dest);
+  osc.start(t);
+  osc.stop(t + dur + 0.02);
+}
+
+function scheduleMusic() {
+  if (!audioCtx || !musicGain) return;
+  while (musicNext < audioCtx.currentTime + 0.12) {
+    playNote(BASS[musicStep], musicNext, STEP * 0.9, 'square', 0.18, musicGain);
+    if (musicStep % 2 === 0) playNote(LEAD[musicStep], musicNext, STEP * 0.8, 'triangle', 0.12, musicGain);
+    musicNext += STEP;
+    musicStep = (musicStep + 1) % 32;
+  }
+}
+
+function startMusic() {
+  if (!musicOn || !audioCtx || musicTimer) return;
+  musicGain = audioCtx.createGain();
+  musicGain.gain.value = 0.5;
+  musicGain.connect(audioCtx.destination);
+  musicStep = 0;
+  musicNext = audioCtx.currentTime + 0.05;
+  scheduleMusic();
+  musicTimer = setInterval(scheduleMusic, 60);
+}
+
+function stopMusic() {
+  clearInterval(musicTimer);
+  musicTimer = null;
+  if (musicGain && audioCtx) {
+    musicGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+    const g = musicGain;
+    setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 400);
+    musicGain = null;
+  }
+}
+
+function toggleMusic() {
+  ensureAudio();
+  if (!audioCtx) return;
+  musicOn = !musicOn;
+  localStorage.setItem('tetris_music_tmdrkl', musicOn ? '1' : '0');
+  musicBtn.textContent = musicOn ? '🔊 Musik: ON' : '🔇 Musik: OFF';
+  if (musicOn) startMusic();
+  else stopMusic();
+}
 
 function buildBoard() {
   boardEl.innerHTML = '';
@@ -380,7 +459,9 @@ function clearLines() {
 function draw() {
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      cellEls[r][c].style.background = grid[r][c] || '#11111b';
+      const el = cellEls[r][c];
+      el.style.background = grid[r][c] || '#11111b';
+      el.style.boxShadow = '';
     }
   }
   if (running && current && !gameOver && !paused) {
@@ -401,7 +482,9 @@ function draw() {
         if (shape[r][c]) {
           const nr = row + r, nc = col + c;
           if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-            cellEls[nr][nc].style.background = color;
+            const el = cellEls[nr][nc];
+            el.style.background = color;
+            el.style.boxShadow = '';
           }
         }
       }
@@ -497,6 +580,7 @@ function endGame() {
   overlaySub.textContent = isNewRecord ? '🎉 Rekor baru!' : `Skor: ${score}`;
   overlayBtn.style.display = 'block';
   overlay.style.display = 'flex';
+  stopMusic();
   sfxGameOver();
 }
 
@@ -509,8 +593,10 @@ function togglePause() {
     overlaySub.className = 'sub blue';
     overlaySub.textContent = 'Tekan P untuk lanjut';
     overlayBtn.style.display = 'none';
+    stopMusic();
   } else {
     draw();
+    startMusic();
   }
 }
 
@@ -535,6 +621,7 @@ function startGame() {
   drawNext();
   draw();
   restartTimer();
+  startMusic();
 }
 
 function showRestartHint() {
@@ -543,6 +630,7 @@ function showRestartHint() {
 }
 
 document.addEventListener('keydown', (e) => {
+  ensureAudio();
   if (e.key === 'ArrowLeft') { e.preventDefault(); move(0, -1); }
   else if (e.key === 'ArrowRight') { e.preventDefault(); move(0, 1); }
   else if (e.key === 'ArrowDown') { e.preventDefault(); move(1, 0); }
@@ -560,6 +648,10 @@ startBtn.addEventListener('click', () => {
 overlayBtn.addEventListener('click', () => {
   startGame();
   overlayBtn.blur();
+});
+musicBtn.addEventListener('click', () => {
+  toggleMusic();
+  musicBtn.blur();
 });
 
 document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(0, -1); }, { passive: false });
