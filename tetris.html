@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="Tetris sederhana dari drkl.my.id. Main langsung di browser.">
+<meta property="og:title" content="Tetris drkl.my.id">
+<meta property="og:description" content="Tetris sederhana dari drkl.my.id. Main langsung di browser.">
+<meta property="og:type" content="website">
 <title>Tetris Sederhana</title>
 <style>
   * { touch-action: manipulation; }
@@ -31,6 +35,7 @@
     .cell { width: 26px; height: 26px; }
     .panel .box.controls:not(#touchHint) { display: none; }
     #touchHint { display: block !important; }
+    .touchbtns { display: grid !important; }
   }
   #board {
     background: #181825;
@@ -40,6 +45,7 @@
     grid-template-columns: repeat(10, 28px);
     grid-template-rows: repeat(20, 28px);
     gap: 1px;
+    user-select: none;
   }
   .cell {
     width: 28px;
@@ -76,7 +82,28 @@
   }
   #next .cell { width: 20px; height: 20px; }
   .score { font-size: 22px; color: #a6e3a1; }
+  .high { font-size: 13px; color: #f5c2e7; margin-top: 4px; }
+  .level { font-size: 13px; color: #89b4fa; margin-top: 2px; }
   .controls { font-size: 12px; line-height: 1.6; color: #bac2de; }
+  .touchbtns {
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .touchbtns button {
+    width: 100%;
+    padding: 14px 0;
+    font-size: 20px;
+    background: #45475a;
+    color: #cdd6f4;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .touchbtns button:active { background: #6c7086; }
   button {
     width: 100%;
     padding: 8px;
@@ -100,6 +127,23 @@
     font-size: 28px;
     text-align: center;
   }
+  #overlay .sub {
+    font-size: 16px;
+    color: #a6e3a1;
+    margin-top: 10px;
+  }
+  #overlay .sub.blue { color: #89b4fa; }
+  #overlay button {
+    width: auto;
+    margin-top: 24px;
+    padding: 10px 28px;
+    font-size: 15px;
+  }
+  @keyframes flash {
+    0% { filter: brightness(3); }
+    100% { filter: brightness(1); }
+  }
+  .clearflash { animation: flash 0.25s linear; }
 </style>
 </head>
 <body>
@@ -111,10 +155,18 @@
     <div class="box">
       <h3>SKOR</h3>
       <div class="score" id="score">0</div>
+      <div class="high">Rekor: <span id="highScore">0</span></div>
+      <div class="level">Level: <span id="level">1</span></div>
     </div>
     <div class="box">
       <h3>BERIKUTNYA</h3>
       <div id="next"></div>
+    </div>
+    <div class="touchbtns" id="touchBtns">
+      <button id="btnLeft" aria-label="Kiri">◀</button>
+      <button id="btnRight" aria-label="Kanan">▶</button>
+      <button id="btnDown" aria-label="Turun">▼</button>
+      <button id="btnRotate" aria-label="Putar">↻</button>
     </div>
     <div class="box controls">
       <h3>KONTROL</h3>
@@ -137,6 +189,8 @@
 
 <div id="overlay">
   <div id="overlayText">GAME OVER</div>
+  <div class="sub" id="overlaySub"></div>
+  <button id="overlayBtn">Main Lagi</button>
 </div>
 
 <script>
@@ -144,8 +198,18 @@ const COLS = 10, ROWS = 20;
 const boardEl = document.getElementById('board');
 const nextEl = document.getElementById('next');
 const scoreEl = document.getElementById('score');
+const highScoreEl = document.getElementById('highScore');
+const levelEl = document.getElementById('level');
 const overlay = document.getElementById('overlay');
 const overlayText = document.getElementById('overlayText');
+const overlaySub = document.getElementById('overlaySub');
+const overlayBtn = document.getElementById('overlayBtn');
+const startBtn = document.getElementById('startBtn');
+
+const HIGHSCORE_KEY = 'tetris_highscore_tmdrkl';
+const BASE_INTERVAL = 600;
+const MIN_INTERVAL = 100;
+const LEVEL_LINES = 10;
 
 const COLORS = {
   I: '#89dceb', O: '#f9e2af', T: '#cba6f7',
@@ -162,8 +226,44 @@ const SHAPES = {
   L: [[0,0,1],[1,1,1]]
 };
 
-let grid, current, next, score, dropInterval, gameOver, paused;
+let grid, current, next, score, level, totalLines, dropInterval, gameOver, paused, running;
 let cellEls = [];
+let highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0', 10) || 0;
+highScoreEl.textContent = highScore;
+
+// --- Sound (WebAudio) ---
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { audioCtx = null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function blip(freq, dur = 0.06, type = 'square', vol = 0.04) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.value = vol;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+  osc.stop(audioCtx.currentTime + dur);
+}
+function sfxMove() { blip(180, 0.03, 'square', 0.02); }
+function sfxRotate() { blip(320, 0.04, 'square', 0.03); }
+function sfxLock() { blip(140, 0.05, 'triangle', 0.04); }
+function sfxClear(n) {
+  const base = 500;
+  for (let i = 0; i < n; i++) {
+    setTimeout(() => blip(base + i * 120, 0.08, 'sawtooth', 0.04), i * 70);
+  }
+}
+function sfxGameOver() { blip(220, 0.15, 'sawtooth', 0.05); setTimeout(() => blip(160, 0.2, 'sawtooth', 0.05), 150); }
+function sfxLevelUp() { blip(600, 0.08, 'sine', 0.05); setTimeout(() => blip(800, 0.1, 'sine', 0.05), 80); }
 
 function buildBoard() {
   boardEl.innerHTML = '';
@@ -217,6 +317,12 @@ function collides(shape, row, col) {
   return false;
 }
 
+function ghostRow() {
+  let row = current.row;
+  while (!collides(current.shape, row + 1, current.col)) row++;
+  return row;
+}
+
 function lockPiece() {
   const { shape, row, col, color } = current;
   for (let r = 0; r < shape.length; r++) {
@@ -228,6 +334,7 @@ function lockPiece() {
       }
     }
   }
+  sfxLock();
   clearLines();
   current = next;
   next = randomPiece();
@@ -239,8 +346,10 @@ function lockPiece() {
 
 function clearLines() {
   let cleared = 0;
+  const clearedRows = [];
   for (let r = ROWS - 1; r >= 0; r--) {
     if (grid[r].every(cell => cell)) {
+      clearedRows.push(r);
       grid.splice(r, 1);
       grid.unshift(new Array(COLS).fill(null));
       cleared++;
@@ -248,9 +357,22 @@ function clearLines() {
     }
   }
   if (cleared) {
+    clearedRows.forEach(r => {
+      for (let c = 0; c < COLS; c++) cellEls[r][c].classList.add('clearflash');
+    });
     const points = [0, 100, 300, 500, 800];
     score += points[cleared] || cleared * 200;
     scoreEl.textContent = score;
+    sfxClear(cleared);
+
+    totalLines += cleared;
+    const prevLevel = level;
+    level = Math.floor(totalLines / LEVEL_LINES) + 1;
+    if (level > prevLevel) {
+      levelEl.textContent = level;
+      sfxLevelUp();
+      restartTimer();
+    }
   }
 }
 
@@ -260,13 +382,26 @@ function draw() {
       cellEls[r][c].style.background = grid[r][c] || '#11111b';
     }
   }
-  const { shape, row, col, color } = current;
-  for (let r = 0; r < shape.length; r++) {
-    for (let c = 0; c < shape[r].length; c++) {
-      if (shape[r][c]) {
-        const nr = row + r, nc = col + c;
-        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-          cellEls[nr][nc].style.background = color;
+  if (running && current && !gameOver && !paused) {
+    const { shape, row, col, color } = current;
+    const gRow = ghostRow();
+    for (let r = 0; r < shape.length; r++) {
+      for (let c = 0; c < shape[r].length; c++) {
+        if (!shape[r][c]) continue;
+        const nr = gRow + r, nc = col + c;
+        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && !grid[nr][nc]) {
+          cellEls[nr][nc].style.background = 'transparent';
+          cellEls[nr][nc].style.boxShadow = `inset 0 0 0 2px ${color}55`;
+        }
+      }
+    }
+    for (let r = 0; r < shape.length; r++) {
+      for (let c = 0; c < shape[r].length; c++) {
+        if (shape[r][c]) {
+          const nr = row + r, nc = col + c;
+          if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+            cellEls[nr][nc].style.background = color;
+          }
         }
       }
     }
@@ -295,13 +430,20 @@ function drawNext() {
   }
 }
 
+function restartTimer() {
+  clearInterval(dropInterval);
+  const interval = Math.max(MIN_INTERVAL, BASE_INTERVAL - (level - 1) * 50);
+  dropInterval = setInterval(() => move(1, 0), interval);
+}
+
 function move(dr, dc) {
-  if (gameOver || paused) return;
+  if (!running || gameOver || paused) return;
   const { shape, row, col } = current;
   const nr = row + dr, nc = col + dc;
   if (!collides(shape, nr, nc)) {
     current.row = nr;
     current.col = nc;
+    if (dc !== 0) sfxMove();
     draw();
   } else if (dr === 1) {
     lockPiece();
@@ -310,22 +452,27 @@ function move(dr, dc) {
 }
 
 function hardDrop() {
-  if (gameOver || paused) return;
+  if (!running || gameOver || paused) return;
+  let dropped = 0;
   while (!collides(current.shape, current.row + 1, current.col)) {
     current.row++;
+    dropped++;
   }
+  score += dropped * 2;
+  scoreEl.textContent = score;
   lockPiece();
   draw();
 }
 
 function doRotate() {
-  if (gameOver || paused) return;
+  if (!running || gameOver || paused) return;
   const rotated = rotate(current.shape);
   const kicks = [0, -1, 1, -2, 2];
   for (const k of kicks) {
     if (!collides(rotated, current.row, current.col + k)) {
       current.shape = rotated;
       current.col += k;
+      sfxRotate();
       draw();
       return;
     }
@@ -333,33 +480,63 @@ function doRotate() {
 }
 
 function endGame() {
+  if (gameOver) return;
   gameOver = true;
+  running = false;
   clearInterval(dropInterval);
-  overlayText.textContent = `GAME OVER\nSkor: ${score}`;
-  overlay.style.whiteSpace = 'pre-line';
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem(HIGHSCORE_KEY, String(highScore));
+    highScoreEl.textContent = highScore;
+  }
+  overlayText.textContent = 'GAME OVER';
+  overlaySub.className = 'sub';
+  overlaySub.textContent = score >= highScore && score > 0 ? '🎉 Rekor baru!' : `Skor: ${score}`;
+  overlayBtn.style.display = 'block';
   overlay.style.display = 'flex';
+  sfxGameOver();
 }
 
 function togglePause() {
-  if (gameOver) return;
+  if (!running || gameOver) return;
   paused = !paused;
   overlay.style.display = paused ? 'flex' : 'none';
-  overlayText.textContent = 'PAUSE';
+  if (paused) {
+    overlayText.textContent = 'PAUSE';
+    overlaySub.className = 'sub blue';
+    overlaySub.textContent = 'Tekan P untuk lanjut';
+    overlayBtn.style.display = 'none';
+  } else {
+    draw();
+  }
 }
 
 function startGame() {
+  ensureAudio();
+  clearInterval(dropInterval);
   grid = Array.from({length: ROWS}, () => new Array(COLS).fill(null));
   score = 0;
+  level = 1;
+  totalLines = 0;
   scoreEl.textContent = 0;
+  levelEl.textContent = 1;
+  highScoreEl.textContent = highScore;
   gameOver = false;
   paused = false;
+  running = true;
   overlay.style.display = 'none';
+  overlayText.textContent = '';
+  overlaySub.textContent = '';
   current = randomPiece();
   next = randomPiece();
   drawNext();
   draw();
-  clearInterval(dropInterval);
-  dropInterval = setInterval(() => move(1, 0), 600);
+  restartTimer();
+}
+
+function showRestartHint() {
+  startBtn.blur();
+  overlayBtn.blur();
 }
 
 document.addEventListener('keydown', (e) => {
@@ -368,16 +545,35 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowDown') move(1, 0);
   else if (e.key === 'ArrowUp') doRotate();
   else if (e.key === ' ') { e.preventDefault(); hardDrop(); }
-  else if (e.key.toLowerCase() === 'p') togglePause();
+  else if (e.key.toLowerCase() === 'p' || e.key.toLowerCase() === 'r') {
+    if (gameOver) { startGame(); } else { togglePause(); }
+  }
 });
 
-document.getElementById('startBtn').addEventListener('click', startGame);
+startBtn.addEventListener('click', () => {
+  startGame();
+  startBtn.blur();
+});
+overlayBtn.addEventListener('click', () => {
+  startGame();
+  overlayBtn.blur();
+});
+
+document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(0, -1); }, { passive: false });
+document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(0, 1); }, { passive: false });
+document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(1, 0); }, { passive: false });
+document.getElementById('btnRotate').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); doRotate(); }, { passive: false });
+document.getElementById('btnLeft').addEventListener('mousedown', (e) => { ensureAudio(); move(0, -1); });
+document.getElementById('btnRight').addEventListener('mousedown', (e) => { ensureAudio(); move(0, 1); });
+document.getElementById('btnDown').addEventListener('mousedown', (e) => { ensureAudio(); move(1, 0); });
+document.getElementById('btnRotate').addEventListener('mousedown', (e) => { ensureAudio(); doRotate(); });
 
 // --- Swipe gesture langsung di papan (untuk touchscreen) ---
 let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
 const SWIPE_THRESHOLD = 20;
 
 boardEl.addEventListener('touchstart', (e) => {
+  ensureAudio();
   const t = e.touches[0];
   touchStartX = t.clientX;
   touchStartY = t.clientY;
@@ -392,7 +588,6 @@ boardEl.addEventListener('touchend', (e) => {
   const absX = Math.abs(dx), absY = Math.abs(dy);
 
   if (absX < 10 && absY < 10 && dt < 250) {
-    // tap singkat = putar
     doRotate();
     return;
   }
