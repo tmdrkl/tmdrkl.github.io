@@ -7,12 +7,13 @@
 <meta property="og:title" content="Tetris drkl.my.id">
 <meta property="og:description" content="Tetris sederhana dari drkl.my.id. Main langsung di browser.">
 <meta property="og:type" content="website">
-<title>Tetris Sederhana</title>
+<title>Tetris</title>
 <style>
   * { touch-action: manipulation; }
   body {
     margin: 0;
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -31,11 +32,31 @@
   }
 
   @media (max-width: 640px) {
-    #board { grid-template-columns: repeat(10, 26px); grid-template-rows: repeat(20, 26px); }
-    .cell { width: 26px; height: 26px; }
+    #board { grid-template-columns: repeat(10, 22px); grid-template-rows: repeat(20, 22px); }
+    .cell { width: 22px; height: 22px; }
     .panel .box.controls:not(#touchHint) { display: none; }
-    #touchHint { display: block !important; }
-    .touchbtns { display: grid !important; }
+    #touchHint { display: none !important; }
+    .touchbtns {
+      display: grid !important;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      margin: 0;
+      padding: 10px;
+      padding-left: max(10px, env(safe-area-inset-left));
+      padding-right: max(10px, env(safe-area-inset-right));
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      background: #1e1e2e;
+      border-top: 2px solid #45475a;
+    }
+    .touchbtns button { height: 56px; }
+    body { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+    .container { gap: 12px; }
+    .panel { width: 100%; }
+    .panel h1 { font-size: 16px; }
+    .box { padding: 8px; margin-bottom: 8px; }
   }
   #board {
     background: #181825;
@@ -118,6 +139,7 @@
   #overlay {
     position: fixed;
     inset: 0;
+    z-index: 20;
     background: rgba(0,0,0,0.7);
     display: none;
     align-items: center;
