@@ -14,9 +14,9 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#2f343f; --panel:#383c4a; --border:#4b5162;
-    --text:#d3dae3; --muted:#8890a4; --blue:#5294e2;
-    --green:#a3be8c; --yellow:#e5c07b; --red:#e06c75;
+    --bg:#2f343f; --panel:#383c4a; --panel2:#404552; --border:#4b5164;
+    --text:#d3dae3; --muted:#7c818c; --blue:#5294e2;
+    --green:#5ca75b; --yellow:#f6ab32; --red:#e14245; --cyan:#73c5e2;
   }
   *{ box-sizing:border-box; }
   html,body{
@@ -59,17 +59,17 @@
   }
   .titlebar{
     display:flex; align-items:center; gap:8px; padding:10px 14px;
-    background:#363b46; border-bottom:1px solid var(--border);
+    background:var(--panel2); border-bottom:1px solid var(--border);
   }
   .dot{ width:11px; height:11px; border-radius:50%; }
-  .dot.r{ background:#e06c75; } .dot.y{ background:#e5c07b; } .dot.g{ background:#98c379; }
+  .dot.r{ background:#e14245; } .dot.y{ background:#f6ab32; } .dot.g{ background:#5ca75b; }
   .titlebar span{ margin-left:8px; color:var(--muted); font-size:13px; }
 
   #screen{
     height: 420px;
     overflow-y:auto;
     padding: 18px 20px;
-    line-height:1.6;
+    line-height:1.45;
   }
   #screen::-webkit-scrollbar{ width:8px; }
   #screen::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
@@ -80,19 +80,24 @@
   .muted{ color:var(--muted); }
   .err{ color:var(--red); }
   .ok{ color:var(--yellow); }
+  .dir{ color:var(--blue); }
+  .blue{ color:var(--blue); }
+  .tree{ color:var(--muted); }
+  pre{ margin:0 0 4px; font-family:inherit; font-size:12px; line-height:1.25; }
 
   #inputline{ display:flex; align-items:center; gap:6px; }
   #inputline .prompt{ flex-shrink:0; }
-  .inputwrap{ position:relative; flex:1; min-width:0; }
+  .inputwrap{ position:relative; flex:1; min-width:0; overflow:hidden; }
   #cmdInput{
     width:100%; padding:0; background:transparent; border:none; outline:none;
     color:var(--text); font-family:inherit; font-size:15px; caret-color:var(--blue);
     position:relative; z-index:1;
   }
   #suggest{
-    position:absolute; left:0; top:0; z-index:0;
-    color:var(--muted); opacity:.55; pointer-events:none;
-    white-space:pre; visibility:hidden;
+    position:absolute; left:0; top:0; bottom:0; z-index:0;
+    display:flex; align-items:center;
+    color:var(--muted); opacity:.6; pointer-events:none;
+    white-space:pre; overflow:hidden; visibility:hidden;
   }
   #suggestList{
     display:flex; flex-wrap:wrap; gap:4px 12px; padding:2px 0 6px; font-size:13px;
@@ -132,7 +137,7 @@
       <div class="row muted">Selamat datang di terminal drkl.my.id. Ketik <span class="ok">help</span> untuk daftar perintah.</div>
       <div id="log"></div>
       <div class="row" id="inputline">
-        <span class="prompt">tomi@drkl:~$</span>
+        <span class="prompt" id="prompt">tomi@drkl:~$</span>
         <div class="inputwrap">
           <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autofocus />
           <span id="suggest"></span>
@@ -156,6 +161,8 @@
 const log = document.getElementById('log');
 const screen = document.getElementById('screen');
 const input = document.getElementById('cmdInput');
+const promptEl = document.getElementById('prompt');
+const loadTime = Date.now();
 
 function print(html, cls){
   const div = document.createElement('div');
@@ -166,50 +173,285 @@ function print(html, cls){
 }
 
 function echo(cmd){
-  print(`<span class="prompt">tomi@drkl:~$</span> <span class="cmd">${cmd}</span>`);
+  print(`<span class="prompt">${promptStr()}</span> <span class="cmd">${esc(cmd)}</span>`);
 }
 
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// --- Sistem file virtual ---
+const FS = {
+  'about.txt': 'Tomi — suka semua hal yang baru dan seru.',
+  'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.my.id',
+  'README.md': '# drkl.my.id\n\nTerminal ini sendiri adalah proyek drkl.my.id.\nAda game Tetris juga — jalankan: tetris',
+  'projects': {
+    'tetris': 'Game Tetris sederhana. Buka lewat perintah: tetris',
+    'terminal': 'Ini dia — terminal web yang sedang Anda pakai.',
+  },
+  'notes': {
+    'todo.txt': '- push website\n- bikin blog\n- makan siang',
+    'ide.txt': 'coba bikin game lain di drkl.my.id',
+  },
+};
+let cwd = ['~'];
+
+function pwdStr(){
+  return '~' + (cwd.length > 1 ? '/' + cwd.slice(1).join('/') : '');
+}
+function promptStr(){
+  return `tomi@drkl:${pwdStr()}$`;
+}
+function refreshPrompt(){
+  promptEl.textContent = promptStr();
+}
+
+function resolvePath(p){
+  if (!p || p === '~' || p === '/') return ['~'];
+  let base, rest;
+  if (p.startsWith('~/')) { base = ['~']; rest = p.slice(2); }
+  else if (p.startsWith('/')) { base = ['~']; rest = p.slice(1); }
+  else { base = cwd.slice(); rest = p; }
+  for (const t of rest.split('/')) {
+    if (!t || t === '.') continue;
+    if (t === '..') { if (base.length > 1) base.pop(); }
+    else base.push(t);
+  }
+  return base;
+}
+
+function getNode(path){
+  let node = FS;
+  for (const seg of path.slice(1)) {
+    if (node && typeof node === 'object' && seg in node) node = node[seg];
+    else return undefined;
+  }
+  return node;
+}
+
+function isDir(node){ return !!node && typeof node === 'object'; }
+
+function entryList(node){
+  return Object.keys(node).map(k => ({ name: k, dir: isDir(node[k]) }));
+}
+
+function walkTree(node, prefix, lines, depth){
+  const keys = Object.keys(node);
+  keys.forEach((k, i) => {
+    const last = i === keys.length - 1;
+    const child = node[k];
+    const d = isDir(child);
+    lines.push(prefix + (last ? '└── ' : '├── ') + (d
+      ? `<span class="dir">${esc(k)}/</span>`
+      : `<span class="muted">${esc(k)}</span>`));
+    if (d && depth < 4) walkTree(child, prefix + (last ? '    ' : '│   '), lines, depth + 1);
+  });
+}
+
+// --- Font pixel kecil untuk banner ---
+const FONT = {
+  D: ['████','█  █','█  █','█  █','█  █','█  █','████'],
+  R: ['████','█  █','█  █','████','█ █ ','█  █','█  █'],
+  K: ['█  █','█ █ ','██  ','█ █ ','█  █','█  █','█  █'],
+  L: ['█   ','█   ','█   ','█   ','█   ','█   ','████'],
+};
+function figlet(word){
+  const letters = word.toUpperCase().split('').map(ch => FONT[ch] || null);
+  const rows = [];
+  for (let i = 0; i < 7; i++) {
+    rows.push(letters.map(l => (l ? l[i] : '    ')).join(' '));
+  }
+  return rows.join('\n');
+}
+
+const HELP = {
+  help: 'bantuan & detail perintah',
+  about: 'sedikit tentang saya',
+  links: 'kontak & github',
+  neofetch: 'info sistem ala neofetch',
+  banner: 'tampilkan logo drkl',
+  date: 'tanggal & jam sekarang',
+  echo: 'tampilkan teks, mis: echo halo dunia',
+  ls: 'daftar isi direktori, mis: ls, ls projects',
+  cd: 'pindah direktori, mis: cd projects, cd .., cd ~',
+  pwd: 'cetak direktori aktif',
+  cat: 'tampilkan isi file, mis: cat about.txt',
+  tree: 'pohon direktori, mis: tree, tree projects',
+  history: 'riwayat perintah yang dijalankan',
+  tetris: 'buka game Tetris di tab baru',
+  play: 'alias dari tetris',
+  clear: 'bersihkan layar',
+  whoami: 'menampilkan nama pengguna',
+};
+
 const commands = {
-  help(){
+  help(args){
+    if (args.length) {
+      const h = HELP[args[0].toLowerCase()];
+      if (h) print(`<span class="ok">${esc(args[0])}</span> — ${h}`);
+      else print(`help: tidak ada perintah "${esc(args[0])}"`, 'err');
+      return;
+    }
     print(`Perintah yang tersedia:
 <ul class="helplist">
+  <li><span class="ok">help [cmd]</span> — bantuan & detail perintah</li>
   <li><span class="ok">about</span> — sedikit tentang saya</li>
   <li><span class="ok">links</span> — kontak & github</li>
+  <li><span class="ok">neofetch</span> — info sistem</li>
+  <li><span class="ok">banner</span> — tampilkan logo</li>
+  <li><span class="ok">date</span> — tanggal & jam sekarang</li>
+  <li><span class="ok">echo &lt;teks&gt;</span> — tampilkan teks</li>
+  <li><span class="ok">ls [path]</span> — daftar isi direktori</li>
+  <li><span class="ok">cd [path]</span> — pindah direktori</li>
+  <li><span class="ok">pwd</span> — cetak direktori aktif</li>
+  <li><span class="ok">cat &lt;file&gt;</span> — tampilkan isi file</li>
+  <li><span class="ok">tree [path]</span> — pohon direktori</li>
+  <li><span class="ok">history</span> — riwayat perintah</li>
   <li><span class="ok">tetris</span> — buka game Tetris</li>
+  <li><span class="ok">whoami</span> — siapa Anda?</li>
   <li><span class="ok">clear</span> — bersihkan layar</li>
-</ul>`);
+</ul>
+Gunakan <span class="ok">Tab</span> untuk autocomplete, <span class="ok">↑/↓</span> riwayat, <span class="ok">Ctrl+L</span> clear.`);
   },
-  about(){
-    print(`Tomi — suka semua hal yang baru dan seru.`);
-  },
+  about(){ print('Tomi — suka semua hal yang baru dan seru.'); },
   links(){
     print(`GitHub: <a href="https://github.com/tmdrkl" target="_blank" rel="noopener">github.com/tmdrkl</a>
 Telegram: <a href="https://t.me/tmdrkl" target="_blank" rel="noopener">@tmdrkl</a>
 Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
+  },
+  neofetch(){
+    const up = Math.floor((Date.now() - loadTime) / 1000);
+    const upStr = up < 60 ? `${up} detik`
+      : up < 3600 ? `${Math.floor(up / 60)}m ${up % 60}s`
+      : `${Math.floor(up / 3600)}j ${Math.floor((up % 3600) / 60)}m`;
+    print(`<pre>   .--.
+  |o_o |   <span class="ok">tomi@drkl</span>
+  |:_/ |   <span class="muted">----------</span>
+ //   \\ \\   <span class="blue">OS</span>: drkl.my.id 1.0
+(|     | )  <span class="blue">Host</span>: Terminal web
+/'\\_   _/\`\\  <span class="blue">Uptime</span>: ${upStr}
+\\___)=(___/  <span class="blue">Shell</span>: drkl-sh
+             <span class="blue">Font</span>: JetBrains Mono
+             <span class="blue">Theme</span>: Arc Dark</pre>`);  },
+  banner(){
+    print(`<pre class="ok">${figlet('drkl')}</pre>`);
+    print('Selamat datang di <span class="ok">drkl.my.id</span>. Ketik <span class="ok">help</span> untuk mulai.');
+  },
+  date(){
+    print(new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'long' }));
+  },
+  echo(args){
+    print(esc(args.join(' ')));
+  },
+  ls(args){
+    const p = args[0] ? resolvePath(args[0]) : cwd;
+    const node = getNode(p);
+    if (node === undefined) { print(`ls: cannot access '${esc(args[0])}': No such file or directory`, 'err'); return; }
+    if (!isDir(node)) { print(`ls: '${esc(args[0])}' bukan direktori`, 'err'); return; }
+    const entries = entryList(node);
+    if (!entries.length) { print('(kosong)', 'muted'); return; }
+    print(entries.map(e => e.dir
+      ? `<span class="dir">${esc(e.name)}/</span>`
+      : `<span class="muted">${esc(e.name)}</span>`).join('  '));
+  },
+  cd(args){
+    const target = resolvePath(args[0]);
+    const node = getNode(target);
+    if (node === undefined) { print(`cd: no such file or directory: ${esc(args[0] || '')}`, 'err'); return; }
+    if (!isDir(node)) { print(`cd: not a directory: ${esc(args[0])}`, 'err'); return; }
+    cwd = target;
+    refreshPrompt();
+  },
+  pwd(){
+    print(pwdStr());
+  },
+  cat(args){
+    if (!args.length) { print('cat: gunakan: cat <file>', 'err'); return; }
+    const node = getNode(resolvePath(args[0]));
+    if (node === undefined) { print(`cat: ${esc(args[0])}: No such file or directory`, 'err'); return; }
+    if (isDir(node)) { print(`cat: ${esc(args[0])}: Is a directory`, 'err'); return; }
+    print(esc(node));
+  },
+  tree(args){
+    const p = args[0] ? resolvePath(args[0]) : cwd;
+    const node = getNode(p);
+    if (node === undefined) { print(`tree: no such file or directory: ${esc(args[0] || '')}`, 'err'); return; }
+    if (!isDir(node)) { print(`tree: '${esc(args[0])}' bukan direktori`, 'err'); return; }
+    const lines = [];
+    walkTree(node, '', lines, 0);
+    print(lines.join('\n'), 'tree');
+  },
+  history(){
+    if (!hist.length) { print('riwayat masih kosong', 'muted'); return; }
+    print(hist.map((h, i) => `${String(i + 1).padStart(3)}  ${esc(h)}`).join('\n'));
   },
   tetris(){
     print(`Membuka <span class="ok">tetris.html</span> di tab baru... <a href="tetris.html" target="_blank" rel="noopener">klik di sini kalau tidak otomatis</a>`);
     window.open('tetris.html', '_blank');
   },
   play(){ commands.tetris(); },
-  clear(){
-    log.innerHTML = '';
-  },
+  clear(){ log.innerHTML = ''; },
   whoami(){ print('tomi'); },
 };
 
+// --- Autocomplete & suggestion ala fish ---
 const suggestEl = document.getElementById('suggest');
 const suggestList = document.getElementById('suggestList');
+let measureEl = null;
+const inputFont = getComputedStyle(input).font;
+function textWidth(s){
+  if (!measureEl) {
+    measureEl = document.createElement('span');
+    measureEl.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;pointer-events:none;';
+    measureEl.style.font = inputFont;
+  }
+  measureEl.textContent = s;
+  document.body.appendChild(measureEl);
+  const w = measureEl.offsetWidth;
+  measureEl.remove();
+  return w;
+}
 const commandList = Object.keys(commands);
-const history = [];
+const PATH_CMDS = { cd: true, ls: true, cat: true, tree: true };
+let hist = [];
 let histIdx = -1;
 let pendingHist = '';
 let tabIdx = -1;
 
+function completePath(partial){
+  const lastSlash = partial.lastIndexOf('/');
+  const dirPart = lastSlash >= 0 ? partial.slice(0, lastSlash + 1) : '';
+  const namePart = lastSlash >= 0 ? partial.slice(lastSlash + 1) : partial;
+  const dir = resolvePath(dirPart || '~');
+  const node = getNode(dir);
+  if (!isDir(node)) return [];
+  return Object.keys(node)
+    .filter(k => k.startsWith(namePart))
+    .map(k => dirPart + k);
+}
+
 function getMatches(val){
-  const v = val.toLowerCase();
-  if (!v) return [];
-  return commandList.filter(c => c.toLowerCase().startsWith(v));
+  const parts = val.split(/\s+/);
+  if (parts.length === 1) {
+    const v = parts[0].toLowerCase();
+    if (!v) return [];
+    return commandList.filter(c => c.toLowerCase().startsWith(v)).map(c => ({ value: c, label: c }));
+  }
+  const cmd = parts[0].toLowerCase();
+  if (!PATH_CMDS[cmd]) return [];
+  const partial = val.slice(parts[0].length).replace(/^\s+/, '');
+  return completePath(partial).map(p => ({ value: cmd + ' ' + p, label: p }));
+}
+
+function commonPrefix(arr){
+  if (!arr.length) return '';
+  let p = arr[0];
+  for (const s of arr) {
+    let i = 0;
+    while (i < p.length && i < s.length && p[i] === s[i]) i++;
+    p = p.slice(0, i);
+  }
+  return p;
 }
 
 function setInput(v){
@@ -220,8 +462,14 @@ function setInput(v){
 function renderSuggestion(){
   const val = input.value;
   const m = getMatches(val);
-  if (m.length === 1 && m[0].length > val.length) {
-    suggestEl.textContent = m[0].slice(val.length);
+  let suffix = '';
+  if (m.length) {
+    const common = commonPrefix(m.map(x => x.value));
+    if (common.length > val.length) suffix = common.slice(val.length);
+  }
+  if (suffix) {
+    suggestEl.textContent = suffix;
+    suggestEl.style.left = textWidth(val) + 'px';
     suggestEl.style.visibility = 'visible';
   } else {
     suggestEl.textContent = '';
@@ -232,10 +480,10 @@ function renderSuggestion(){
 
 function acceptSuggestion(){
   const m = getMatches(input.value);
-  if (m.length === 1 && m[0].length > input.value.length) {
-    setInput(m[0]);
-    renderSuggestion();
-  }
+  if (!m.length) return;
+  const common = commonPrefix(m.map(x => x.value));
+  if (common.length > input.value.length) setInput(common);
+  renderSuggestion();
 }
 
 function hideList(){
@@ -245,11 +493,11 @@ function hideList(){
 
 function showList(m, active){
   suggestList.innerHTML = '';
-  m.forEach((c, i) => {
+  m.forEach((x, i) => {
     const s = document.createElement('span');
     if (i === active) s.className = 'active';
-    s.textContent = c;
-    s.addEventListener('click', () => { setInput(c); hideList(); renderSuggestion(); input.focus(); });
+    s.textContent = x.label;
+    s.addEventListener('click', () => { setInput(x.value); hideList(); renderSuggestion(); input.focus(); });
     suggestList.appendChild(s);
   });
 }
@@ -257,35 +505,55 @@ function showList(m, active){
 function doTab(){
   const m = getMatches(input.value);
   if (!m.length) { hideList(); return; }
+  const common = commonPrefix(m.map(x => x.value));
   if (m.length === 1) {
-    setInput(m[0]);
+    setInput(m[0].value);
+    hideList();
+  } else if (common.length > input.value.length) {
+    setInput(common);
     hideList();
   } else {
     tabIdx = (tabIdx + 1) % m.length;
-    setInput(m[tabIdx]);
+    setInput(m[tabIdx].value);
     showList(m, tabIdx);
   }
   renderSuggestion();
 }
 
 function goHistory(dir){
-  if (!history.length) return;
+  if (!hist.length) return;
   if (histIdx === -1) pendingHist = input.value;
-  histIdx += dir;
-  if (histIdx < 0) {
-    histIdx = -1;
-    setInput(pendingHist);
+  if (dir < 0) {
+    if (histIdx === -1) histIdx = hist.length - 1;
+    else histIdx = Math.max(0, histIdx - 1);
   } else {
-    if (histIdx >= history.length) histIdx = history.length - 1;
-    setInput(history[histIdx]);
+    if (histIdx === -1) return;
+    histIdx += 1;
+    if (histIdx >= hist.length) {
+      histIdx = -1;
+      setInput(pendingHist);
+      renderSuggestion();
+      hideList();
+      return;
+    }
   }
+  setInput(hist[histIdx]);
   renderSuggestion();
   hideList();
 }
 
-input.addEventListener('input', () => { renderSuggestion(); });
+input.addEventListener('input', () => { hideList(); renderSuggestion(); });
 
 input.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key.toLowerCase() === 'l') { e.preventDefault(); log.innerHTML = ''; return; }
+  if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+    e.preventDefault();
+    if (input.value) print('^C', 'muted');
+    input.value = '';
+    hideList();
+    renderSuggestion();
+    return;
+  }
   if (e.key === 'Tab') { e.preventDefault(); doTab(); return; }
   if (e.key === 'ArrowRight') { if (input.selectionStart === input.value.length) acceptSuggestion(); return; }
   if (e.key === 'ArrowUp') { e.preventDefault(); goHistory(-1); return; }
@@ -297,17 +565,17 @@ input.addEventListener('keydown', (e) => {
   renderSuggestion();
   if (!raw) return;
   echo(raw);
-  if (raw !== history[history.length - 1]) history.push(raw);
+  if (raw !== hist[hist.length - 1]) hist.push(raw);
   histIdx = -1;
-  const key = raw.toLowerCase();
-  if (commands[key]) {
-    commands[key]();
-  } else {
-    print(`command not found: ${raw}. Ketik <span class="ok">help</span>.`, 'err');
-  }
+  const parts = raw.split(/\s+/);
+  const key = parts[0].toLowerCase();
+  const args = parts.slice(1);
+  if (commands[key]) commands[key](args);
+  else print(`command not found: ${esc(raw)}. Ketik <span class="ok">help</span>.`, 'err');
 });
 
 document.getElementById('term').addEventListener('click', () => input.focus());
+refreshPrompt();
 </script>
 
 </body>
