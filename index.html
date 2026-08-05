@@ -83,10 +83,23 @@
 
   #inputline{ display:flex; align-items:center; gap:6px; }
   #inputline .prompt{ flex-shrink:0; }
+  .inputwrap{ position:relative; flex:1; min-width:0; }
   #cmdInput{
-    flex:1; background:transparent; border:none; outline:none;
+    width:100%; padding:0; background:transparent; border:none; outline:none;
     color:var(--text); font-family:inherit; font-size:15px; caret-color:var(--blue);
+    position:relative; z-index:1;
   }
+  #suggest{
+    position:absolute; left:0; top:0; z-index:0;
+    color:var(--muted); opacity:.55; pointer-events:none;
+    white-space:pre; visibility:hidden;
+  }
+  #suggestList{
+    display:flex; flex-wrap:wrap; gap:4px 12px; padding:2px 0 6px; font-size:13px;
+  }
+  #suggestList span{ cursor:pointer; color:var(--blue); }
+  #suggestList span.active{ background:var(--border); border-radius:3px; padding:0 4px; }
+  #suggestList:empty{ display:none; }
 
   ul.helplist{ margin:4px 0 0; padding-left:18px; }
   ul.helplist li{ margin:2px 0; }
@@ -120,8 +133,12 @@
       <div id="log"></div>
       <div class="row" id="inputline">
         <span class="prompt">tomi@drkl:~$</span>
-        <input id="cmdInput" type="text" autocomplete="off" autofocus />
+        <div class="inputwrap">
+          <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autofocus />
+          <span id="suggest"></span>
+        </div>
       </div>
+      <div id="suggestList"></div>
     </div>
   </div>
 
@@ -181,12 +198,107 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   whoami(){ print('tomi'); },
 };
 
+const suggestEl = document.getElementById('suggest');
+const suggestList = document.getElementById('suggestList');
+const commandList = Object.keys(commands);
+const history = [];
+let histIdx = -1;
+let pendingHist = '';
+let tabIdx = -1;
+
+function getMatches(val){
+  const v = val.toLowerCase();
+  if (!v) return [];
+  return commandList.filter(c => c.toLowerCase().startsWith(v));
+}
+
+function setInput(v){
+  input.value = v;
+  input.setSelectionRange(v.length, v.length);
+}
+
+function renderSuggestion(){
+  const val = input.value;
+  const m = getMatches(val);
+  if (m.length === 1 && m[0].length > val.length) {
+    suggestEl.textContent = m[0].slice(val.length);
+    suggestEl.style.visibility = 'visible';
+  } else {
+    suggestEl.textContent = '';
+    suggestEl.style.visibility = 'hidden';
+  }
+  return m;
+}
+
+function acceptSuggestion(){
+  const m = getMatches(input.value);
+  if (m.length === 1 && m[0].length > input.value.length) {
+    setInput(m[0]);
+    renderSuggestion();
+  }
+}
+
+function hideList(){
+  suggestList.innerHTML = '';
+  tabIdx = -1;
+}
+
+function showList(m, active){
+  suggestList.innerHTML = '';
+  m.forEach((c, i) => {
+    const s = document.createElement('span');
+    if (i === active) s.className = 'active';
+    s.textContent = c;
+    s.addEventListener('click', () => { setInput(c); hideList(); renderSuggestion(); input.focus(); });
+    suggestList.appendChild(s);
+  });
+}
+
+function doTab(){
+  const m = getMatches(input.value);
+  if (!m.length) { hideList(); return; }
+  if (m.length === 1) {
+    setInput(m[0]);
+    hideList();
+  } else {
+    tabIdx = (tabIdx + 1) % m.length;
+    setInput(m[tabIdx]);
+    showList(m, tabIdx);
+  }
+  renderSuggestion();
+}
+
+function goHistory(dir){
+  if (!history.length) return;
+  if (histIdx === -1) pendingHist = input.value;
+  histIdx += dir;
+  if (histIdx < 0) {
+    histIdx = -1;
+    setInput(pendingHist);
+  } else {
+    if (histIdx >= history.length) histIdx = history.length - 1;
+    setInput(history[histIdx]);
+  }
+  renderSuggestion();
+  hideList();
+}
+
+input.addEventListener('input', () => { renderSuggestion(); });
+
 input.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') { e.preventDefault(); doTab(); return; }
+  if (e.key === 'ArrowRight') { if (input.selectionStart === input.value.length) acceptSuggestion(); return; }
+  if (e.key === 'ArrowUp') { e.preventDefault(); goHistory(-1); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); goHistory(1); return; }
   if (e.key !== 'Enter') return;
   const raw = input.value.trim();
   input.value = '';
+  hideList();
+  renderSuggestion();
   if (!raw) return;
   echo(raw);
+  if (raw !== history[history.length - 1]) history.push(raw);
+  histIdx = -1;
   const key = raw.toLowerCase();
   if (commands[key]) {
     commands[key]();

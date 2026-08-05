@@ -52,7 +52,10 @@
       border-top: 2px solid #45475a;
     }
     .touchbtns button { height: 56px; }
-    body { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+    body {
+      align-items: flex-start;
+      padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    }
     .container { gap: 12px; }
     .panel { width: 100%; }
     .panel h1 { font-size: 16px; }
