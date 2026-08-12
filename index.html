@@ -1,22 +1,38 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="gruvbox-dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>tomi@drkl ~ </title>
+<script>try{var t=localStorage.getItem('drkl_theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 <meta name="description" content="Terminal pribadi drkl.my.id — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
 <meta property="og:title" content="tomi@drkl ~">
 <meta property="og:description" content="Terminal pribadi drkl.my.id — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://drkl.my.id/">
-<meta name="theme-color" content="#2f343f">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%232f343f'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a3be8c' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#282828">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%23282828'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23b8bb26' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{
+  :root[data-theme="gruvbox-dark"]{
+    --bg:#282828; --panel:#3c3836; --panel2:#504945; --border:#665c54;
+    --text:#ebdbb2; --muted:#928374; --blue:#83a598;
+    --green:#b8bb26; --yellow:#fabd2f; --red:#fb4934; --cyan:#8ec07c;
+  }
+  :root[data-theme="gruvbox-light"]{
+    --bg:#fbf1c7; --panel:#ebdbb2; --panel2:#d5c4a1; --border:#bdae93;
+    --text:#282828; --muted:#7c6f64; --blue:#076678;
+    --green:#79740e; --yellow:#b57614; --red:#cc241d; --cyan:#427b58;
+  }
+  :root[data-theme="arc-dark"]{
     --bg:#2f343f; --panel:#383c4a; --panel2:#404552; --border:#4b5164;
     --text:#d3dae3; --muted:#7c818c; --blue:#5294e2;
     --green:#5ca75b; --yellow:#f6ab32; --red:#e14245; --cyan:#73c5e2;
+  }
+  :root[data-theme="arc-light"]{
+    --bg:#f5f6f7; --panel:#fbfbfc; --panel2:#e7e8eb; --border:#d3d4d8;
+    --text:#2e3436; --muted:#7a7f85; --blue:#5294e2;
+    --green:#5ca75b; --yellow:#c08a0e; --red:#e14245; --cyan:#2e8fb8;
   }
   *{ box-sizing:border-box; }
   html,body{
@@ -41,6 +57,13 @@
     color:var(--muted); font-size:13px; text-decoration:none;
   }
   header.site nav a:hover{ color:var(--blue); }
+  header.site select{
+    background:var(--panel2); color:var(--text); border:1px solid var(--border);
+    border-radius:4px; font-family:inherit; font-size:12px; padding:2px 6px;
+    cursor:pointer; outline:none;
+  }
+  header.site select:hover{ border-color:var(--blue); }
+  header.site select option{ background:var(--panel2); color:var(--text); }
 
   footer.site{
     display:flex; align-items:center; justify-content:center; gap:18px;
@@ -62,7 +85,7 @@
     background:var(--panel2); border-bottom:1px solid var(--border);
   }
   .dot{ width:11px; height:11px; border-radius:50%; }
-  .dot.r{ background:#e14245; } .dot.y{ background:#f6ab32; } .dot.g{ background:#5ca75b; }
+  .dot.r{ background:var(--red); } .dot.y{ background:var(--yellow); } .dot.g{ background:var(--green); }
   .titlebar span{ margin-left:8px; color:var(--muted); font-size:13px; }
 
   #screen{
@@ -125,6 +148,12 @@
     <div class="brand">drkl<span class="dim">.my.id</span></div>
     <nav>
       <a href="tetris.html" target="_blank" rel="noopener">tetris</a>
+      <select id="themeSelect" aria-label="Tema">
+        <option value="gruvbox-dark">Gruvbox Dark</option>
+        <option value="gruvbox-light">Gruvbox Light</option>
+        <option value="arc-dark">Arc Dark</option>
+        <option value="arc-light">Arc Light</option>
+      </select>
     </nav>
   </header>
 
@@ -282,6 +311,7 @@ const HELP = {
   play: 'alias dari tetris',
   clear: 'bersihkan layar',
   whoami: 'menampilkan nama pengguna',
+  theme: 'ganti tema warna: theme gruvbox-dark | gruvbox-light | arc-dark | arc-light',
 };
 
 const commands = {
@@ -309,6 +339,7 @@ const commands = {
   <li><span class="ok">history</span> — riwayat perintah</li>
   <li><span class="ok">tetris</span> — buka game Tetris</li>
   <li><span class="ok">whoami</span> — siapa Anda?</li>
+  <li><span class="ok">theme [nama]</span> — ganti tema warna</li>
   <li><span class="ok">clear</span> — bersihkan layar</li>
 </ul>
 Gunakan <span class="ok">Tab</span> untuk autocomplete, <span class="ok">↑/↓</span> riwayat, <span class="ok">Ctrl+L</span> clear.`);
@@ -332,7 +363,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
 /'\\_   _/\`\\  <span class="blue">Uptime</span>: ${upStr}
 \\___)=(___/  <span class="blue">Shell</span>: drkl-sh
              <span class="blue">Font</span>: JetBrains Mono
-             <span class="blue">Theme</span>: Arc Dark</pre>`);  },
+             <span class="blue">Theme</span>: ${THEMES[document.documentElement.dataset.theme] || 'Gruvbox Dark'}</pre>`);  },
   banner(){
     print(`<pre class="ok">${figlet('drkl')}</pre>`);
     print('Selamat datang di <span class="ok">drkl.my.id</span>. Ketik <span class="ok">help</span> untuk mulai.');
@@ -392,6 +423,19 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   play(){ commands.tetris(); },
   clear(){ log.innerHTML = ''; },
   whoami(){ print('tomi'); },
+  theme(args){
+    const cur = document.documentElement.dataset.theme || 'gruvbox-dark';
+    if (!args.length) {
+      print(`Tema aktif: <span class="ok">${THEMES[cur]}</span> — <span class="muted">${cur}</span>`);
+      print('Ganti: <span class="ok">theme gruvbox-dark</span> | <span class="ok">gruvbox-light</span> | <span class="ok">arc-dark</span> | <span class="ok">arc-light</span>');
+      return;
+    }
+    const t = args[0].toLowerCase();
+    if (!THEMES[t]) { print(`theme: tema tidak dikenal "${esc(args[0])}"`, 'err'); return; }
+    setTheme(t);
+    themeSelect.value = t;
+    print(`Tema diganti ke <span class="ok">${THEMES[t]}</span>.`);
+  },
 };
 
 // --- Autocomplete & suggestion ala fish ---
@@ -576,6 +620,33 @@ input.addEventListener('keydown', (e) => {
 
 document.getElementById('term').addEventListener('click', () => input.focus());
 refreshPrompt();
+
+// --- Tema ---
+const THEME_IDS = ['gruvbox-dark', 'gruvbox-light', 'arc-dark', 'arc-light'];
+const THEMES = {
+  'gruvbox-dark': 'Gruvbox Dark',
+  'gruvbox-light': 'Gruvbox Light',
+  'arc-dark': 'Arc Dark',
+  'arc-light': 'Arc Light',
+};
+const themeSelect = document.getElementById('themeSelect');
+themeSelect.value = document.documentElement.dataset.theme || 'gruvbox-dark';
+if (!THEME_IDS.includes(themeSelect.value)) {
+  themeSelect.value = 'gruvbox-dark';
+  document.documentElement.dataset.theme = 'gruvbox-dark';
+}
+function setTheme(t){
+  if (!THEMES[t]) return;
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('drkl_theme', t);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if (bg) meta.content = bg;
+  }
+}
+setTheme(themeSelect.value);
+themeSelect.addEventListener('change', () => setTheme(themeSelect.value));
 </script>
 
 </body>

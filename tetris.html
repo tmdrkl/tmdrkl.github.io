@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="gruvbox-dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,7 +8,36 @@
 <meta property="og:description" content="Tetris sederhana dari drkl.my.id. Main langsung di browser.">
 <meta property="og:type" content="website">
 <title>Tetris</title>
+<script>try{var t=localStorage.getItem('drkl_theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
+  :root[data-theme="gruvbox-dark"]{
+    --bg:#282828; --panel:#3c3836; --panel2:#504945; --border:#665c54;
+    --text:#ebdbb2; --muted:#a89984; --blue:#83a598;
+    --green:#b8bb26; --yellow:#fabd2f; --red:#fb4934; --cyan:#8ec07c;
+    --btn-bg:#83a598; --btn-text:#1d2021; --btn-hover:#8ec07c;
+    --T-I:#8ec07c; --T-O:#fabd2f; --T-T:#d3869b; --T-S:#b8bb26; --T-Z:#fb4934; --T-J:#83a598; --T-L:#fe8019;
+  }
+  :root[data-theme="gruvbox-light"]{
+    --bg:#fbf1c7; --panel:#ebdbb2; --panel2:#d5c4a1; --border:#bdae93;
+    --text:#282828; --muted:#7c6f64; --blue:#076678;
+    --green:#79740e; --yellow:#b57614; --red:#cc241d; --cyan:#427b58;
+    --btn-bg:#076678; --btn-text:#fbf1c7; --btn-hover:#427b58;
+    --T-I:#427b58; --T-O:#b57614; --T-T:#8f3f71; --T-S:#79740e; --T-Z:#cc241d; --T-J:#076678; --T-L:#af3a03;
+  }
+  :root[data-theme="arc-dark"]{
+    --bg:#2f343f; --panel:#383c4a; --panel2:#404552; --border:#4b5164;
+    --text:#d3dae3; --muted:#7c818c; --blue:#5294e2;
+    --green:#5ca75b; --yellow:#f6ab32; --red:#e14245; --cyan:#73c5e2;
+    --btn-bg:#5294e2; --btn-text:#ffffff; --btn-hover:#73c5e2;
+    --T-I:#73c5e2; --T-O:#f6ab32; --T-T:#a660c3; --T-S:#5ca75b; --T-Z:#e14245; --T-J:#5294e2; --T-L:#f27835;
+  }
+  :root[data-theme="arc-light"]{
+    --bg:#f5f6f7; --panel:#fbfbfc; --panel2:#e7e8eb; --border:#d3d4d8;
+    --text:#2e3436; --muted:#7a7f85; --blue:#5294e2;
+    --green:#5ca75b; --yellow:#c08a0e; --red:#e14245; --cyan:#2e8fb8;
+    --btn-bg:#5294e2; --btn-text:#ffffff; --btn-hover:#73c5e2;
+    --T-I:#2e8fb8; --T-O:#c08a0e; --T-T:#a660c3; --T-S:#5ca75b; --T-Z:#e14245; --T-J:#5294e2; --T-L:#d0601f;
+  }
   * { touch-action: manipulation; }
   body {
     margin: 0;
@@ -17,9 +46,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #2f343f;
+    background: var(--bg);
     font-family: 'Courier New', monospace;
-    color: #d3dae3;
+    color: var(--text);
     padding: 16px;
     box-sizing: border-box;
   }
@@ -48,8 +77,8 @@
       padding-left: max(10px, env(safe-area-inset-left));
       padding-right: max(10px, env(safe-area-inset-right));
       padding-bottom: max(10px, env(safe-area-inset-bottom));
-      background: #2f343f;
-      border-top: 2px solid #4b5164;
+      background: var(--bg);
+      border-top: 2px solid var(--border);
     }
     .touchbtns button { height: 56px; }
     body {
@@ -62,8 +91,8 @@
     .box { padding: 8px; margin-bottom: 8px; }
   }
   #board {
-    background: #383c4a;
-    border: 4px solid #4b5164;
+    background: var(--panel);
+    border: 4px solid var(--border);
     border-radius: 8px;
     display: grid;
     grid-template-columns: repeat(10, 28px);
@@ -74,7 +103,7 @@
   .cell {
     width: 28px;
     height: 28px;
-    background: #2f343f;
+    background: var(--bg);
     border-radius: 2px;
   }
   .panel {
@@ -83,11 +112,11 @@
   .panel h1 {
     font-size: 20px;
     margin-bottom: 8px;
-    color: #f6ab32;
+    color: var(--yellow);
   }
   .box {
-    background: #404552;
-    border: 2px solid #4b5164;
+    background: var(--panel2);
+    border: 2px solid var(--border);
     border-radius: 8px;
     padding: 12px;
     margin-bottom: 16px;
@@ -95,7 +124,7 @@
   .box h3 {
     margin: 0 0 8px 0;
     font-size: 14px;
-    color: #73c5e2;
+    color: var(--cyan);
   }
   #next {
     display: grid;
@@ -105,10 +134,10 @@
     margin: 0 auto;
   }
   #next .cell { width: 20px; height: 20px; }
-  .score { font-size: 22px; color: #add488; }
-  .high { font-size: 13px; color: #f6ab32; margin-top: 4px; }
-  .level { font-size: 13px; color: #5294e2; margin-top: 2px; }
-  .controls { font-size: 12px; line-height: 1.6; color: #9ba2ab; }
+  .score { font-size: 22px; color: var(--green); }
+  .high { font-size: 13px; color: var(--yellow); margin-top: 4px; }
+  .level { font-size: 13px; color: var(--blue); margin-top: 2px; }
+  .controls { font-size: 12px; line-height: 1.6; color: var(--muted); }
   .touchbtns {
     display: none;
     grid-template-columns: repeat(4, 1fr);
@@ -119,27 +148,40 @@
     width: 100%;
     padding: 14px 0;
     font-size: 20px;
-    background: #404552;
-    color: #d3dae3;
+    background: var(--panel2);
+    color: var(--text);
     border: none;
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
     font-family: inherit;
   }
-  .touchbtns button:active { background: #4b5164; }
+  .touchbtns button:active { background: var(--border); }
   button {
     width: 100%;
     padding: 8px;
-    background: #5294e2;
-    color: #ffffff;
+    background: var(--btn-bg);
+    color: var(--btn-text);
     border: none;
     border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
     font-family: inherit;
   }
-  button:hover { background: #73c5e2; }
+  button:hover { background: var(--btn-hover); }
+  #themeSelect{
+    width: 100%;
+    padding: 8px;
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+  }
+  #themeSelect option{ background: var(--panel2); color: var(--text); }
   #overlay {
     position: fixed;
     inset: 0;
@@ -149,16 +191,16 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    color: #e14245;
+    color: var(--red);
     font-size: 28px;
     text-align: center;
   }
   #overlay .sub {
     font-size: 16px;
-    color: #add488;
+    color: var(--green);
     margin-top: 10px;
   }
-  #overlay .sub.blue { color: #5294e2; }
+  #overlay .sub.blue { color: var(--blue); }
   #overlay button {
     width: auto;
     margin-top: 24px;
@@ -209,6 +251,15 @@
       Geser bawah : turun / jatuh cepat<br>
       Atau pakai tombol di bawah papan
     </div>
+    <div class="box">
+      <h3>TEMA</h3>
+      <select id="themeSelect" aria-label="Tema">
+        <option value="gruvbox-dark">Gruvbox Dark</option>
+        <option value="gruvbox-light">Gruvbox Light</option>
+        <option value="arc-dark">Arc Dark</option>
+        <option value="arc-light">Arc Light</option>
+      </select>
+    </div>
     <button id="startBtn">Mulai / Restart</button>
     <button id="musicBtn">🔊 Musik: ON</button>
   </div>
@@ -240,10 +291,19 @@ const BASE_INTERVAL = 600;
 const MIN_INTERVAL = 100;
 const LEVEL_LINES = 10;
 
-const COLORS = {
-  I: '#73c5e2', O: '#f6ab32', T: '#a660c3',
-  S: '#5ca75b', Z: '#e14245', J: '#5294e2', L: '#f27835'
-};
+let COLORS = {};
+function refreshColors(){
+  const cs = getComputedStyle(document.documentElement);
+  COLORS = {
+    I: cs.getPropertyValue('--T-I').trim(),
+    O: cs.getPropertyValue('--T-O').trim(),
+    T: cs.getPropertyValue('--T-T').trim(),
+    S: cs.getPropertyValue('--T-S').trim(),
+    Z: cs.getPropertyValue('--T-Z').trim(),
+    J: cs.getPropertyValue('--T-J').trim(),
+    L: cs.getPropertyValue('--T-L').trim(),
+  };
+}
 
 const SHAPES = {
   I: [[1,1,1,1]],
@@ -391,7 +451,6 @@ function randomPiece() {
   return {
     type,
     shape: SHAPES[type].map(r => r.slice()),
-    color: COLORS[type],
     row: 0,
     col: Math.floor((COLS - SHAPES[type][0].length) / 2)
   };
@@ -429,13 +488,13 @@ function ghostRow() {
 }
 
 function lockPiece() {
-  const { shape, row, col, color } = current;
+  const { shape, row, col, type } = current;
   for (let r = 0; r < shape.length; r++) {
     for (let c = 0; c < shape[r].length; c++) {
       if (shape[r][c]) {
         const nr = row + r, nc = col + c;
         if (nr < 0) { endGame(); return; }
-        grid[nr][nc] = color;
+        grid[nr][nc] = type;
       }
     }
   }
@@ -486,12 +545,13 @@ function draw() {
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const el = cellEls[r][c];
-      el.style.background = grid[r][c] || '#2f343f';
+      el.style.background = grid[r][c] ? COLORS[grid[r][c]] : 'var(--bg)';
       el.style.boxShadow = '';
     }
   }
   if (running && current && !gameOver && !paused) {
-    const { shape, row, col, color } = current;
+    const { shape, row, col, type } = current;
+    const color = COLORS[type];
     const gRow = ghostRow();
     for (let r = 0; r < shape.length; r++) {
       for (let c = 0; c < shape[r].length; c++) {
@@ -527,14 +587,14 @@ function drawNext() {
   const offC = Math.floor((size - shape[0].length) / 2);
   for (let r = 0; r < shape.length; r++) {
     for (let c = 0; c < shape[r].length; c++) {
-      if (shape[r][c]) grid4[r + offR][c + offC] = next.color;
+      if (shape[r][c]) grid4[r + offR][c + offC] = COLORS[next.type];
     }
   }
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
       const div = document.createElement('div');
       div.className = 'cell';
-      div.style.background = grid4[r][c] || '#2f343f';
+      div.style.background = grid4[r][c] || 'var(--bg)';
       nextEl.appendChild(div);
     }
   }
@@ -720,7 +780,24 @@ boardEl.addEventListener('touchend', (e) => {
   }
 }, { passive: true });
 
+// --- Tema ---
+const THEME_IDS = ['gruvbox-dark', 'gruvbox-light', 'arc-dark', 'arc-light'];
+const themeSelect = document.getElementById('themeSelect');
+themeSelect.value = document.documentElement.dataset.theme || 'gruvbox-dark';
+if (!THEME_IDS.includes(themeSelect.value)) {
+  themeSelect.value = 'gruvbox-dark';
+  document.documentElement.dataset.theme = 'gruvbox-dark';
+}
+themeSelect.addEventListener('change', () => {
+  document.documentElement.dataset.theme = themeSelect.value;
+  localStorage.setItem('drkl_theme', themeSelect.value);
+  refreshColors();
+  draw();
+  drawNext();
+});
+
 buildBoard();
+refreshColors();
 startGame();
 </script>
 
