@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="gruvbox-dark">
+<html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,35 +8,13 @@
 <meta property="og:description" content="Tetris sederhana dari drkl.my.id. Main langsung di browser.">
 <meta property="og:type" content="website">
 <title>Tetris</title>
-<script>try{var t=localStorage.getItem('drkl_theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
-  :root[data-theme="gruvbox-dark"]{
-    --bg:#282828; --panel:#3c3836; --panel2:#504945; --border:#665c54;
-    --text:#ebdbb2; --muted:#a89984; --blue:#83a598;
-    --green:#b8bb26; --yellow:#fabd2f; --red:#fb4934; --cyan:#8ec07c;
-    --btn-bg:#83a598; --btn-text:#1d2021; --btn-hover:#8ec07c;
-    --T-I:#8ec07c; --T-O:#fabd2f; --T-T:#d3869b; --T-S:#b8bb26; --T-Z:#fb4934; --T-J:#83a598; --T-L:#fe8019;
-  }
-  :root[data-theme="gruvbox-light"]{
-    --bg:#fbf1c7; --panel:#ebdbb2; --panel2:#d5c4a1; --border:#bdae93;
-    --text:#282828; --muted:#7c6f64; --blue:#076678;
-    --green:#79740e; --yellow:#b57614; --red:#cc241d; --cyan:#427b58;
-    --btn-bg:#076678; --btn-text:#fbf1c7; --btn-hover:#427b58;
-    --T-I:#427b58; --T-O:#b57614; --T-T:#8f3f71; --T-S:#79740e; --T-Z:#cc241d; --T-J:#076678; --T-L:#af3a03;
-  }
-  :root[data-theme="arc-dark"]{
-    --bg:#2f343f; --panel:#383c4a; --panel2:#404552; --border:#4b5164;
-    --text:#d3dae3; --muted:#7c818c; --blue:#5294e2;
-    --green:#5ca75b; --yellow:#f6ab32; --red:#e14245; --cyan:#73c5e2;
-    --btn-bg:#5294e2; --btn-text:#ffffff; --btn-hover:#73c5e2;
-    --T-I:#73c5e2; --T-O:#f6ab32; --T-T:#a660c3; --T-S:#5ca75b; --T-Z:#e14245; --T-J:#5294e2; --T-L:#f27835;
-  }
-  :root[data-theme="arc-light"]{
-    --bg:#f5f6f7; --panel:#fbfbfc; --panel2:#e7e8eb; --border:#d3d4d8;
-    --text:#2e3436; --muted:#7a7f85; --blue:#5294e2;
-    --green:#5ca75b; --yellow:#c08a0e; --red:#e14245; --cyan:#2e8fb8;
-    --btn-bg:#5294e2; --btn-text:#ffffff; --btn-hover:#73c5e2;
-    --T-I:#2e8fb8; --T-O:#c08a0e; --T-T:#a660c3; --T-S:#5ca75b; --T-Z:#e14245; --T-J:#5294e2; --T-L:#d0601f;
+  :root{
+    --bg:#1f1f28; --panel:#2a2a37; --panel2:#363646; --border:#54546d;
+    --text:#dcd7ba; --muted:#8a8980; --blue:#7e9cd8;
+    --green:#98bb6c; --yellow:#e6c384; --red:#e46876; --cyan:#6a9589;
+    --btn-bg:#7e9cd8; --btn-text:#16161d; --btn-hover:#6a9589;
+    --T-I:#6a9589; --T-O:#e6c384; --T-T:#957fb8; --T-S:#98bb6c; --T-Z:#e46876; --T-J:#7e9cd8; --T-L:#ff9e3b;
   }
   * { touch-action: manipulation; }
   body {
@@ -169,19 +147,6 @@
     font-family: inherit;
   }
   button:hover { background: var(--btn-hover); }
-  #themeSelect{
-    width: 100%;
-    padding: 8px;
-    background: var(--panel2);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 13px;
-    cursor: pointer;
-    outline: none;
-  }
-  #themeSelect option{ background: var(--panel2); color: var(--text); }
   #overlay {
     position: fixed;
     inset: 0;
@@ -250,15 +215,6 @@
       Tap papan : putar<br>
       Geser bawah : turun / jatuh cepat<br>
       Atau pakai tombol di bawah papan
-    </div>
-    <div class="box">
-      <h3>TEMA</h3>
-      <select id="themeSelect" aria-label="Tema">
-        <option value="gruvbox-dark">Gruvbox Dark</option>
-        <option value="gruvbox-light">Gruvbox Light</option>
-        <option value="arc-dark">Arc Dark</option>
-        <option value="arc-light">Arc Light</option>
-      </select>
     </div>
     <button id="startBtn">Mulai / Restart</button>
     <button id="musicBtn">🔊 Musik: ON</button>
@@ -779,22 +735,6 @@ boardEl.addEventListener('touchend', (e) => {
     else if (dy > SWIPE_THRESHOLD) move(1, 0);
   }
 }, { passive: true });
-
-// --- Tema ---
-const THEME_IDS = ['gruvbox-dark', 'gruvbox-light', 'arc-dark', 'arc-light'];
-const themeSelect = document.getElementById('themeSelect');
-themeSelect.value = document.documentElement.dataset.theme || 'gruvbox-dark';
-if (!THEME_IDS.includes(themeSelect.value)) {
-  themeSelect.value = 'gruvbox-dark';
-  document.documentElement.dataset.theme = 'gruvbox-dark';
-}
-themeSelect.addEventListener('change', () => {
-  document.documentElement.dataset.theme = themeSelect.value;
-  localStorage.setItem('drkl_theme', themeSelect.value);
-  refreshColors();
-  draw();
-  drawNext();
-});
 
 buildBoard();
 refreshColors();
