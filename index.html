@@ -4,11 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>tomi@drkl ~ </title>
-<meta name="description" content="Terminal pribadi drkl.my.id — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
+<meta name="description" content="Terminal pribadi tmdrkl.github.io — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
 <meta property="og:title" content="tomi@drkl ~">
-<meta property="og:description" content="Terminal pribadi drkl.my.id — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
+<meta property="og:description" content="Terminal pribadi tmdrkl.github.io — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://drkl.my.id/">
+<meta property="og:url" content="https://tmdrkl.github.io/">
+<meta property="og:site_name" content="tmdrkl.github.io">
+<meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#1f1f28">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%231f1f28'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%2398bb6c' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -24,7 +26,10 @@
     font-family:'JetBrains Mono', ui-monospace, monospace; font-size:15px;
   }
   body{ display:flex; justify-content:center; align-items:flex-start; padding:40px 16px; }
-  a{ color:var(--blue); }
+  a{ color:var(--blue); transition:color .15s; }
+  a:focus-visible, button:focus-visible, input:focus-visible{
+    outline:2px solid var(--blue); outline-offset:2px;
+  }
 
   .wrap{ width:100%; max-width:700px; }
 
@@ -55,7 +60,7 @@
   .term{
     width:100%; max-width:700px;
     background:var(--panel); border:1px solid var(--border); border-radius:8px;
-    box-shadow:0 20px 50px rgba(0,0,0,.35); overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,.35), 0 0 40px rgba(126,156,216,.10); overflow:hidden;
   }
   .titlebar{
     display:flex; align-items:center; gap:8px; padding:10px 14px;
@@ -84,6 +89,7 @@
   .blue{ color:var(--blue); }
   .tree{ color:var(--muted); }
   pre{ margin:0 0 4px; font-family:inherit; font-size:12px; line-height:1.25; }
+  .banner{ text-shadow:0 0 14px rgba(152,188,108,.35); }
 
   #inputline{ display:flex; align-items:center; gap:6px; }
   #inputline .prompt{ flex-shrink:0; }
@@ -92,6 +98,7 @@
     width:100%; padding:0; background:transparent; border:none; outline:none;
     color:var(--text); font-family:inherit; font-size:15px; caret-color:var(--blue);
     position:relative; z-index:1;
+    animation:caretblink 1s step-end infinite;
   }
   #suggest{
     position:absolute; left:0; top:0; bottom:0; z-index:0;
@@ -109,20 +116,35 @@
   ul.helplist{ margin:4px 0 0; padding-left:18px; }
   ul.helplist li{ margin:2px 0; }
 
+  #rain{
+    position:fixed; inset:0; z-index:-1; width:100%; height:100%;
+    pointer-events:none;
+  }
+  @keyframes caretblink{ 50%{ caret-color:transparent; } }
+
   @media (max-width: 480px){
     body{ padding:16px 10px; font-size:14px; }
     header.site nav{ gap:12px; }
     #screen{ height: 360px; padding: 14px; }
     .titlebar span{ display:none; }
+    #cmdInput{ font-size:16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    #cmdInput{ animation:none; }
+    #rain{ display:none; }
+    .term{ box-shadow:0 20px 50px rgba(0,0,0,.35); }
   }
 </style>
 </head>
 <body>
 
+<canvas id="rain"></canvas>
+
 <div class="wrap">
 
   <header class="site">
-    <div class="brand">drkl<span class="dim">.my.id</span></div>
+    <div class="brand">tmdrkl<span class="dim">.github.io</span></div>
     <nav>
       <a href="tetris.html" target="_blank" rel="noopener">tetris</a>
     </nav>
@@ -133,13 +155,12 @@
       <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
       <span>tomi@drkl: ~</span>
     </div>
-    <div id="screen">
-      <div class="row muted">Selamat datang di terminal drkl.my.id. Ketik <span class="ok">help</span> untuk daftar perintah.</div>
+    <div id="screen" role="log" aria-live="polite">
       <div id="log"></div>
       <div class="row" id="inputline">
         <span class="prompt" id="prompt">tomi@drkl:~$</span>
         <div class="inputwrap">
-          <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autofocus />
+          <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autofocus aria-label="Perintah terminal" />
           <span id="suggest"></span>
         </div>
       </div>
@@ -184,14 +205,14 @@ function esc(s){
 const FS = {
   'about.txt': 'Tomi — suka semua hal yang baru dan seru.',
   'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.my.id',
-  'README.md': '# drkl.my.id\n\nTerminal ini sendiri adalah proyek drkl.my.id.\nAda game Tetris juga — jalankan: tetris',
+  'README.md': '# tmdrkl.github.io\n\nTerminal ini sendiri adalah proyek tmdrkl.github.io.\nAda game Tetris juga — jalankan: tetris',
   'projects': {
     'tetris': 'Game Tetris sederhana. Buka lewat perintah: tetris',
     'terminal': 'Ini dia — terminal web yang sedang Anda pakai.',
   },
   'notes': {
     'todo.txt': '- push website\n- bikin blog\n- makan siang',
-    'ide.txt': 'coba bikin game lain di drkl.my.id',
+    'ide.txt': 'coba bikin game lain di tmdrkl.github.io',
   },
 };
 let cwd = ['~'];
@@ -327,7 +348,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     print(`<pre>   .--.
   |o_o |   <span class="ok">tomi@drkl</span>
   |:_/ |   <span class="muted">----------</span>
- //   \\ \\   <span class="blue">OS</span>: drkl.my.id 1.0
+ //   \\ \\   <span class="blue">OS</span>: tmdrkl.github.io 1.0
 (|     | )  <span class="blue">Host</span>: Terminal web
 /'\\_   _/\`\\  <span class="blue">Uptime</span>: ${upStr}
 \\___)=(___/  <span class="blue">Shell</span>: drkl-sh
@@ -335,7 +356,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
              <span class="blue">Theme</span>: Kanagawa</pre>`);  },
   banner(){
     print(`<pre class="ok">${figlet('drkl')}</pre>`);
-    print('Selamat datang di <span class="ok">drkl.my.id</span>. Ketik <span class="ok">help</span> untuk mulai.');
+    print('Selamat datang di <span class="ok">tmdrkl.github.io</span>. Ketik <span class="ok">help</span> untuk mulai.');
   },
   date(){
     print(new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'long' }));
@@ -414,6 +435,7 @@ function textWidth(s){
 const commandList = Object.keys(commands);
 const PATH_CMDS = { cd: true, ls: true, cat: true, tree: true };
 let hist = [];
+try { const h = JSON.parse(sessionStorage.getItem('drkl_hist')); if (Array.isArray(h)) hist = h; } catch (e) {}
 let histIdx = -1;
 let pendingHist = '';
 let tabIdx = -1;
@@ -565,7 +587,10 @@ input.addEventListener('keydown', (e) => {
   renderSuggestion();
   if (!raw) return;
   echo(raw);
-  if (raw !== hist[hist.length - 1]) hist.push(raw);
+  if (raw !== hist[hist.length - 1]) {
+    hist.push(raw);
+    try { sessionStorage.setItem('drkl_hist', JSON.stringify(hist.slice(-200))); } catch (e) {}
+  }
   histIdx = -1;
   const parts = raw.split(/\s+/);
   const key = parts[0].toLowerCase();
@@ -576,6 +601,72 @@ input.addEventListener('keydown', (e) => {
 
 document.getElementById('term').addEventListener('click', () => input.focus());
 refreshPrompt();
+
+// --- Boot ---
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const BOOT_LINES = [
+  `<pre class="ok banner">${figlet('drkl')}</pre>`,
+  'Selamat datang di <span class="ok">tmdrkl.github.io</span>.',
+  '<span class="muted">drklOS 1.0.0 — Shell drkl-sh · Font JetBrains Mono · Tema Kanagawa</span>',
+  'Ketik <span class="ok">help</span> untuk daftar perintah.',
+];
+let bootDone = false;
+let bootTimers = [];
+let bootIdx = 0;
+function finishBoot(){
+  if (bootDone) return;
+  bootDone = true;
+  bootTimers.forEach(clearTimeout);
+  bootTimers = [];
+  for (let i = bootIdx; i < BOOT_LINES.length; i++) print(BOOT_LINES[i]);
+}
+if (reducedMotion) {
+  bootDone = true;
+  BOOT_LINES.forEach(print);
+} else {
+  BOOT_LINES.forEach((html, i) => {
+    bootTimers.push(setTimeout(() => {
+      bootIdx = i + 1;
+      print(html);
+      if (i === BOOT_LINES.length - 1) { bootDone = true; bootTimers = []; }
+    }, 120 + i * 240));
+  });
+  ['keydown', 'click', 'touchstart'].forEach(ev =>
+    document.addEventListener(ev, finishBoot, { once: true, passive: true }));
+}
+
+// --- Matrix rain ---
+const rainCanvas = document.getElementById('rain');
+if (rainCanvas && !reducedMotion && window.innerWidth > 640) {
+  const rctx = rainCanvas.getContext('2d');
+  const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789$#@%&+=;:~';
+  let rcols = 0, rdrops = [], rraf = null, rrunning = false;
+  function rainResize(){
+    rainCanvas.width = window.innerWidth;
+    rainCanvas.height = window.innerHeight;
+    rcols = Math.floor(rainCanvas.width / 16);
+    rdrops = Array.from({length: rcols}, () => Math.floor(Math.random() * -60));
+  }
+  function rainTick(){
+    rctx.fillStyle = 'rgba(31,31,40,0.10)';
+    rctx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
+    rctx.font = '14px monospace';
+    for (let i = 0; i < rcols; i++) {
+      rctx.fillStyle = 'rgba(152,188,108,0.45)';
+      rctx.fillText(CHARS[Math.floor(Math.random() * CHARS.length)], i * 16, rdrops[i] * 16);
+      if (rdrops[i] * 16 > rainCanvas.height && Math.random() > 0.975) rdrops[i] = 0;
+      rdrops[i]++;
+    }
+    rraf = requestAnimationFrame(rainTick);
+  }
+  rainResize();
+  window.addEventListener('resize', rainResize);
+  rainTick();
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { cancelAnimationFrame(rraf); rrunning = false; }
+    else if (!rrunning) { rrunning = true; rainTick(); }
+  });
+}
 </script>
 
 </body>

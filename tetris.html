@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="description" content="Tetris sederhana dari drkl.my.id. Main langsung di browser.">
-<meta property="og:title" content="Tetris drkl.my.id">
-<meta property="og:description" content="Tetris sederhana dari drkl.my.id. Main langsung di browser.">
+<meta name="description" content="Tetris sederhana dari tmdrkl.github.io. Main langsung di browser.">
+<meta property="og:title" content="Tetris tmdrkl.github.io">
+<meta property="og:description" content="Tetris sederhana dari tmdrkl.github.io. Main langsung di browser.">
 <meta property="og:type" content="website">
+<meta name="theme-color" content="#1f1f28">
 <title>Tetris</title>
 <style>
   :root{
@@ -112,13 +113,23 @@
     margin: 0 auto;
   }
   #next .cell { width: 20px; height: 20px; }
+  #hold {
+    display: grid;
+    grid-template-columns: repeat(4, 20px);
+    grid-template-rows: repeat(4, 20px);
+    gap: 1px;
+    margin: 0 auto;
+  }
+  #hold .cell { width: 20px; height: 20px; }
+  .lines { font-size: 13px; color: var(--cyan); margin-top: 2px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   .score { font-size: 22px; color: var(--green); }
   .high { font-size: 13px; color: var(--yellow); margin-top: 4px; }
   .level { font-size: 13px; color: var(--blue); margin-top: 2px; }
   .controls { font-size: 12px; line-height: 1.6; color: var(--muted); }
   .touchbtns {
     display: none;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 8px;
     margin-bottom: 16px;
   }
@@ -177,6 +188,9 @@
     100% { filter: brightness(1); }
   }
   .clearflash { animation: flash 0.25s linear; }
+  @media (prefers-reduced-motion: reduce) {
+    .clearflash { animation: none; }
+  }
 </style>
 </head>
 <body>
@@ -190,22 +204,29 @@
       <div class="score" id="score">0</div>
       <div class="high">Rekor: <span id="highScore">0</span></div>
       <div class="level">Level: <span id="level">1</span></div>
+      <div class="lines">Baris: <span id="lines">0</span></div>
     </div>
     <div class="box">
       <h3>BERIKUTNYA</h3>
       <div id="next"></div>
+    </div>
+    <div class="box">
+      <h3>HOLD</h3>
+      <div id="hold"></div>
     </div>
     <div class="touchbtns" id="touchBtns">
       <button id="btnLeft" aria-label="Kiri">◀</button>
       <button id="btnRight" aria-label="Kanan">▶</button>
       <button id="btnDown" aria-label="Turun">▼</button>
       <button id="btnRotate" aria-label="Putar">↻</button>
+      <button id="btnHold" aria-label="Tahan">⇄</button>
     </div>
     <div class="box controls">
       <h3>KONTROL</h3>
       ← → : geser<br>
       ↓ : turun cepat<br>
       ↑ : putar<br>
+      C : hold<br>
       Spasi : jatuh instan<br>
       P : pause
     </div>
@@ -217,6 +238,7 @@
       Atau pakai tombol di bawah papan
     </div>
     <button id="startBtn">Mulai / Restart</button>
+    <button id="pauseBtn">⏸ Pause</button>
     <button id="musicBtn">🔊 Musik: ON</button>
   </div>
 </div>
@@ -240,6 +262,9 @@ const overlaySub = document.getElementById('overlaySub');
 const overlayBtn = document.getElementById('overlayBtn');
 const startBtn = document.getElementById('startBtn');
 const musicBtn = document.getElementById('musicBtn');
+const holdEl = document.getElementById('hold');
+const linesEl = document.getElementById('lines');
+const pauseBtn = document.getElementById('pauseBtn');
 musicBtn.textContent = localStorage.getItem('tetris_music_tmdrkl') !== '0' ? '🔊 Musik: ON' : '🔇 Musik: OFF';
 
 const HIGHSCORE_KEY = 'tetris_highscore_tmdrkl';
@@ -272,6 +297,7 @@ const SHAPES = {
 };
 
 let grid, current, next, score, level, totalLines, dropInterval, gameOver, paused, running;
+let hold = null, canHold = true;
 let cellEls = [];
 let highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0', 10) || 0;
 highScoreEl.textContent = highScore;
@@ -459,6 +485,7 @@ function lockPiece() {
   current = next;
   next = randomPiece();
   drawNext();
+  canHold = true;
   if (collides(current.shape, current.row, current.col)) {
     endGame();
   }
@@ -487,6 +514,7 @@ function clearLines() {
     sfxClear(cleared);
 
     totalLines += cleared;
+    linesEl.textContent = totalLines;
     const prevLevel = level;
     level = Math.floor(totalLines / LEVEL_LINES) + 1;
     if (level > prevLevel) {
@@ -554,6 +582,50 @@ function drawNext() {
       nextEl.appendChild(div);
     }
   }
+}
+
+function drawHold() {
+  holdEl.innerHTML = '';
+  const size = 4;
+  const grid4 = Array.from({length: size}, () => new Array(size).fill(null));
+  if (hold) {
+    const shape = hold.shape;
+    const offR = Math.floor((size - shape.length) / 2);
+    const offC = Math.floor((size - shape[0].length) / 2);
+    for (let r = 0; r < shape.length; r++) {
+      for (let c = 0; c < shape[r].length; c++) {
+        if (shape[r][c]) grid4[r + offR][c + offC] = COLORS[hold.type];
+      }
+    }
+  }
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const div = document.createElement('div');
+      div.className = 'cell';
+      div.style.background = grid4[r][c] || 'var(--bg)';
+      holdEl.appendChild(div);
+    }
+  }
+}
+
+function doHold() {
+  if (!running || gameOver || paused || !canHold) return;
+  if (hold) {
+    const tmp = current;
+    current = hold;
+    hold = tmp;
+  } else {
+    hold = current;
+    current = next;
+    next = randomPiece();
+    drawNext();
+  }
+  current.row = 0;
+  current.col = Math.floor((COLS - current.shape[0].length) / 2);
+  canHold = false;
+  drawHold();
+  draw();
+  if (collides(current.shape, current.row, current.col)) endGame();
 }
 
 function restartTimer() {
@@ -629,6 +701,7 @@ function endGame() {
 function togglePause() {
   if (!running || gameOver) return;
   paused = !paused;
+  pauseBtn.textContent = paused ? '▶ Lanjut' : '⏸ Pause';
   overlay.style.display = paused ? 'flex' : 'none';
   if (paused) {
     overlayText.textContent = 'PAUSE';
@@ -649,18 +722,23 @@ function startGame() {
   score = 0;
   level = 1;
   totalLines = 0;
+  hold = null;
+  canHold = true;
   scoreEl.textContent = 0;
   levelEl.textContent = 1;
+  linesEl.textContent = 0;
   highScoreEl.textContent = highScore;
   gameOver = false;
   paused = false;
   running = true;
+  pauseBtn.textContent = '⏸ Pause';
   overlay.style.display = 'none';
   overlayText.textContent = '';
   overlaySub.textContent = '';
   current = randomPiece();
   next = randomPiece();
   drawNext();
+  drawHold();
   draw();
   restartTimer();
   startMusic();
@@ -678,6 +756,7 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowDown') { e.preventDefault(); move(1, 0); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); doRotate(); }
   else if (e.key === ' ') { e.preventDefault(); hardDrop(); }
+  else if (e.key.toLowerCase() === 'c') { doHold(); }
   else if (e.key.toLowerCase() === 'p' || e.key.toLowerCase() === 'r') {
     if (gameOver) { startGame(); } else { togglePause(); }
   }
@@ -695,15 +774,21 @@ musicBtn.addEventListener('click', () => {
   toggleMusic();
   musicBtn.blur();
 });
+pauseBtn.addEventListener('click', () => {
+  togglePause();
+  pauseBtn.blur();
+});
 
 document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(0, -1); }, { passive: false });
 document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(0, 1); }, { passive: false });
 document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(1, 0); }, { passive: false });
 document.getElementById('btnRotate').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); doRotate(); }, { passive: false });
+document.getElementById('btnHold').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); doHold(); }, { passive: false });
 document.getElementById('btnLeft').addEventListener('mousedown', (e) => { ensureAudio(); move(0, -1); });
 document.getElementById('btnRight').addEventListener('mousedown', (e) => { ensureAudio(); move(0, 1); });
 document.getElementById('btnDown').addEventListener('mousedown', (e) => { ensureAudio(); move(1, 0); });
 document.getElementById('btnRotate').addEventListener('mousedown', (e) => { ensureAudio(); doRotate(); });
+document.getElementById('btnHold').addEventListener('mousedown', (e) => { ensureAudio(); doHold(); });
 
 // --- Swipe gesture langsung di papan (untuk touchscreen) ---
 let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
