@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>tomi@drkl ~ </title>
-<meta name="description" content="Terminal pribadi tmdrkl.github.io — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
+<meta name="description" content="Terminal pribadi drkl.my.id — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
 <meta property="og:title" content="tomi@drkl ~">
-<meta property="og:description" content="Terminal pribadi tmdrkl.github.io — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
+<meta property="og:description" content="Terminal pribadi drkl.my.id — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://tmdrkl.github.io/">
-<meta property="og:site_name" content="tmdrkl.github.io">
+<meta property="og:url" content="https://www.drkl.my.id/">
+<meta property="og:site_name" content="drkl.my.id">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#1f1f28">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%231f1f28'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%2398bb6c' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
@@ -144,7 +144,7 @@
 <div class="wrap">
 
   <header class="site">
-    <div class="brand">tmdrkl<span class="dim">.github.io</span></div>
+    <div class="brand">drkl<span class="dim">.my.id</span></div>
     <nav>
       <a href="tetris.html" target="_blank" rel="noopener">tetris</a>
     </nav>
@@ -205,14 +205,14 @@ function esc(s){
 const FS = {
   'about.txt': 'Tomi — suka semua hal yang baru dan seru.',
   'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.my.id',
-  'README.md': '# tmdrkl.github.io\n\nTerminal ini sendiri adalah proyek tmdrkl.github.io.\nAda game Tetris juga — jalankan: tetris',
+  'README.md': '# drkl.my.id\n\nTerminal ini sendiri adalah proyek drkl.my.id.\nAda game Tetris juga — jalankan: tetris',
   'projects': {
     'tetris': 'Game Tetris sederhana. Buka lewat perintah: tetris',
     'terminal': 'Ini dia — terminal web yang sedang Anda pakai.',
   },
   'notes': {
     'todo.txt': '- push website\n- bikin blog\n- makan siang',
-    'ide.txt': 'coba bikin game lain di tmdrkl.github.io',
+    'ide.txt': 'coba bikin game lain di drkl.my.id',
   },
 };
 let cwd = ['~'];
@@ -348,7 +348,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     print(`<pre>   .--.
   |o_o |   <span class="ok">tomi@drkl</span>
   |:_/ |   <span class="muted">----------</span>
- //   \\ \\   <span class="blue">OS</span>: tmdrkl.github.io 1.0
+ //   \\ \\   <span class="blue">OS</span>: drkl.my.id 1.0
 (|     | )  <span class="blue">Host</span>: Terminal web
 /'\\_   _/\`\\  <span class="blue">Uptime</span>: ${upStr}
 \\___)=(___/  <span class="blue">Shell</span>: drkl-sh
@@ -356,7 +356,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
              <span class="blue">Theme</span>: Kanagawa</pre>`);  },
   banner(){
     print(`<pre class="ok">${figlet('drkl')}</pre>`);
-    print('Selamat datang di <span class="ok">tmdrkl.github.io</span>. Ketik <span class="ok">help</span> untuk mulai.');
+    print('Selamat datang di <span class="ok">drkl.my.id</span>. Ketik <span class="ok">help</span> untuk mulai.');
   },
   date(){
     print(new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'long' }));
@@ -606,7 +606,7 @@ refreshPrompt();
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const BOOT_LINES = [
   `<pre class="ok banner">${figlet('drkl')}</pre>`,
-  'Selamat datang di <span class="ok">tmdrkl.github.io</span>.',
+  'Selamat datang di <span class="ok">drkl.my.id</span>.',
   '<span class="muted">drklOS 1.0.0 — Shell drkl-sh · Font JetBrains Mono · Tema Kanagawa</span>',
   'Ketik <span class="ok">help</span> untuk daftar perintah.',
 ];
