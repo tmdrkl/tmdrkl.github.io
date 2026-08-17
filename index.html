@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>tomi@drkl ~ </title>
-<meta name="description" content="Terminal pribadi drkl.my.id — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
+<meta name="description" content="Personal drkl.my.id terminal — a terminal-style landing page. Tetris, contact, and fun stuff.">
 <meta property="og:title" content="tomi@drkl ~">
-<meta property="og:description" content="Terminal pribadi drkl.my.id — landing page ala terminal. Tetris, kontak, dan hal-hal seru.">
+<meta property="og:description" content="Personal drkl.my.id terminal — a terminal-style landing page. Tetris, contact, and fun stuff.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.drkl.my.id/">
 <meta property="og:site_name" content="drkl.my.id">
@@ -166,7 +166,7 @@
       <div class="row" id="inputline">
         <span class="prompt" id="prompt">tomi@drkl:~$</span>
         <div class="inputwrap">
-          <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autofocus aria-label="Perintah terminal" />
+          <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autofocus aria-label="Terminal command" />
           <span id="suggest"></span>
         </div>
       </div>
@@ -209,16 +209,16 @@ function esc(s){
 
 // --- Sistem file virtual ---
 const FS = {
-  'about.txt': 'Tomi — suka semua hal yang baru dan seru.',
+  'about.txt': 'Tomi — likes everything new and fun.',
   'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.my.id',
-  'README.md': '# drkl.my.id\n\nTerminal ini sendiri adalah proyek drkl.my.id.\nAda game Tetris juga — jalankan: tetris',
+  'README.md': '# drkl.my.id\n\nThis terminal itself is a drkl.my.id project.\nThere is also a Tetris game — run: tetris',
   'projects': {
-    'tetris': 'Game Tetris sederhana. Buka lewat perintah: tetris',
-    'terminal': 'Ini dia — terminal web yang sedang Anda pakai.',
+    'tetris': 'A simple Tetris game. Open it with the command: tetris',
+    'terminal': 'This is it — the web terminal you are using right now.',
   },
   'notes': {
-    'todo.txt': '- push website\n- bikin blog\n- makan siang',
-    'ide.txt': 'coba bikin game lain di drkl.my.id',
+    'todo.txt': '- push website\n- make a blog\n- have lunch',
+    'ide.txt': 'try making another game on drkl.my.id',
   },
 };
 let cwd = ['~'];
@@ -297,31 +297,31 @@ function browserName(){
   if (ua.includes('Firefox/')) return 'Firefox';
   if (ua.includes('Chrome/')) return 'Chrome';
   if (ua.includes('Safari/')) return 'Safari';
-  return 'Browser misterius';
+  return 'Mysterious browser';
 }
 
 const HELP = {
-  help: 'bantuan & detail perintah',
-  about: 'sedikit tentang saya',
-  links: 'kontak & github',
-  neofetch: 'info sistem ala neofetch',
-  banner: 'tampilkan logo drkl',
-  date: 'tanggal & jam sekarang',
-  echo: 'tampilkan teks, mis: echo halo dunia',
-  ls: 'daftar isi direktori, mis: ls, ls projects',
-  cd: 'pindah direktori, mis: cd projects, cd .., cd ~',
-  pwd: 'cetak direktori aktif',
-  cat: 'tampilkan isi file, mis: cat about.txt',
-  tree: 'pohon direktori, mis: tree, tree projects',
-  history: 'riwayat perintah, mis: history -c untuk membersihkan',
-  tetris: 'buka game Tetris di tab baru',
-  play: 'alias dari tetris',
-  clear: 'bersihkan layar',
-  whoami: 'menampilkan nama pengguna',
-  uname: 'info sistem & kernel',
-  sudo: 'jalankan perintah sebagai root (pasti gagal)',
-  exit: 'keluar dari sesi terminal',
-  rm: 'hapus berkas (sistem file read-only)',
+  help: 'help & command details',
+  about: 'a bit about me',
+  links: 'contacts & github',
+  neofetch: 'system info in neofetch style',
+  banner: 'display the drkl logo',
+  date: 'current date & time',
+  echo: 'display text, e.g. echo hello world',
+  ls: 'list directory contents, e.g. ls, ls projects',
+  cd: 'change directory, e.g. cd projects, cd .., cd ~',
+  pwd: 'print working directory',
+  cat: 'show file contents, e.g. cat about.txt',
+  tree: 'directory tree, e.g. tree, tree projects',
+  history: 'command history, e.g. history -c to clear',
+  tetris: 'open the Tetris game in a new tab',
+  play: 'alias for tetris',
+  clear: 'clear the screen',
+  whoami: 'show current username',
+  uname: 'system & kernel info',
+  sudo: 'run a command as root (will definitely fail)',
+  exit: 'exit the terminal session',
+  rm: 'delete files (read-only filesystem)',
 };
 
 const commands = {
@@ -329,19 +329,19 @@ const commands = {
     if (args.length) {
       const h = HELP[args[0].toLowerCase()];
       if (h) print(`<span class="ok">${esc(args[0])}</span> — ${h}`);
-      else print(`help: tidak ada perintah "${esc(args[0])}"`, 'err');
+      else print(`help: no such command "${esc(args[0])}"`, 'err');
       return;
     }
     const items = Object.keys(HELP)
       .map(k => `<li><span class="ok">${esc(k)}</span> — ${esc(HELP[k])}</li>`)
       .join('\n');
-    print(`Perintah yang tersedia:
+    print(`Available commands:
 <ul class="helplist">
 ${items}
 </ul>
-Gunakan <span class="ok">Tab</span> autocomplete, <span class="ok">↑/↓</span> riwayat, <span class="ok">Ctrl+L</span> clear, <span class="ok">Esc</span> tutup saran.`);
+Use <span class="ok">Tab</span> autocomplete, <span class="ok">↑/↓</span> history, <span class="ok">Ctrl+L</span> clear, <span class="ok">Esc</span> to close suggestions.`);
   },
-  about(){ print('Tomi — suka semua hal yang baru dan seru.'); },
+  about(){ print('Tomi — likes everything new and fun.'); },
   links(){
     print(`GitHub: <a href="https://github.com/tmdrkl" target="_blank" rel="noopener">github.com/tmdrkl</a>
 Telegram: <a href="https://t.me/tmdrkl" target="_blank" rel="noopener">@tmdrkl</a>
@@ -349,9 +349,9 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   },
   neofetch(){
     const up = Math.floor((Date.now() - loadTime) / 1000);
-    const upStr = up < 60 ? `${up} detik`
+    const upStr = up < 60 ? `${up}s`
       : up < 3600 ? `${Math.floor(up / 60)}m ${up % 60}s`
-      : `${Math.floor(up / 3600)}j ${Math.floor((up % 3600) / 60)}m`;
+      : `${Math.floor(up / 3600)}h ${Math.floor((up % 3600) / 60)}m`;
     print(`<pre>   .--.
   |o_o |   <span class="ok">tomi@drkl</span>
   |:_/ |   <span class="muted">----------</span>
@@ -364,10 +364,10 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
              <span class="blue">Theme</span>: Kanagawa</pre>`);  },
   banner(){
     print(`<pre class="ok">${figlet('drkl')}</pre>`);
-    print('Selamat datang di <span class="ok">drkl.my.id</span>. Ketik <span class="ok">help</span> untuk mulai.');
+    print('Welcome to <span class="ok">drkl.my.id</span>. Type <span class="ok">help</span> to get started.');
   },
   date(){
-    print(new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'long' }));
+    print(new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' }));
   },
   echo(args){
     print(esc(args.join(' ')));
@@ -376,9 +376,9 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     const p = args[0] ? resolvePath(args[0]) : cwd;
     const node = getNode(p);
     if (node === undefined) { print(`ls: cannot access '${esc(args[0])}': No such file or directory`, 'err'); return; }
-    if (!isDir(node)) { print(`ls: '${esc(args[0])}' bukan direktori`, 'err'); return; }
+    if (!isDir(node)) { print(`ls: '${esc(args[0])}' is not a directory`, 'err'); return; }
     const entries = entryList(node);
-    if (!entries.length) { print('(kosong)', 'muted'); return; }
+    if (!entries.length) { print('(empty)', 'muted'); return; }
     print(entries.map(e => e.dir
       ? `<span class="dir">${esc(e.name)}/</span>`
       : `<span class="muted">${esc(e.name)}</span>`).join('  '));
@@ -395,7 +395,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     print(pwdStr());
   },
   cat(args){
-    if (!args.length) { print('cat: gunakan: cat <file>', 'err'); return; }
+    if (!args.length) { print('cat: usage: cat <file>', 'err'); return; }
     const node = getNode(resolvePath(args[0]));
     if (node === undefined) { print(`cat: ${esc(args[0])}: No such file or directory`, 'err'); return; }
     if (isDir(node)) { print(`cat: ${esc(args[0])}: Is a directory`, 'err'); return; }
@@ -405,7 +405,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     const p = args[0] ? resolvePath(args[0]) : cwd;
     const node = getNode(p);
     if (node === undefined) { print(`tree: no such file or directory: ${esc(args[0] || '')}`, 'err'); return; }
-    if (!isDir(node)) { print(`tree: '${esc(args[0])}' bukan direktori`, 'err'); return; }
+    if (!isDir(node)) { print(`tree: '${esc(args[0])}' is not a directory`, 'err'); return; }
     const lines = [];
     walkTree(node, '', lines, 0);
     print(lines.join('\n'), 'tree');
@@ -415,14 +415,14 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
       hist = [];
       histIdx = -1;
       try { sessionStorage.removeItem('drkl_hist'); } catch (e) {}
-      print('riwayat dibersihkan', 'muted');
+      print('history cleared', 'muted');
       return;
     }
-    if (!hist.length) { print('riwayat masih kosong', 'muted'); return; }
+    if (!hist.length) { print('history is empty', 'muted'); return; }
     print(hist.map((h, i) => `${String(i + 1).padStart(3)}  ${esc(h)}`).join('\n'));
   },
   tetris(){
-    print(`Membuka <span class="ok">tetris.html</span> di tab baru... <a href="tetris.html" target="_blank" rel="noopener">klik di sini kalau tidak otomatis</a>`);
+    print(`Opening <span class="ok">tetris.html</span> in a new tab... <a href="tetris.html" target="_blank" rel="noopener">click here if it doesn't open automatically</a>`);
     window.open('tetris.html', '_blank');
   },
   play(){ commands.tetris(); },
@@ -431,15 +431,15 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   uname(){ print('drklOS 1.0.0 — kernel drkl-sh 6.6.0 (Kanagawa)'); },
   sudo(args){
     const cmd = args.join(' ');
-    if (!cmd) { print('usage: sudo <perintah>', 'err'); return; }
+    if (!cmd) { print('usage: sudo <command>', 'err'); return; }
     if (cmd.includes('rm -rf')) {
-      print('sudo: rm -rf / — nice try, tapi tidak. 🙅', 'err');
+      print('sudo: rm -rf / — nice try, but no. 🙅', 'err');
       return;
     }
-    print(`tomi tidak ada di file sudoers. Insiden ini akan dilaporkan. (perintah: ${esc(cmd)})`, 'err');
+    print(`tomi is not in the sudoers file. This incident will be reported. (command: ${esc(cmd)})`, 'err');
   },
-  exit(){ print('logout — tapi Anda tetap di sini. 😏 Ketik <span class="ok">clear</span> kalau buntu.'); },
-  rm(){ print('rm: sistem file ini read-only. Berkas tidak bisa dihapus.', 'err'); },
+  exit(){ print('logout — but you are still here. 😏 Type <span class="ok">clear</span> if you get stuck.'); },
+  rm(){ print('rm: this filesystem is read-only. Files cannot be deleted.', 'err'); },
 };
 
 // --- Autocomplete & suggestion ala fish ---
@@ -636,7 +636,7 @@ input.addEventListener('keydown', (e) => {
   const key = parts[0].toLowerCase();
   const args = parts.slice(1);
   if (commands[key]) commands[key](args);
-  else print(`command not found: ${esc(raw)}. Ketik <span class="ok">help</span>.`, 'err');
+  else print(`command not found: ${esc(raw)}. Type <span class="ok">help</span>.`, 'err');
 });
 
 document.getElementById('term').addEventListener('click', () => input.focus());
@@ -646,9 +646,9 @@ refreshPrompt();
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const BOOT_LINES = [
   `<pre class="ok banner">${figlet('drkl')}</pre>`,
-  'Selamat datang di <span class="ok">drkl.my.id</span>.',
-  '<span class="muted">drklOS 1.0.0 — Shell drkl-sh · Font JetBrains Mono · Tema Kanagawa</span>',
-  'Ketik <span class="ok">help</span> untuk daftar perintah.',
+  'Welcome to <span class="ok">drkl.my.id</span>.',
+  '<span class="muted">drklOS 1.0.0 — drkl-sh shell · JetBrains Mono font · Kanagawa theme</span>',
+  'Type <span class="ok">help</span> for the list of commands.',
 ];
 let bootDone = false;
 let bootTimers = [];

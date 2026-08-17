@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="description" content="Tetris sederhana dari drkl.my.id. Main langsung di browser.">
+<meta name="description" content="A simple Tetris from drkl.my.id. Play directly in the browser.">
 <meta property="og:title" content="Tetris drkl.my.id">
-<meta property="og:description" content="Tetris sederhana dari drkl.my.id. Main langsung di browser.">
+<meta property="og:description" content="A simple Tetris from drkl.my.id. Play directly in the browser.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1f1f28">
 <title>Tetris</title>
@@ -200,7 +200,7 @@
     <div class="box">
       <div class="score" id="score">0</div>
       <div class="stats">
-        Rekor <b id="highScore">0</b><span class="sep"> · </span>Lv <b id="level">1</b><span class="sep"> · </span>Baris <b id="lines">0</b>
+        Best <b id="highScore">0</b><span class="sep"> · </span>Lv <b id="level">1</b><span class="sep"> · </span>Lines <b id="lines">0</b>
       </div>
     </div>
     <div class="box minis">
@@ -214,26 +214,26 @@
       </div>
     </div>
     <div class="touchbtns" id="touchBtns">
-      <button id="btnLeft" aria-label="Kiri">◀</button>
-      <button id="btnRight" aria-label="Kanan">▶</button>
-      <button id="btnDown" aria-label="Turun">▼</button>
-      <button id="btnRotate" aria-label="Putar">↻</button>
-      <button id="btnHold" aria-label="Tahan">⇄</button>
+      <button id="btnLeft" aria-label="Left">◀</button>
+      <button id="btnRight" aria-label="Right">▶</button>
+      <button id="btnDown" aria-label="Down">▼</button>
+      <button id="btnRotate" aria-label="Rotate">↻</button>
+      <button id="btnHold" aria-label="Hold">⇄</button>
     </div>
     <div class="box controls">
-      <h3>KONTROL</h3>
-      ← → geser · ↓ turun · ↑ putar<br>
-      C hold · Spasi jatuh · P pause
+      <h3>CONTROLS</h3>
+      ← → move · ↓ down · ↑ rotate<br>
+      C hold · Space drop · P pause
     </div>
     <div class="box controls" id="touchHint" style="display:none">
-      <h3>KONTROL TOUCH</h3>
-      Geser papan: pindah · Tap: putar<br>
-      Geser bawah: turun · Tombol bawah: aksi
+      <h3>TOUCH CONTROLS</h3>
+      Swipe board: move · Tap: rotate<br>
+      Swipe down: drop · Bottom buttons: action
     </div>
     <div class="btnrow">
-      <button id="startBtn">Mulai</button>
-      <button id="pauseBtn" aria-label="Jeda">⏸</button>
-      <button id="musicBtn" aria-label="Musik">🔊</button>
+      <button id="startBtn">Start</button>
+      <button id="pauseBtn" aria-label="Pause">⏸</button>
+      <button id="musicBtn" aria-label="Music">🔊</button>
     </div>
   </div>
 </div>
@@ -241,7 +241,7 @@
 <div id="overlay">
   <div id="overlayText">GAME OVER</div>
   <div class="sub" id="overlaySub"></div>
-  <button id="overlayBtn">Main Lagi</button>
+  <button id="overlayBtn">Play Again</button>
 </div>
 
 <script>
@@ -413,7 +413,7 @@ function toggleMusic() {
   musicOn = !musicOn;
   store.set('tetris_music_tmdrkl', musicOn ? '1' : '0');
   musicBtn.textContent = musicOn ? '🔊' : '🔇';
-  musicBtn.setAttribute('aria-label', musicOn ? 'Matikan musik' : 'Nyalakan musik');
+  musicBtn.setAttribute('aria-label', musicOn ? 'Turn off music' : 'Turn on music');
   if (musicOn) startMusic();
   else stopMusic();
 }
@@ -697,7 +697,8 @@ function endGame() {
   }
   overlayText.textContent = 'GAME OVER';
   overlaySub.className = 'sub';
-  overlaySub.textContent = isNewRecord ? '🎉 Rekor baru!' : `Skor: ${score}`;
+  overlaySub.textContent = isNewRecord ? '🎉 New record!' : `Score: ${score}`;
+  overlayBtn.textContent = 'Play Again';
   overlayBtn.style.display = 'block';
   overlay.style.display = 'flex';
   stopMusic();
@@ -708,13 +709,14 @@ function togglePause() {
   if (!running || gameOver) return;
   paused = !paused;
   pauseBtn.textContent = paused ? '▶' : '⏸';
-  pauseBtn.setAttribute('aria-label', paused ? 'Lanjut' : 'Jeda');
+  pauseBtn.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
   overlay.style.display = paused ? 'flex' : 'none';
   if (paused) {
     overlayText.textContent = 'PAUSE';
     overlaySub.className = 'sub blue';
-    overlaySub.textContent = 'Tekan P untuk lanjut';
-    overlayBtn.style.display = 'none';
+    overlaySub.textContent = 'Press P to resume';
+    overlayBtn.textContent = 'Resume';
+    overlayBtn.style.display = 'block';
     stopMusic();
   } else {
     draw();
@@ -739,7 +741,7 @@ function startGame() {
   paused = false;
   running = true;
   pauseBtn.textContent = '⏸';
-  pauseBtn.setAttribute('aria-label', 'Jeda');
+  pauseBtn.setAttribute('aria-label', 'Pause');
   overlay.style.display = 'none';
   overlayText.textContent = '';
   overlaySub.textContent = '';
@@ -775,7 +777,8 @@ startBtn.addEventListener('click', () => {
   startBtn.blur();
 });
 overlayBtn.addEventListener('click', () => {
-  startGame();
+  if (paused) togglePause();
+  else startGame();
   overlayBtn.blur();
 });
 musicBtn.addEventListener('click', () => {
