@@ -257,10 +257,14 @@ const overlaySub = document.getElementById('overlaySub');
 const overlayBtn = document.getElementById('overlayBtn');
 const startBtn = document.getElementById('startBtn');
 const musicBtn = document.getElementById('musicBtn');
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }
+};
 const holdEl = document.getElementById('hold');
 const linesEl = document.getElementById('lines');
 const pauseBtn = document.getElementById('pauseBtn');
-musicBtn.textContent = localStorage.getItem('tetris_music_tmdrkl') !== '0' ? '🔊' : '🔇';
+musicBtn.textContent = store.get('tetris_music_tmdrkl') !== '0' ? '🔊' : '🔇';
 
 const HIGHSCORE_KEY = 'tetris_highscore_tmdrkl';
 const BASE_INTERVAL = 600;
@@ -268,16 +272,22 @@ const MIN_INTERVAL = 100;
 const LEVEL_LINES = 10;
 
 let COLORS = {};
+const FALLBACK_COLORS = {
+  I: '#6a9589', O: '#e6c384', T: '#957fb8',
+  S: '#98bb6c', Z: '#e46876', J: '#7e9cd8', L: '#ff9e3b'
+};
+const colorOf = t => COLORS[t] || FALLBACK_COLORS[t];
 function refreshColors(){
   const cs = getComputedStyle(document.documentElement);
+  const get = k => cs.getPropertyValue(k).trim() || FALLBACK_COLORS[k.slice(4)];
   COLORS = {
-    I: cs.getPropertyValue('--T-I').trim(),
-    O: cs.getPropertyValue('--T-O').trim(),
-    T: cs.getPropertyValue('--T-T').trim(),
-    S: cs.getPropertyValue('--T-S').trim(),
-    Z: cs.getPropertyValue('--T-Z').trim(),
-    J: cs.getPropertyValue('--T-J').trim(),
-    L: cs.getPropertyValue('--T-L').trim(),
+    I: get('--T-I'),
+    O: get('--T-O'),
+    T: get('--T-T'),
+    S: get('--T-S'),
+    Z: get('--T-Z'),
+    J: get('--T-J'),
+    L: get('--T-L'),
   };
 }
 
@@ -294,7 +304,7 @@ const SHAPES = {
 let grid, current, next, score, level, totalLines, dropInterval, gameOver, paused, running;
 let hold = null, canHold = true;
 let cellEls = [];
-let highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0', 10) || 0;
+let highScore = parseInt(store.get(HIGHSCORE_KEY) || '0', 10) || 0;
 highScoreEl.textContent = highScore;
 
 // --- Sound (WebAudio) ---
@@ -333,7 +343,7 @@ function sfxGameOver() { blip(220, 0.15, 'sawtooth', 0.05); setTimeout(() => bli
 function sfxLevelUp() { blip(600, 0.08, 'sine', 0.05); setTimeout(() => blip(800, 0.1, 'sine', 0.05), 80); }
 
 // --- Background music (chiptune loop) ---
-let musicOn = localStorage.getItem('tetris_music_tmdrkl') !== '0';
+let musicOn = store.get('tetris_music_tmdrkl') !== '0';
 let musicTimer = null;
 let musicNext = 0;
 let musicStep = 0;
@@ -401,7 +411,7 @@ function toggleMusic() {
   ensureAudio();
   if (!audioCtx) return;
   musicOn = !musicOn;
-  localStorage.setItem('tetris_music_tmdrkl', musicOn ? '1' : '0');
+  store.set('tetris_music_tmdrkl', musicOn ? '1' : '0');
   musicBtn.textContent = musicOn ? '🔊' : '🔇';
   musicBtn.setAttribute('aria-label', musicOn ? 'Matikan musik' : 'Nyalakan musik');
   if (musicOn) startMusic();
@@ -525,13 +535,13 @@ function draw() {
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const el = cellEls[r][c];
-      el.style.background = grid[r][c] ? COLORS[grid[r][c]] : 'var(--bg)';
+      el.style.background = grid[r][c] ? colorOf(grid[r][c]) : 'var(--bg)';
       el.style.boxShadow = '';
     }
   }
   if (running && current && !gameOver && !paused) {
     const { shape, row, col, type } = current;
-    const color = COLORS[type];
+    const color = colorOf(type);
     const gRow = ghostRow();
     for (let r = 0; r < shape.length; r++) {
       for (let c = 0; c < shape[r].length; c++) {
@@ -567,7 +577,7 @@ function drawNext() {
   const offC = Math.floor((size - shape[0].length) / 2);
   for (let r = 0; r < shape.length; r++) {
     for (let c = 0; c < shape[r].length; c++) {
-      if (shape[r][c]) grid4[r + offR][c + offC] = COLORS[next.type];
+      if (shape[r][c]) grid4[r + offR][c + offC] = colorOf(next.type);
     }
   }
   for (let r = 0; r < size; r++) {
@@ -590,7 +600,7 @@ function drawHold() {
     const offC = Math.floor((size - shape[0].length) / 2);
     for (let r = 0; r < shape.length; r++) {
       for (let c = 0; c < shape[r].length; c++) {
-        if (shape[r][c]) grid4[r + offR][c + offC] = COLORS[hold.type];
+        if (shape[r][c]) grid4[r + offR][c + offC] = colorOf(hold.type);
       }
     }
   }
@@ -681,7 +691,7 @@ function endGame() {
   let isNewRecord = false;
   if (score > highScore) {
     highScore = score;
-    localStorage.setItem(HIGHSCORE_KEY, String(highScore));
+    store.set(HIGHSCORE_KEY, String(highScore));
     highScoreEl.textContent = highScore;
     isNewRecord = true;
   }
@@ -822,26 +832,44 @@ boardEl.addEventListener('touchend', (e) => {
 function fitLayout(){
   const isMobile = window.innerWidth <= 640;
   const vh = window.innerHeight || document.documentElement.clientHeight;
+  const vw = window.innerWidth;
   const panel = document.querySelector('.panel');
   const board = document.getElementById('board');
   const pad = isMobile ? 16 : 32;
   const bottomPad = isMobile ? 96 : 0;
   const gap = isMobile ? 12 : 16;
-  const panelH = panel.offsetHeight;
-  const avail = vh - pad - bottomPad - gap - panelH;
   const minCell = isMobile ? 9 : 14;
-  let cell = Math.floor((avail - 19) / 20);
+  let cell;
+  if (isMobile) {
+    // Panel wraps BELOW the board: both width and height are constraints.
+    const panelH = panel.offsetHeight;
+    const availW = vw - pad * 2;
+    const availH = vh - pad - bottomPad - gap - panelH;
+    cell = Math.min(Math.floor((availW - 9) / 10), Math.floor((availH - 19) / 20));
+  } else {
+    // Panel sits BESIDE the board: its width eats horizontal space,
+    // its height does not limit the board vertically.
+    const panelW = panel.offsetWidth || 190;
+    const availW = vw - pad * 2 - gap - panelW;
+    const availH = vh - pad * 2;
+    cell = Math.min(Math.floor((availW - 9) / 10), Math.floor((availH - 19) / 20));
+  }
   cell = Math.max(minCell, Math.min(cell, 40));
-  const maxW = window.innerWidth - (isMobile ? 20 : 48);
-  cell = Math.min(cell, Math.max(minCell, Math.floor((maxW - 9) / 10)));
   board.style.width = (cell * 10 + 9) + 'px';
   board.style.height = (cell * 20 + 19) + 'px';
 }
 
-buildBoard();
-refreshColors();
-fitLayout();
-startGame();
+try {
+  buildBoard();
+  refreshColors();
+  fitLayout();
+  startGame();
+} catch (err) {
+  const warn = document.createElement('div');
+  warn.style.cssText = 'color:var(--red);font-size:11px;margin-top:8px;word-break:break-all;';
+  warn.textContent = '⚠ ' + (err && err.message ? err.message : err);
+  document.querySelector('.panel').appendChild(warn);
+}
 window.addEventListener('resize', fitLayout);
 </script>
 

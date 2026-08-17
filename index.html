@@ -76,8 +76,10 @@
     padding: 18px 20px;
     line-height:1.45;
   }
+  #screen{ scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
   #screen::-webkit-scrollbar{ width:8px; }
   #screen::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
+  ::selection{ background:var(--blue); color:var(--bg); }
 
   .row{ white-space:pre-wrap; word-break:break-word; }
   .prompt{ color:var(--green); }
@@ -109,8 +111,12 @@
   #suggestList{
     display:flex; flex-wrap:wrap; gap:4px 12px; padding:2px 0 6px; font-size:13px;
   }
-  #suggestList span{ cursor:pointer; color:var(--blue); }
-  #suggestList span.active{ background:var(--border); border-radius:3px; padding:0 4px; }
+  #suggestList span{
+    cursor:pointer; color:var(--blue); border-radius:3px; padding:0 4px;
+    transition:background .12s, color .12s;
+  }
+  #suggestList span:hover{ background:var(--panel2); color:var(--cyan); }
+  #suggestList span.active{ background:var(--border); }
   #suggestList:empty{ display:none; }
 
   ul.helplist{ margin:4px 0 0; padding-left:18px; }
@@ -285,6 +291,15 @@ function figlet(word){
   return rows.join('\n');
 }
 
+function browserName(){
+  const ua = navigator.userAgent;
+  if (ua.includes('Edg/')) return 'Edge';
+  if (ua.includes('Firefox/')) return 'Firefox';
+  if (ua.includes('Chrome/')) return 'Chrome';
+  if (ua.includes('Safari/')) return 'Safari';
+  return 'Browser misterius';
+}
+
 const HELP = {
   help: 'bantuan & detail perintah',
   about: 'sedikit tentang saya',
@@ -298,11 +313,15 @@ const HELP = {
   pwd: 'cetak direktori aktif',
   cat: 'tampilkan isi file, mis: cat about.txt',
   tree: 'pohon direktori, mis: tree, tree projects',
-  history: 'riwayat perintah yang dijalankan',
+  history: 'riwayat perintah, mis: history -c untuk membersihkan',
   tetris: 'buka game Tetris di tab baru',
   play: 'alias dari tetris',
   clear: 'bersihkan layar',
   whoami: 'menampilkan nama pengguna',
+  uname: 'info sistem & kernel',
+  sudo: 'jalankan perintah sebagai root (pasti gagal)',
+  exit: 'keluar dari sesi terminal',
+  rm: 'hapus berkas (sistem file read-only)',
 };
 
 const commands = {
@@ -313,26 +332,14 @@ const commands = {
       else print(`help: tidak ada perintah "${esc(args[0])}"`, 'err');
       return;
     }
+    const items = Object.keys(HELP)
+      .map(k => `<li><span class="ok">${esc(k)}</span> — ${esc(HELP[k])}</li>`)
+      .join('\n');
     print(`Perintah yang tersedia:
 <ul class="helplist">
-  <li><span class="ok">help [cmd]</span> — bantuan & detail perintah</li>
-  <li><span class="ok">about</span> — sedikit tentang saya</li>
-  <li><span class="ok">links</span> — kontak & github</li>
-  <li><span class="ok">neofetch</span> — info sistem</li>
-  <li><span class="ok">banner</span> — tampilkan logo</li>
-  <li><span class="ok">date</span> — tanggal & jam sekarang</li>
-  <li><span class="ok">echo &lt;teks&gt;</span> — tampilkan teks</li>
-  <li><span class="ok">ls [path]</span> — daftar isi direktori</li>
-  <li><span class="ok">cd [path]</span> — pindah direktori</li>
-  <li><span class="ok">pwd</span> — cetak direktori aktif</li>
-  <li><span class="ok">cat &lt;file&gt;</span> — tampilkan isi file</li>
-  <li><span class="ok">tree [path]</span> — pohon direktori</li>
-  <li><span class="ok">history</span> — riwayat perintah</li>
-  <li><span class="ok">tetris</span> — buka game Tetris</li>
-  <li><span class="ok">whoami</span> — siapa Anda?</li>
-  <li><span class="ok">clear</span> — bersihkan layar</li>
+${items}
 </ul>
-Gunakan <span class="ok">Tab</span> untuk autocomplete, <span class="ok">↑/↓</span> riwayat, <span class="ok">Ctrl+L</span> clear.`);
+Gunakan <span class="ok">Tab</span> autocomplete, <span class="ok">↑/↓</span> riwayat, <span class="ok">Ctrl+L</span> clear, <span class="ok">Esc</span> tutup saran.`);
   },
   about(){ print('Tomi — suka semua hal yang baru dan seru.'); },
   links(){
@@ -351,8 +358,9 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
  //   \\ \\   <span class="blue">OS</span>: drkl.my.id 1.0
 (|     | )  <span class="blue">Host</span>: Terminal web
 /'\\_   _/\`\\  <span class="blue">Uptime</span>: ${upStr}
-\\___)=(___/  <span class="blue">Shell</span>: drkl-sh
-             <span class="blue">Font</span>: JetBrains Mono
+\\___)=(___/             <span class="blue">Shell</span>: drkl-sh
+             <span class="blue">Resolution</span>: ${window.screen.width}x${window.screen.height}
+             <span class="blue">Browser</span>: ${browserName()}
              <span class="blue">Theme</span>: Kanagawa</pre>`);  },
   banner(){
     print(`<pre class="ok">${figlet('drkl')}</pre>`);
@@ -402,7 +410,14 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     walkTree(node, '', lines, 0);
     print(lines.join('\n'), 'tree');
   },
-  history(){
+  history(args){
+    if (args[0] === '-c') {
+      hist = [];
+      histIdx = -1;
+      try { sessionStorage.removeItem('drkl_hist'); } catch (e) {}
+      print('riwayat dibersihkan', 'muted');
+      return;
+    }
     if (!hist.length) { print('riwayat masih kosong', 'muted'); return; }
     print(hist.map((h, i) => `${String(i + 1).padStart(3)}  ${esc(h)}`).join('\n'));
   },
@@ -411,8 +426,20 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     window.open('tetris.html', '_blank');
   },
   play(){ commands.tetris(); },
-  clear(){ log.innerHTML = ''; },
+  clear(){ log.innerHTML = ''; hideList(); renderSuggestion(); },
   whoami(){ print('tomi'); },
+  uname(){ print('drklOS 1.0.0 — kernel drkl-sh 6.6.0 (Kanagawa)'); },
+  sudo(args){
+    const cmd = args.join(' ');
+    if (!cmd) { print('usage: sudo <perintah>', 'err'); return; }
+    if (cmd.includes('rm -rf')) {
+      print('sudo: rm -rf / — nice try, tapi tidak. 🙅', 'err');
+      return;
+    }
+    print(`tomi tidak ada di file sudoers. Insiden ini akan dilaporkan. (perintah: ${esc(cmd)})`, 'err');
+  },
+  exit(){ print('logout — tapi Anda tetap di sini. 😏 Ketik <span class="ok">clear</span> kalau buntu.'); },
+  rm(){ print('rm: sistem file ini read-only. Berkas tidak bisa dihapus.', 'err'); },
 };
 
 // --- Autocomplete & suggestion ala fish ---
@@ -567,7 +594,20 @@ function goHistory(dir){
 input.addEventListener('input', () => { hideList(); renderSuggestion(); });
 
 input.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key.toLowerCase() === 'l') { e.preventDefault(); log.innerHTML = ''; return; }
+  if (e.ctrlKey && e.key.toLowerCase() === 'l') { e.preventDefault(); log.innerHTML = ''; hideList(); renderSuggestion(); return; }
+  if (e.key === 'Escape') { e.preventDefault(); hideList(); renderSuggestion(); return; }
+  if (e.ctrlKey && e.key.toLowerCase() === 'u') { e.preventDefault(); input.value = ''; hideList(); renderSuggestion(); return; }
+  if (e.ctrlKey && e.key.toLowerCase() === 'w') {
+    e.preventDefault();
+    const pos = input.selectionStart;
+    const after = input.value.slice(pos);
+    input.value = input.value.slice(0, pos).replace(/\S*\s*$/, '') + after;
+    const np = input.value.length - after.length;
+    input.setSelectionRange(np, np);
+    hideList();
+    renderSuggestion();
+    return;
+  }
   if (e.ctrlKey && e.key.toLowerCase() === 'c') {
     e.preventDefault();
     if (input.value) print('^C', 'muted');
