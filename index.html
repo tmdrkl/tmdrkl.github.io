@@ -152,6 +152,7 @@
   <header class="site">
     <div class="brand">drkl<span class="dim">.my.id</span></div>
     <nav>
+      <a href="chat.html" target="_blank" rel="noopener">chat</a>
       <a href="tetris.html" target="_blank" rel="noopener">tetris</a>
     </nav>
   </header>
@@ -211,9 +212,10 @@ function esc(s){
 const FS = {
   'about.txt': 'Tomi — likes everything new and fun.',
   'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.my.id',
-  'README.md': '# drkl.my.id\n\nThis terminal itself is a drkl.my.id project.\nThere is also a Tetris game — run: tetris',
+  'README.md': '# drkl.my.id\n\nThis terminal itself is a drkl.my.id project.\nThere is also a Tetris game — run: tetris\nAnd an AI chat — run: chat',
   'projects': {
     'tetris': 'A simple Tetris game. Open it with the command: tetris',
+    'chat': 'An AI chatbot powered by Groq. Open it with the command: chat',
     'terminal': 'This is it — the web terminal you are using right now.',
   },
   'notes': {
@@ -316,6 +318,7 @@ const HELP = {
   history: 'command history, e.g. history -c to clear',
   tetris: 'open the Tetris game in a new tab',
   play: 'alias for tetris',
+  chat: 'open the AI chat in a new tab',
   clear: 'clear the screen',
   whoami: 'show current username',
   uname: 'system & kernel info',
@@ -426,6 +429,10 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     window.open('tetris.html', '_blank');
   },
   play(){ commands.tetris(); },
+  chat(){
+    print(`Opening <span class="ok">chat.html</span> in a new tab... <a href="chat.html" target="_blank" rel="noopener">click here if it doesn't open automatically</a>`);
+    window.open('chat.html', '_blank');
+  },
   clear(){ log.innerHTML = ''; hideList(); renderSuggestion(); },
   whoami(){ print('tomi'); },
   uname(){ print('drklOS 1.0.0 — kernel drkl-sh 6.6.0 (Kanagawa)'); },
