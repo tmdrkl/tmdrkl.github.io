@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#2e3440">
 <title>Tetris</title>
 <script>
-var t=localStorage.getItem('drkl_theme')||'dark';
+var t=localStorage.getItem('drkl_theme');if(t!=='dark'&&t!=='light')t='dark';
 document.documentElement.setAttribute('data-theme',t);
 document.write('<link rel="stylesheet" href="'+t+'.css" id="theme-css">');
 </script>
@@ -70,25 +70,26 @@ document.write('<link rel="stylesheet" href="'+t+'.css" id="theme-css">');
 
 <script>
 // --- Theme toggle ---
-const THEMES = ['dark','light','catppuccin'];
-const THEME_META = { dark:'#2e3440', light:'#eceff4', catppuccin:'#1e1e2e' };
-function getTheme(){ return localStorage.getItem('drkl_theme') || 'dark'; }
+const THEMES = ['dark','light'];
+const THEME_META = { dark:'#2e3440', light:'#eceff4' };
+function getTheme(){ var v=localStorage.getItem('drkl_theme'); return (v==='dark'||v==='light')?v:'dark'; }
 function setTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('drkl_theme', t);
   const link = document.getElementById('theme-css');
   if (link) link.href = t + '.css';
   const btn = document.getElementById('themeToggle');
-  if (btn) btn.textContent = t === 'light' ? '🌙' : t === 'catppuccin' ? '🐱' : '☀️';
+  if (btn) { btn.textContent = t === 'light' ? '🌙' : '☀️'; btn.classList.add('switching'); setTimeout(() => btn.classList.remove('switching'), 420); }
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = THEME_META[t] || '#2e3440';
 }
+function themeRainBurst(theme){var c=document.createElement('canvas');c.style.cssText='position:fixed;inset:0;z-index:9999;width:100%;height:100%;pointer-events:none;transition:opacity .35s ease';document.body.appendChild(c);var ctx=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;var ch='\u30a2\u30a4\u30a6\u30a8\u30aa\u30ab\u30ad\u30af\u30b1\u30b3\u30b5\u30b7\u30b9\u30bb\u30bd\u30bf\u30c1\u30c4\u30c6\u30c8\u30ca\u30cb\u30cc\u30cd\u30ce0123456789$#@%&+=;:~';var fs=14,cols=Math.floor(c.width/fs);var drops=[];for(var i=0;i<cols;i++)drops.push(Math.random()*-30);var bg=theme==='light'?'rgba(236,239,244,0.12)':'rgba(46,52,64,0.12)';var fg=theme==='light'?'rgba(94,129,172,0.85)':'rgba(163,190,140,0.85)';var t0=performance.now();(function frame(){ctx.fillStyle=bg;ctx.fillRect(0,0,c.width,c.height);ctx.font=fs+'px monospace';ctx.fillStyle=fg;for(var j=0;j<cols;j++){ctx.fillText(ch[Math.random()*ch.length|0],j*fs,drops[j]*fs);if(drops[j]*fs>c.height&&Math.random()>0.975)drops[j]=0;drops[j]++;}if(performance.now()-t0<700)requestAnimationFrame(frame);else{c.style.opacity='0';setTimeout(function(){c.remove();},350);}})();}
 setTheme(getTheme());
-refreshColors();
 document.getElementById('themeToggle').addEventListener('click', () => {
   const cur = getTheme();
   const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
   setTheme(next);
+  themeRainBurst(next);
   refreshColors();
   draw();
   drawNext();
@@ -140,6 +141,7 @@ function refreshColors(){
     L: get('--T-L'),
   };
 }
+refreshColors();
 
 const SHAPES = {
   I: [[1,1,1,1]],
@@ -182,15 +184,16 @@ function blip(freq, dur = 0.06, type = 'square', vol = 0.04) {
 }
 function sfxMove() { blip(180, 0.03, 'square', 0.02); }
 function sfxRotate() { blip(320, 0.04, 'square', 0.03); }
-function sfxLock() { blip(140, 0.05, 'triangle', 0.04); }
+function sfxLock() { vibrate(15); blip(140, 0.05, 'triangle', 0.04); }
 function sfxClear(n) {
+  vibrate(n * 15);
   const base = 500;
   for (let i = 0; i < n; i++) {
     setTimeout(() => blip(base + i * 120, 0.08, 'sawtooth', 0.04), i * 70);
   }
 }
-function sfxGameOver() { blip(220, 0.15, 'sawtooth', 0.05); setTimeout(() => blip(160, 0.2, 'sawtooth', 0.05), 150); }
-function sfxLevelUp() { blip(600, 0.08, 'sine', 0.05); setTimeout(() => blip(800, 0.1, 'sine', 0.05), 80); }
+function sfxGameOver() { vibrate([50, 30, 50]); blip(220, 0.15, 'sawtooth', 0.05); setTimeout(() => blip(160, 0.2, 'sawtooth', 0.05), 150); }
+function sfxLevelUp() { vibrate([10, 20, 10]); blip(600, 0.08, 'sine', 0.05); setTimeout(() => blip(800, 0.1, 'sine', 0.05), 80); }
 
 // --- Background music (chiptune loop) ---
 let musicOn = store.get('tetris_music_tmdrkl') !== '0';
@@ -640,11 +643,12 @@ pauseBtn.addEventListener('click', () => {
   pauseBtn.blur();
 });
 
-document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(0, -1); }, { passive: false });
-document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(0, 1); }, { passive: false });
-document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); move(1, 0); }, { passive: false });
-document.getElementById('btnRotate').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); doRotate(); }, { passive: false });
-document.getElementById('btnHold').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); doHold(); }, { passive: false });
+function vibrate(ms){ try { navigator.vibrate(ms); } catch(e) {} }
+document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); vibrate(8); move(0, -1); }, { passive: false });
+document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); vibrate(8); move(0, 1); }, { passive: false });
+document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); vibrate(8); move(1, 0); }, { passive: false });
+document.getElementById('btnRotate').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); vibrate(12); doRotate(); }, { passive: false });
+document.getElementById('btnHold').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); vibrate(15); doHold(); }, { passive: false });
 document.getElementById('btnLeft').addEventListener('mousedown', (e) => { ensureAudio(); move(0, -1); });
 document.getElementById('btnRight').addEventListener('mousedown', (e) => { ensureAudio(); move(0, 1); });
 document.getElementById('btnDown').addEventListener('mousedown', (e) => { ensureAudio(); move(1, 0); });
@@ -671,14 +675,14 @@ boardEl.addEventListener('touchend', (e) => {
   const absX = Math.abs(dx), absY = Math.abs(dy);
 
   if (absX < 10 && absY < 10 && dt < 250) {
-    doRotate();
+    vibrate(12); doRotate();
     return;
   }
   if (absX > absY) {
-    if (absX > SWIPE_THRESHOLD) move(0, dx > 0 ? 1 : -1);
+    if (absX > SWIPE_THRESHOLD) { vibrate(8); move(0, dx > 0 ? 1 : -1); }
   } else {
-    if (dy > SWIPE_THRESHOLD * 3) hardDrop();
-    else if (dy > SWIPE_THRESHOLD) move(1, 0);
+    if (dy > SWIPE_THRESHOLD * 3) { vibrate(20); hardDrop(); }
+    else if (dy > SWIPE_THRESHOLD) { vibrate(8); move(1, 0); }
   }
 }, { passive: true });
 

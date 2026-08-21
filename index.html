@@ -12,10 +12,11 @@
 <meta property="og:site_name" content="drkl.my.id">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#2e3440">
+<meta name="robots" content="index, follow">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%232e3440'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a3be8c' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script>
-var t=localStorage.getItem('drkl_theme')||'dark';
+var t=localStorage.getItem('drkl_theme');if(t!=='dark'&&t!=='light')t='dark';
 document.documentElement.setAttribute('data-theme',t);
 document.write('<link rel="stylesheet" href="'+t+'.css" id="theme-css">');
 </script>
@@ -195,12 +196,12 @@ const HELP = {
   tree: 'directory tree, e.g. tree, tree projects',
   history: 'command history, e.g. history -c to clear',
   tetris: 'open the Tetris game in a new tab',
-  play: 'alias for tetris',
   chat: 'open the AI chat in a new tab',
   clear: 'clear the screen',
   whoami: 'show current username',
   uname: 'system & kernel info',
   sudo: 'run a command as root (will definitely fail)',
+  theme: 'switch theme, e.g. theme dark, theme light',
   exit: 'exit the terminal session',
   rm: 'delete files (read-only filesystem)',
 };
@@ -306,7 +307,6 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     print(`Opening <span class="ok">tetris.html</span> in a new tab... <a href="tetris.html" target="_blank" rel="noopener">click here if it doesn't open automatically</a>`);
     window.open('tetris.html', '_blank');
   },
-  play(){ commands.tetris(); },
   chat(){
     print(`Opening <span class="ok">chat.html</span> in a new tab... <a href="chat.html" target="_blank" rel="noopener">click here if it doesn't open automatically</a>`);
     window.open('chat.html', '_blank');
@@ -325,6 +325,13 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   },
   exit(){ print('logout — but you are still here. 😏 Type <span class="ok">clear</span> if you get stuck.'); },
   rm(){ print('rm: this filesystem is read-only. Files cannot be deleted.', 'err'); },
+  theme(args){
+    const t = args[0];
+    if (!t || !THEMES.includes(t)) { print(`usage: theme <${THEMES.join('|')}>`, 'err'); return; }
+    setTheme(t);
+    themeRainBurst(t);
+    print(`Theme set to <span class="ok">${t}</span>.`);
+  },
 };
 
 // --- Autocomplete & suggestion ala fish ---
@@ -529,29 +536,33 @@ refreshPrompt();
 
 // --- Boot ---
 // --- Theme toggle ---
-const THEMES = ['dark','light','catppuccin'];
-const THEME_META = { dark:'#2e3440', light:'#eceff4', catppuccin:'#1e1e2e' };
-function getTheme(){ return localStorage.getItem('drkl_theme') || 'dark'; }
+const THEMES = ['dark','light'];
+const THEME_META = { dark:'#2e3440', light:'#eceff4' };
+function getTheme(){ var v=localStorage.getItem('drkl_theme'); return (v==='dark'||v==='light')?v:'dark'; }
 function setTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('drkl_theme', t);
   const link = document.getElementById('theme-css');
   if (link) link.href = t + '.css';
   const btn = document.getElementById('themeToggle');
-  if (btn) btn.textContent = t === 'light' ? '🌙' : t === 'catppuccin' ? '🐱' : '☀️';
+  if (btn) { btn.textContent = t === 'light' ? '🌙' : '☀️'; btn.classList.add('switching'); setTimeout(() => btn.classList.remove('switching'), 420); }
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = THEME_META[t] || '#2e3440';
 }
+function themeRainBurst(theme){var c=document.createElement('canvas');c.style.cssText='position:fixed;inset:0;z-index:9999;width:100%;height:100%;pointer-events:none;transition:opacity .35s ease';document.body.appendChild(c);var ctx=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;var ch='\u30a2\u30a4\u30a6\u30a8\u30aa\u30ab\u30ad\u30af\u30b1\u30b3\u30b5\u30b7\u30b9\u30bb\u30bd\u30bf\u30c1\u30c4\u30c6\u30c8\u30ca\u30cb\u30cc\u30cd\u30ce0123456789$#@%&+=;:~';var fs=14,cols=Math.floor(c.width/fs);var drops=[];for(var i=0;i<cols;i++)drops.push(Math.random()*-30);var bg=theme==='light'?'rgba(236,239,244,0.12)':'rgba(46,52,64,0.12)';var fg=theme==='light'?'rgba(94,129,172,0.85)':'rgba(163,190,140,0.85)';var t0=performance.now();(function frame(){ctx.fillStyle=bg;ctx.fillRect(0,0,c.width,c.height);ctx.font=fs+'px monospace';ctx.fillStyle=fg;for(var j=0;j<cols;j++){ctx.fillText(ch[Math.random()*ch.length|0],j*fs,drops[j]*fs);if(drops[j]*fs>c.height&&Math.random()>0.975)drops[j]=0;drops[j]++;}if(performance.now()-t0<700)requestAnimationFrame(frame);else{c.style.opacity='0';setTimeout(function(){c.remove();},350);}})();}
 setTheme(getTheme());
 document.getElementById('themeToggle').addEventListener('click', () => {
   const cur = getTheme();
   const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
   setTheme(next);
+  themeRainBurst(next);
 });
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SEEN_INTRO = 'drkl_seen_intro';
+let hasSeenIntro = false;
+try { hasSeenIntro = localStorage.getItem(SEEN_INTRO) === '1'; } catch(e) {}
 const BOOT_LINES = [
-  `<pre class="ok banner">${figlet('drkl')}</pre>`,
   'Welcome to <span class="ok">drkl.my.id</span>.',
   '<span class="muted">drklOS 1.0.0 — drkl-sh shell · JetBrains Mono font · Nord theme</span>',
   'Type <span class="ok">help</span> for the list of commands.',
@@ -565,16 +576,18 @@ function finishBoot(){
   bootTimers.forEach(clearTimeout);
   bootTimers = [];
   for (let i = bootIdx; i < BOOT_LINES.length; i++) print(BOOT_LINES[i]);
+  try { localStorage.setItem(SEEN_INTRO, '1'); } catch(e) {}
 }
-if (reducedMotion) {
+if (reducedMotion || hasSeenIntro) {
   bootDone = true;
   BOOT_LINES.forEach(print);
+  try { localStorage.setItem(SEEN_INTRO, '1'); } catch(e) {}
 } else {
   BOOT_LINES.forEach((html, i) => {
     bootTimers.push(setTimeout(() => {
       bootIdx = i + 1;
       print(html);
-      if (i === BOOT_LINES.length - 1) { bootDone = true; bootTimers = []; }
+      if (i === BOOT_LINES.length - 1) { bootDone = true; bootTimers = []; try { localStorage.setItem(SEEN_INTRO, '1'); } catch(e) {} }
     }, 120 + i * 240));
   });
   ['keydown', 'click', 'touchstart'].forEach(ev =>
@@ -595,8 +608,8 @@ if (rainCanvas && !reducedMotion && window.innerWidth > 640) {
   }
   function rainTick(){
     const th = document.documentElement.getAttribute('data-theme') || 'dark';
-    const rainBg = th === 'light' ? 'rgba(236,239,244,0.10)' : th === 'catppuccin' ? 'rgba(30,30,46,0.10)' : 'rgba(46,52,64,0.10)';
-    const rainClr = th === 'light' ? 'rgba(94,129,172,0.45)' : th === 'catppuccin' ? 'rgba(203,166,247,0.45)' : 'rgba(163,190,140,0.45)';
+    const rainBg = th === 'light' ? 'rgba(236,239,244,0.10)' : 'rgba(46,52,64,0.10)';
+    const rainClr = th === 'light' ? 'rgba(94,129,172,0.45)' : 'rgba(163,190,140,0.45)';
     rctx.fillStyle = rainBg;
     rctx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
     rctx.font = '14px monospace';
