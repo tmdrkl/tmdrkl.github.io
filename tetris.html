@@ -9,11 +9,8 @@
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#2e3440">
 <title>Tetris</title>
-<script>
-var t=localStorage.getItem('drkl_theme');if(t!=='dark'&&t!=='light')t='dark';
-document.documentElement.setAttribute('data-theme',t);
-document.write('<link rel="stylesheet" href="'+t+'.css" id="theme-css">');
-</script>
+<link rel="stylesheet" href="style.css" id="theme-css">
+<script src="theme.js"></script>
 </head>
 <body>
 
@@ -70,21 +67,6 @@ document.write('<link rel="stylesheet" href="'+t+'.css" id="theme-css">');
 
 <script>
 // --- Theme toggle ---
-const THEMES = ['dark','light'];
-const THEME_META = { dark:'#2e3440', light:'#eceff4' };
-function getTheme(){ var v=localStorage.getItem('drkl_theme'); return (v==='dark'||v==='light')?v:'dark'; }
-function setTheme(t){
-  document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem('drkl_theme', t);
-  const link = document.getElementById('theme-css');
-  if (link) link.href = t + '.css';
-  const btn = document.getElementById('themeToggle');
-  if (btn) { btn.textContent = t === 'light' ? '🌙' : '☀️'; btn.classList.add('switching'); setTimeout(() => btn.classList.remove('switching'), 420); }
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = THEME_META[t] || '#2e3440';
-}
-function themeRainBurst(theme){var c=document.createElement('canvas');c.style.cssText='position:fixed;inset:0;z-index:9999;width:100%;height:100%;pointer-events:none;transition:opacity .35s ease';document.body.appendChild(c);var ctx=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;var ch='\u30a2\u30a4\u30a6\u30a8\u30aa\u30ab\u30ad\u30af\u30b1\u30b3\u30b5\u30b7\u30b9\u30bb\u30bd\u30bf\u30c1\u30c4\u30c6\u30c8\u30ca\u30cb\u30cc\u30cd\u30ce0123456789$#@%&+=;:~';var fs=14,cols=Math.floor(c.width/fs);var drops=[];for(var i=0;i<cols;i++)drops.push(Math.random()*-30);var bg=theme==='light'?'rgba(236,239,244,0.12)':'rgba(46,52,64,0.12)';var fg=theme==='light'?'rgba(94,129,172,0.85)':'rgba(163,190,140,0.85)';var t0=performance.now();(function frame(){ctx.fillStyle=bg;ctx.fillRect(0,0,c.width,c.height);ctx.font=fs+'px monospace';ctx.fillStyle=fg;for(var j=0;j<cols;j++){ctx.fillText(ch[Math.random()*ch.length|0],j*fs,drops[j]*fs);if(drops[j]*fs>c.height&&Math.random()>0.975)drops[j]=0;drops[j]++;}if(performance.now()-t0<700)requestAnimationFrame(frame);else{c.style.opacity='0';setTimeout(function(){c.remove();},350);}})();}
-setTheme(getTheme());
 document.getElementById('themeToggle').addEventListener('click', () => {
   const cur = getTheme();
   const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
@@ -692,25 +674,13 @@ function fitLayout(){
   const vw = window.innerWidth;
   const panel = document.querySelector('.panel');
   const board = document.getElementById('board');
-  const pad = isMobile ? 12 : 32;
-  const bottomPad = isMobile ? 32 : 0;
-  const gap = isMobile ? 10 : 16;
-  const minCell = isMobile ? 9 : 14;
-  let cell;
-  if (isMobile) {
-    // Panel wraps BELOW the board: both width and height are constraints.
-    const panelH = panel.offsetHeight;
-    const availW = vw - pad * 2;
-    const availH = vh - pad - bottomPad - gap - panelH;
-    cell = Math.min(Math.floor((availW - 9) / 10), Math.floor((availH - 19) / 20));
-  } else {
-    // Panel sits BESIDE the board: its width eats horizontal space,
-    // its height does not limit the board vertically.
-    const panelW = panel.offsetWidth || 190;
-    const availW = vw - pad * 2 - gap - panelW;
-    const availH = vh - pad * 2;
-    cell = Math.min(Math.floor((availW - 9) / 10), Math.floor((availH - 19) / 20));
-  }
+  const pad = isMobile ? 8 : 32;
+  const gap = isMobile ? 8 : 16;
+  const minCell = isMobile ? 12 : 14;
+  const panelW = panel.offsetWidth || (isMobile ? 140 : 190);
+  const availW = vw - pad * 2 - gap - panelW;
+  const availH = vh - pad * 2;
+  let cell = Math.min(Math.floor((availW - 9) / 10), Math.floor((availH - 19) / 20));
   cell = Math.max(minCell, Math.min(cell, 40));
   board.style.width = (cell * 10 + 9) + 'px';
   board.style.height = (cell * 20 + 19) + 'px';
