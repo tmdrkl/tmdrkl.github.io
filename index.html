@@ -11,137 +11,14 @@
 <meta property="og:url" content="https://www.drkl.my.id/">
 <meta property="og:site_name" content="drkl.my.id">
 <meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#1f1f28">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%231f1f28'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%2398bb6c' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#2e3440">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%232e3440'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a3be8c' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#1f1f28; --panel:#2a2a37; --panel2:#363646; --border:#54546d;
-    --text:#dcd7ba; --muted:#8a8980; --blue:#7e9cd8;
-    --green:#98bb6c; --yellow:#e6c384; --red:#e46876; --cyan:#6a9589;
-  }
-  *{ box-sizing:border-box; }
-  html,body{
-    margin:0; min-height:100vh; background:var(--bg); color:var(--text);
-    font-family:'JetBrains Mono', ui-monospace, monospace; font-size:15px;
-  }
-  body{ display:flex; justify-content:center; align-items:flex-start; padding:40px 16px; }
-  a{ color:var(--blue); transition:color .15s; }
-  a:focus-visible, button:focus-visible, input:focus-visible{
-    outline:2px solid var(--blue); outline-offset:2px;
-  }
-
-  .wrap{ width:100%; max-width:700px; }
-
-  header.site{
-    display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:14px; padding:0 2px;
-  }
-  header.site .brand{
-    color:var(--text); font-weight:700; font-size:15px;
-  }
-  header.site .brand .dim{ color:var(--muted); font-weight:400; }
-  header.site nav{ display:flex; gap:16px; }
-  header.site nav a{
-    color:var(--muted); font-size:13px; text-decoration:none;
-  }
-  header.site nav a:hover{ color:var(--blue); }
-
-  footer.site{
-    display:flex; align-items:center; justify-content:center; gap:18px;
-    margin-top:14px; padding:0 2px;
-  }
-  footer.site a{
-    color:var(--muted); font-size:13px; text-decoration:none;
-  }
-  footer.site a:hover{ color:var(--blue); }
-  footer.site .sep{ color:var(--border); }
-
-  .term{
-    width:100%; max-width:700px;
-    background:var(--panel); border:1px solid var(--border); border-radius:8px;
-    box-shadow:0 20px 50px rgba(0,0,0,.35), 0 0 40px rgba(126,156,216,.10); overflow:hidden;
-  }
-  .titlebar{
-    display:flex; align-items:center; gap:8px; padding:10px 14px;
-    background:var(--panel2); border-bottom:1px solid var(--border);
-  }
-  .dot{ width:11px; height:11px; border-radius:50%; }
-  .dot.r{ background:var(--red); } .dot.y{ background:var(--yellow); } .dot.g{ background:var(--green); }
-  .titlebar span{ margin-left:8px; color:var(--muted); font-size:13px; }
-
-  #screen{
-    height: 420px;
-    overflow-y:auto;
-    padding: 18px 20px;
-    line-height:1.45;
-  }
-  #screen{ scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
-  #screen::-webkit-scrollbar{ width:8px; }
-  #screen::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
-  ::selection{ background:var(--blue); color:var(--bg); }
-
-  .row{ white-space:pre-wrap; word-break:break-word; }
-  .prompt{ color:var(--green); }
-  .cmd{ color:var(--text); }
-  .muted{ color:var(--muted); }
-  .err{ color:var(--red); }
-  .ok{ color:var(--yellow); }
-  .dir{ color:var(--blue); }
-  .blue{ color:var(--blue); }
-  .tree{ color:var(--muted); }
-  pre{ margin:0 0 4px; font-family:inherit; font-size:12px; line-height:1.25; }
-  .banner{ text-shadow:0 0 14px rgba(152,188,108,.35); }
-
-  #inputline{ display:flex; align-items:center; gap:6px; }
-  #inputline .prompt{ flex-shrink:0; }
-  .inputwrap{ position:relative; flex:1; min-width:0; overflow:hidden; }
-  #cmdInput{
-    width:100%; padding:0; background:transparent; border:none; outline:none;
-    color:var(--text); font-family:inherit; font-size:15px; caret-color:var(--blue);
-    position:relative; z-index:1;
-    animation:caretblink 1s step-end infinite;
-  }
-  #suggest{
-    position:absolute; left:0; top:0; bottom:0; z-index:0;
-    display:flex; align-items:center;
-    color:var(--muted); opacity:.6; pointer-events:none;
-    white-space:pre; overflow:hidden; visibility:hidden;
-  }
-  #suggestList{
-    display:flex; flex-wrap:wrap; gap:4px 12px; padding:2px 0 6px; font-size:13px;
-  }
-  #suggestList span{
-    cursor:pointer; color:var(--blue); border-radius:3px; padding:0 4px;
-    transition:background .12s, color .12s;
-  }
-  #suggestList span:hover{ background:var(--panel2); color:var(--cyan); }
-  #suggestList span.active{ background:var(--border); }
-  #suggestList:empty{ display:none; }
-
-  ul.helplist{ margin:4px 0 0; padding-left:18px; }
-  ul.helplist li{ margin:2px 0; }
-
-  #rain{
-    position:fixed; inset:0; z-index:-1; width:100%; height:100%;
-    pointer-events:none;
-  }
-  @keyframes caretblink{ 50%{ caret-color:transparent; } }
-
-  @media (max-width: 480px){
-    body{ padding:16px 10px; font-size:14px; }
-    header.site nav{ gap:12px; }
-    #screen{ height: 360px; padding: 14px; }
-    .titlebar span{ display:none; }
-    #cmdInput{ font-size:16px; }
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    #cmdInput{ animation:none; }
-    #rain{ display:none; }
-    .term{ box-shadow:0 20px 50px rgba(0,0,0,.35); }
-  }
-</style>
+<script>
+var t=localStorage.getItem('drkl_theme')||'dark';
+document.documentElement.setAttribute('data-theme',t);
+document.write('<link rel="stylesheet" href="'+t+'.css" id="theme-css">');
+</script>
 </head>
 <body>
 
@@ -154,6 +31,7 @@
     <nav>
       <a href="chat.html" target="_blank" rel="noopener">chat</a>
       <a href="tetris.html" target="_blank" rel="noopener">tetris</a>
+      <button class="theme-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle dark/light theme"></button>
     </nav>
   </header>
 
@@ -364,7 +242,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
 \\___)=(___/             <span class="blue">Shell</span>: drkl-sh
              <span class="blue">Resolution</span>: ${window.screen.width}x${window.screen.height}
              <span class="blue">Browser</span>: ${browserName()}
-             <span class="blue">Theme</span>: Kanagawa</pre>`);  },
+             <span class="blue">Theme</span>: Nord</pre>`);  },
   banner(){
     print(`<pre class="ok">${figlet('drkl')}</pre>`);
     print('Welcome to <span class="ok">drkl.my.id</span>. Type <span class="ok">help</span> to get started.');
@@ -435,7 +313,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   },
   clear(){ log.innerHTML = ''; hideList(); renderSuggestion(); },
   whoami(){ print('tomi'); },
-  uname(){ print('drklOS 1.0.0 — kernel drkl-sh 6.6.0 (Kanagawa)'); },
+  uname(){ print('drklOS 1.0.0 — kernel drkl-sh 6.6.0 (Nord)'); },
   sudo(args){
     const cmd = args.join(' ');
     if (!cmd) { print('usage: sudo <command>', 'err'); return; }
@@ -650,11 +528,32 @@ document.getElementById('term').addEventListener('click', () => input.focus());
 refreshPrompt();
 
 // --- Boot ---
+// --- Theme toggle ---
+const THEMES = ['dark','light','catppuccin'];
+const THEME_META = { dark:'#2e3440', light:'#eceff4', catppuccin:'#1e1e2e' };
+function getTheme(){ return localStorage.getItem('drkl_theme') || 'dark'; }
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('drkl_theme', t);
+  const link = document.getElementById('theme-css');
+  if (link) link.href = t + '.css';
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = t === 'light' ? '🌙' : t === 'catppuccin' ? '🐱' : '☀️';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = THEME_META[t] || '#2e3440';
+}
+setTheme(getTheme());
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const cur = getTheme();
+  const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+  setTheme(next);
+});
+
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const BOOT_LINES = [
   `<pre class="ok banner">${figlet('drkl')}</pre>`,
   'Welcome to <span class="ok">drkl.my.id</span>.',
-  '<span class="muted">drklOS 1.0.0 — drkl-sh shell · JetBrains Mono font · Kanagawa theme</span>',
+  '<span class="muted">drklOS 1.0.0 — drkl-sh shell · JetBrains Mono font · Nord theme</span>',
   'Type <span class="ok">help</span> for the list of commands.',
 ];
 let bootDone = false;
@@ -695,11 +594,14 @@ if (rainCanvas && !reducedMotion && window.innerWidth > 640) {
     rdrops = Array.from({length: rcols}, () => Math.floor(Math.random() * -60));
   }
   function rainTick(){
-    rctx.fillStyle = 'rgba(31,31,40,0.10)';
+    const th = document.documentElement.getAttribute('data-theme') || 'dark';
+    const rainBg = th === 'light' ? 'rgba(236,239,244,0.10)' : th === 'catppuccin' ? 'rgba(30,30,46,0.10)' : 'rgba(46,52,64,0.10)';
+    const rainClr = th === 'light' ? 'rgba(94,129,172,0.45)' : th === 'catppuccin' ? 'rgba(203,166,247,0.45)' : 'rgba(163,190,140,0.45)';
+    rctx.fillStyle = rainBg;
     rctx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
     rctx.font = '14px monospace';
     for (let i = 0; i < rcols; i++) {
-      rctx.fillStyle = 'rgba(152,188,108,0.45)';
+      rctx.fillStyle = rainClr;
       rctx.fillText(CHARS[Math.floor(Math.random() * CHARS.length)], i * 16, rdrops[i] * 16);
       if (rdrops[i] * 16 > rainCanvas.height && Math.random() > 0.975) rdrops[i] = 0;
       rdrops[i]++;

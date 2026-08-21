@@ -7,196 +7,20 @@
 <meta property="og:title" content="Tetris drkl.my.id">
 <meta property="og:description" content="A simple Tetris from drkl.my.id. Play directly in the browser.">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#1f1f28">
+<meta name="theme-color" content="#2e3440">
 <title>Tetris</title>
-<style>
-  :root{
-    --bg:#1f1f28; --panel:#2a2a37; --panel2:#363646; --border:#54546d;
-    --text:#dcd7ba; --muted:#8a8980; --blue:#7e9cd8;
-    --green:#98bb6c; --yellow:#e6c384; --red:#e46876; --cyan:#6a9589;
-    --btn-bg:#7e9cd8; --btn-text:#16161d; --btn-hover:#6a9589;
-    --T-I:#6a9589; --T-O:#e6c384; --T-T:#957fb8; --T-S:#98bb6c; --T-Z:#e46876; --T-J:#7e9cd8; --T-L:#ff9e3b;
-  }
-  * { touch-action: manipulation; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    min-height: 100dvh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-    font-family: 'Courier New', monospace;
-    color: var(--text);
-    padding: 16px;
-    box-sizing: border-box;
-  }
-  .container {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  @media (max-width: 640px) {
-    .panel .box.controls:not(#touchHint) { display: none; }
-    #touchHint { display: none !important; }
-    .touchbtns {
-      display: grid !important;
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 10;
-      margin: 0;
-      padding: 10px;
-      padding-left: max(10px, env(safe-area-inset-left));
-      padding-right: max(10px, env(safe-area-inset-right));
-      padding-bottom: max(10px, env(safe-area-inset-bottom));
-      background: var(--bg);
-      border-top: 2px solid var(--border);
-    }
-    .touchbtns button { height: 56px; }
-    body {
-      align-items: flex-start;
-      padding-bottom: calc(96px + env(safe-area-inset-bottom));
-    }
-    .container { gap: 12px; }
-    .panel { width: 100%; }
-    .panel h1 { font-size: 16px; }
-    .box { padding: 8px; margin-bottom: 8px; }
-  }
-  #board {
-    background: var(--panel);
-    border: 4px solid var(--border);
-    border-radius: 8px;
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    grid-template-rows: repeat(20, 1fr);
-    gap: 1px;
-    user-select: none;
-    width: 280px;
-    height: 560px;
-  }
-  .cell {
-    background: var(--bg);
-    border-radius: 2px;
-  }
-  .panel {
-    width: 190px;
-  }
-  .panel h1 {
-    font-size: 17px;
-    margin-bottom: 8px;
-    color: var(--yellow);
-  }
-  .box {
-    background: var(--panel2);
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 10px;
-    margin-bottom: 8px;
-  }
-  .box h3 {
-    margin: 0 0 4px 0;
-    font-size: 11px;
-    letter-spacing: .08em;
-    color: var(--cyan);
-  }
-  #next, #hold {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    gap: 1px;
-    width: 64px;
-    height: 64px;
-  }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  .minis { display: flex; gap: 12px; justify-content: center; }
-  .mini { text-align: center; }
-  .score { font-size: 24px; color: var(--green); line-height: 1.1; }
-  .stats { font-size: 11px; color: var(--muted); margin-top: 3px; }
-  .stats b { color: var(--text); font-weight: 700; }
-  .stats .sep { color: var(--border); }
-  .controls { font-size: 11px; line-height: 1.7; color: var(--muted); }
-  .btnrow { display: flex; gap: 6px; margin-bottom: 8px; }
-  .btnrow button { flex: 1; font-size: 13px; padding: 7px 2px; }
-  .touchbtns {
-    display: none;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .touchbtns button {
-    width: 100%;
-    padding: 14px 0;
-    font-size: 20px;
-    background: var(--panel2);
-    color: var(--text);
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .touchbtns button:active { background: var(--border); }
-  button {
-    width: 100%;
-    padding: 7px;
-    background: var(--btn-bg);
-    color: var(--btn-text);
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  button:hover { background: var(--btn-hover); }
-  #overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    background: rgba(0,0,0,0.7);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    color: var(--red);
-    font-size: 28px;
-    text-align: center;
-  }
-  #overlay .sub {
-    font-size: 16px;
-    color: var(--green);
-    margin-top: 10px;
-  }
-  #overlay .sub.blue { color: var(--blue); }
-  #overlay button {
-    width: auto;
-    margin-top: 24px;
-    padding: 10px 28px;
-    font-size: 15px;
-  }
-  @keyframes flash {
-    0% { filter: brightness(3); }
-    100% { filter: brightness(1); }
-  }
-  .clearflash { animation: flash 0.25s linear; }
-  @media (max-height: 820px) and (min-width: 641px) {
-    .panel .box.controls:not(#touchHint) { display: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .clearflash { animation: none; }
-  }
-</style>
+<script>
+var t=localStorage.getItem('drkl_theme')||'dark';
+document.documentElement.setAttribute('data-theme',t);
+document.write('<link rel="stylesheet" href="'+t+'.css" id="theme-css">');
+</script>
 </head>
 <body>
 
 <div class="container">
   <div id="board"></div>
   <div class="panel">
-    <h1>🎮 Tetris</h1>
+    <h1>🎮 Tetris <button class="theme-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle dark/light theme"></button></h1>
     <div class="box">
       <div class="score" id="score">0</div>
       <div class="stats">
@@ -245,6 +69,32 @@
 </div>
 
 <script>
+// --- Theme toggle ---
+const THEMES = ['dark','light','catppuccin'];
+const THEME_META = { dark:'#2e3440', light:'#eceff4', catppuccin:'#1e1e2e' };
+function getTheme(){ return localStorage.getItem('drkl_theme') || 'dark'; }
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('drkl_theme', t);
+  const link = document.getElementById('theme-css');
+  if (link) link.href = t + '.css';
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = t === 'light' ? '🌙' : t === 'catppuccin' ? '🐱' : '☀️';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = THEME_META[t] || '#2e3440';
+}
+setTheme(getTheme());
+refreshColors();
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const cur = getTheme();
+  const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+  setTheme(next);
+  refreshColors();
+  draw();
+  drawNext();
+  drawHold();
+});
+
 const COLS = 10, ROWS = 20;
 const boardEl = document.getElementById('board');
 const nextEl = document.getElementById('next');
@@ -273,8 +123,8 @@ const LEVEL_LINES = 10;
 
 let COLORS = {};
 const FALLBACK_COLORS = {
-  I: '#6a9589', O: '#e6c384', T: '#957fb8',
-  S: '#98bb6c', Z: '#e46876', J: '#7e9cd8', L: '#ff9e3b'
+  I: '#88c0d0', O: '#ebcb8b', T: '#b48ead',
+  S: '#a3be8c', Z: '#bf616a', J: '#81a1c1', L: '#d08770'
 };
 const colorOf = t => COLORS[t] || FALLBACK_COLORS[t];
 function refreshColors(){
@@ -864,7 +714,6 @@ function fitLayout(){
 
 try {
   buildBoard();
-  refreshColors();
   fitLayout();
   startGame();
 } catch (err) {
