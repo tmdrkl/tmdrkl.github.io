@@ -41,16 +41,26 @@
       <button id="btnRotate" aria-label="Rotate">↻</button>
       <button id="btnHold" aria-label="Hold">⇄</button>
     </div>
-    <div class="box controls">
-      <h3>CONTROLS</h3>
-      ← → move · ↓ down · ↑ rotate<br>
-      C hold · Space drop · P pause
-    </div>
-    <div class="box controls" id="touchHint" style="display:none">
-      <h3>TOUCH CONTROLS</h3>
-      Swipe board: move · Tap: rotate<br>
-      Swipe down: drop · Bottom buttons: action
-    </div>
+    <details class="box controls" id="controlsGuide">
+      <summary><h3>CONTROLS</h3></summary>
+      <div class="control-section">
+        <h4>Keyboard</h4>
+        <div class="control-row"><kbd>←</kbd><kbd>→</kbd><span>Move</span></div>
+        <div class="control-row"><kbd>↓</kbd><span>Soft drop</span></div>
+        <div class="control-row"><kbd>↑</kbd><span>Rotate</span></div>
+        <div class="control-row"><kbd>Space</kbd><span>Hard drop</span></div>
+        <div class="control-row"><kbd>C</kbd><span>Hold</span></div>
+        <div class="control-row"><kbd>P</kbd><span>Pause</span></div>
+      </div>
+      <div class="control-section">
+        <h4>Touch</h4>
+        <div class="control-row"><span class="touch-desc">Swipe ←/→</span><span>Move</span></div>
+        <div class="control-row"><span class="touch-desc">Tap board</span><span>Rotate</span></div>
+        <div class="control-row"><span class="touch-desc">Swipe ↓</span><span>Soft drop</span></div>
+        <div class="control-row"><span class="touch-desc">Swipe ↓↓</span><span>Hard drop</span></div>
+        <div class="control-row"><span class="touch-desc">Bottom buttons</span><span>Actions</span></div>
+      </div>
+    </details>
     <div class="btnrow">
       <button id="startBtn">Start</button>
       <button id="pauseBtn" aria-label="Pause">⏸</button>

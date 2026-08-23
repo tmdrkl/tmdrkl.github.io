@@ -186,6 +186,17 @@ body{ display:flex; flex-direction:column; min-height:100vh; padding:32px 16px; 
 .stats b{ color:var(--text); font-weight:700; }
 .stats .sep{ color:var(--border); }
 .controls{ font-size:11px; line-height:1.7; color:var(--muted); }
+.controls summary{ cursor:pointer; list-style:none; }
+.controls summary::-webkit-details-marker{ display:none; }
+.controls summary::before{ content:'▸'; display:inline-block; margin-right:6px; transition:transform .2s; font-size:10px; }
+.controls[open] summary::before{ transform:rotate(90deg); }
+.control-section{ margin-top:8px; }
+.control-section:first-child{ margin-top:4px; }
+.control-section h4{ font-size:10px; color:var(--cyan); margin:0 0 4px; letter-spacing:.08em; }
+.control-row{ display:flex; align-items:center; gap:8px; margin:3px 0; font-size:11px; }
+.control-row kbd{ background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:1px 6px; font-family:inherit; font-size:10px; min-width:28px; text-align:center; color:var(--text); }
+.control-row span:last-child{ color:var(--muted); flex:1; }
+.touch-desc{ color:var(--blue); font-size:10px; min-width:80px; }
 .btnrow{ display:flex; gap:6px; margin-bottom:8px; }
 .btnrow button{ flex:1; font-size:13px; padding:7px 2px; }
 .touchbtns{
@@ -215,7 +226,7 @@ button:hover{ background:var(--btn-hover); }
 .clearflash{ animation:flash .25s linear; }
 
 @media (max-width:640px){
-  .panel .box.controls:not(#touchHint){ display:none; }
+  .panel .box.controls:not(#controlsGuide):not(#touchHint){ display:none; }
   #touchHint{ display:none!important; }
   .touchbtns{ display:none!important; }
   body{ margin:0; padding:8px; min-height:100vh; display:flex; flex-direction:column; }
@@ -231,7 +242,7 @@ button:hover{ background:var(--btn-hover); }
   .btnrow button{ font-size:11px; padding:5px 2px; }
 }
 @media (max-height:820px) and (min-width:641px){
-  .panel .box.controls:not(#touchHint){ display:none; }
+  .panel .box.controls:not(#controlsGuide):not(#touchHint){ display:none; }
 }
 @media (prefers-reduced-motion:reduce){ .clearflash{ animation:none; } }
 
