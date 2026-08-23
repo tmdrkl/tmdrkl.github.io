@@ -1,17 +1,5 @@
 import { getTheme, setTheme, themeRainBurst, THEMES } from './theme.js';
 
-// --- Theme toggle ---
-document.getElementById('themeToggle').addEventListener('click', () => {
-  const cur = getTheme();
-  const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
-  setTheme(next);
-  themeRainBurst(next);
-  refreshColors();
-  draw();
-  drawNext();
-  drawHold();
-});
-
 const COLS = 10, ROWS = 20;
 const boardEl = document.getElementById('board');
 const nextEl = document.getElementById('next');
@@ -57,7 +45,25 @@ function refreshColors(){
     L: get('--T-L'),
   };
 }
-refreshColors();
+
+// Ensure colors are ready after CSS loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', refreshColors);
+} else {
+  refreshColors();
+}
+
+// --- Theme toggle ---
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const cur = getTheme();
+  const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+  setTheme(next);
+  themeRainBurst(next);
+  refreshColors();
+  draw();
+  drawNext();
+  drawHold();
+});
 
 const SHAPES = {
   I: [[1,1,1,1]],
@@ -301,7 +307,6 @@ function clearLines() {
 }
 
 function draw() {
-  refreshColors();
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const el = cellEls[r][c];
