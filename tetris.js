@@ -270,6 +270,7 @@ function lockPiece() {
   if (collides(current.shape, current.row, current.col)) {
     endGame();
   }
+  draw();
 }
 
 function clearLines() {
