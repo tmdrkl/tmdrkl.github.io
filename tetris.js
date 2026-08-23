@@ -301,6 +301,7 @@ function clearLines() {
 }
 
 function draw() {
+  refreshColors();
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const el = cellEls[r][c];
@@ -324,13 +325,12 @@ function draw() {
     }
     for (let r = 0; r < shape.length; r++) {
       for (let c = 0; c < shape[r].length; c++) {
-        if (shape[r][c]) {
-          const nr = row + r, nc = col + c;
-          if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-            const el = cellEls[nr][nc];
-            el.style.background = color;
-            el.style.boxShadow = '';
-          }
+        if (!shape[r][c]) continue;
+        const nr = row + r, nc = col + c;
+        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+          const el = cellEls[nr][nc];
+          el.style.background = color;
+          el.style.boxShadow = '';
         }
       }
     }
