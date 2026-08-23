@@ -140,19 +140,19 @@ ul.helplist li{ margin:2px 0; }
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  src: url('fonts/JetBrainsMono-Regular.ttf') format('truetype');
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('fonts/JetBrainsMono-Medium.woff2') format('woff2');
+  src: url('fonts/JetBrainsMono-Medium.ttf') format('truetype');
   font-weight: 500;
   font-display: swap;
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('fonts/JetBrainsMono-Bold.woff2') format('woff2');
+  src: url('fonts/JetBrainsMono-Bold.ttf') format('truetype');
   font-weight: 700;
   font-display: swap;
 }
