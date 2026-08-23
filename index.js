@@ -504,43 +504,8 @@ if (reducedMotion || hasSeenIntro) {
     document.addEventListener(ev, finishBoot, { once: true, passive: true }));
 }
 
-// --- Matrix rain ---
-const rainCanvas = document.getElementById('rain');
-if (rainCanvas && !reducedMotion && window.innerWidth > 640) {
-  const rctx = rainCanvas.getContext('2d');
-  const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789$#@%&+=;:~';
-  let rcols = 0, rdrops = [], rraf = null, rrunning = false;
-  function rainResize(){
-    rainCanvas.width = window.innerWidth;
-    rainCanvas.height = window.innerHeight;
-    rcols = Math.floor(rainCanvas.width / 16);
-    rdrops = Array.from({length: rcols}, () => Math.floor(Math.random() * -60));
-  }
-  let rainResizeTimer = null;
-  function debouncedRainResize() {
-    clearTimeout(rainResizeTimer);
-    rainResizeTimer = setTimeout(rainResize, 150);
-  }
-  function rainTick(){
-    const th = document.documentElement.getAttribute('data-theme') || 'dark';
-    const rainBg = th === 'light' ? 'rgba(236,239,244,0.10)' : 'rgba(46,52,64,0.10)';
-    const rainClr = th === 'light' ? 'rgba(94,129,172,0.45)' : 'rgba(163,190,140,0.45)';
-    rctx.fillStyle = rainBg;
-    rctx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
-    rctx.font = '14px monospace';
-    for (let i = 0; i < rcols; i++) {
-      rctx.fillStyle = rainClr;
-      rctx.fillText(CHARS[Math.floor(Math.random() * CHARS.length)], i * 16, rdrops[i] * 16);
-      if (rdrops[i] * 16 > rainCanvas.height && Math.random() > 0.975) rdrops[i] = 0;
-      rdrops[i]++;
-    }
-    rraf = requestAnimationFrame(rainTick);
-  }
-  rainResize();
-  window.addEventListener('resize', debouncedRainResize);
-  rainTick();
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { cancelAnimationFrame(rraf); rrunning = false; }
-    else if (!rrunning) { rrunning = true; rainTick(); }
-  });
-}
+// --- Matrix rain disabled ---
+// const rainCanvas = document.getElementById('rain');
+// if (rainCanvas && !reducedMotion && window.innerWidth > 640) {
+//   ...
+// }
