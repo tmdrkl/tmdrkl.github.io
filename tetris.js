@@ -251,6 +251,7 @@ function ghostRow() {
 }
 
 function lockPiece() {
+  console.log('lockPiece start', { currentType: current.type, currentRow: current.row });
   const { shape, row, col, type } = current;
   for (let r = 0; r < shape.length; r++) {
     for (let c = 0; c < shape[r].length; c++) {
@@ -267,6 +268,7 @@ function lockPiece() {
   next = randomPiece();
   drawNext();
   canHold = true;
+  console.log('lockPiece new current', { currentType: current.type, currentRow: current.row });
   if (collides(current.shape, current.row, current.col)) {
     endGame();
   }
@@ -308,6 +310,7 @@ function clearLines() {
 }
 
 function draw() {
+  console.log('draw()', { running, gameOver, paused, current: current ? { type: current.type, row: current.row, col: current.col } : null });
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const el = cellEls[r][c];
@@ -318,6 +321,7 @@ function draw() {
   if (running && current && !gameOver && !paused) {
     const { shape, row, col, type } = current;
     const color = colorOf(type);
+    console.log('draw piece', { type, color, row, col });
     const gRow = ghostRow();
     for (let r = 0; r < shape.length; r++) {
       for (let c = 0; c < shape[r].length; c++) {
