@@ -310,7 +310,7 @@ async function sendChatMessage(text) {
     chatHistory.push({ role: 'assistant', content: full, time: Date.now() });
   } catch (e) {
     replyEl.innerHTML = `<span class="chat-ai">ai></span> <span class="err">Error: ${esc(e.message)}</span>`;
-    chatHistory.pop();
+  }
   } finally {
     chatBusy = false;
     input.disabled = false;
@@ -643,10 +643,11 @@ input.addEventListener('keydown', (e) => {
 
   // ── Chat mode ──
   if (chatMode) {
-    if (raw === '/exit' || raw === '/quit') { exitChatMode(); return; }
-    if (raw === '/clear') { log.innerHTML = ''; return; }
-    if (raw === '/new') { chatHistory = []; print('<span class="muted">New conversation started.</span>'); return; }
-    if (raw === '/help') {
+    const cmd = raw.toLowerCase().trim();
+    if (cmd === '/exit' || cmd === '/quit') { exitChatMode(); return; }
+    if (cmd === '/clear') { log.innerHTML = ''; return; }
+    if (cmd === '/new') { chatHistory = []; print('<span class="muted">New conversation started.</span>'); return; }
+    if (cmd === '/help') {
       print('<span class="muted">/exit      leave chat mode</span>');
       print('<span class="muted">/clear     clear screen</span>');
       print('<span class="muted">/new       new conversation</span>');
@@ -657,25 +658,25 @@ input.addEventListener('keydown', (e) => {
       print('<span class="muted">/export    download chat log</span>');
       return;
     }
-    if (raw === '/models') {
+    if (raw.toLowerCase().trim() === '/models') {
       showModels();
       return;
     }
-    if (raw === '/history' || raw === '/history -f') {
-      showChatHistory(raw === '/history -f');
+    if (cmd === '/history' || cmd === '/history -f') {
+      showChatHistory(cmd === '/history -f');
       return;
     }
-    if (raw === '/export') {
+    if (cmd === '/export') {
       exportChatLog();
       return;
     }
 
-    if (raw === '/model') {
+    if (cmd === '/model') {
       print(`<span class="muted">current: ${esc(chatModel || 'none')}</span>`);
       return;
     }
-    if (raw.startsWith('/model ')) {
-      chatModel = raw.slice(7).trim();
+    if (cmd.startsWith('/model ')) {
+      chatModel = cmd.slice(7).trim();
       print(`<span class="muted">model → ${esc(chatModel)}</span>`);
       return;
     }
