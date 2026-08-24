@@ -170,6 +170,26 @@ async function showModels() {
   print(`<span class="muted">Use /model &lt;name&gt; to switch.</span>`);
 }
 
+function showChatHistory() {
+  if (!chatHistory.length) {
+    print('<span class="muted">No messages yet.</span>');
+    return;
+  }
+  print('<span class="ok">Chat history:</span>');
+  print('');
+  chatHistory.forEach((msg, i) => {
+    if (msg.role === 'user') {
+      print(`<span class="chat-you">you></span> ${esc(msg.content)}`);
+    } else {
+      // Show first 120 chars of AI response
+      const preview = msg.content.length > 120 ? msg.content.slice(0, 120) + '...' : msg.content;
+      print(`<span class="chat-ai">ai></span> ${esc(preview)}`);
+    }
+  });
+  print('');
+  print(`<span class="muted">${chatHistory.length} messages total.</span>`);
+}
+
 function cliFormat(text) {
   // Format markdown-like text for CLI: bold `text`, code `code`, separators
   return text
@@ -602,10 +622,15 @@ input.addEventListener('keydown', (e) => {
       print('<span class="muted">/models     list available models</span>');
       print('<span class="muted">/model      show current model</span>');
       print('<span class="muted">/model X    switch to model X</span>');
+      print('<span class="muted">/history    show chat history</span>');
       return;
     }
     if (raw === '/models') {
       showModels();
+      return;
+    }
+    if (raw === '/history') {
+      showChatHistory();
       return;
     }
     if (raw === '/model') {
