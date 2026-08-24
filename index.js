@@ -647,14 +647,22 @@ input.addEventListener('keydown', (e) => {
     if (cmd === '/clear') { log.innerHTML = ''; return; }
     if (cmd === '/new') { chatHistory = []; print('<span class="muted">New conversation started.</span>'); return; }
     if (cmd === '/help') {
-      print('<span class="muted">/exit      leave chat mode</span>');
-      print('<span class="muted">/clear     clear screen</span>');
-      print('<span class="muted">/new       new conversation</span>');
-      print('<span class="muted">/models    list available models</span>');
-      print('<span class="muted">/model     show current model</span>');
-      print('<span class="muted">/model X   switch to model X</span>');
-      print('<span class="muted">/history   show chat history (-f full)</span>');
-      print('<span class="muted">/export    download chat log</span>');
+      const cmds = [
+        ['/exit', 'leave chat mode'],
+        ['/clear', 'clear screen'],
+        ['/new', 'new conversation'],
+        ['/models', 'list available models'],
+        ['/model', 'show current model'],
+        ['/model X', 'switch to model X'],
+        ['/history', 'show chat history (-f full)'],
+        ['/export', 'download chat log'],
+      ];
+      let html = '<span class="chat-help">';
+      cmds.forEach(([name, desc]) => {
+        html += `<span class="cmd-name">${esc(name)}</span><span class="cmd-desc">${esc(desc)}</span>`;
+      });
+      html += '</span>';
+      print(html);
       return;
     }
     if (raw.toLowerCase().trim() === '/models') {
