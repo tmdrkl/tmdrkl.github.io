@@ -331,7 +331,7 @@ const HELP = {
   help:     'list available commands',
   about:    'a bit about me',
   links:    'contacts & github',
-  neofetch: 'system info in neofetch style',
+  neofetch: 'system info in neofetch style (-f to fetch geo/IP)',
   banner:   'display the drkl logo',
   date:     'current date & time',
   echo:     'display text, e.g. echo hello',
@@ -373,20 +373,66 @@ Telegram: <a href="https://t.me/tmdrkl" target="_blank">@tmdrkl</a>
 Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   },
 
-  neofetch() {
+async neofetch(args) {
+    const showFetch = args.includes('--fetch') || args.includes('-f');
     const up = Math.floor((Date.now() - loadTime) / 1000);
     const upStr = up < 60 ? `${up}s`
       : up < 3600 ? `${Math.floor(up/60)}m ${up%60}s`
       : `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m`;
-    print(`<pre>      @ @          <span class="ok">tomi@drkl</span>
-     (v v)          <span class="muted">----------</span>
-   ooO--(_)--Ooo    <span class="blue">OS</span>: drkl.my.id 1.0
-                    <span class="blue">Host</span>: Terminal web
-                    <span class="blue">Uptime</span>: ${upStr}
-                    <span class="blue">Shell</span>: drkl-sh
-                    <span class="blue">Res</span>: ${screen.width}×${screen.height}
-                    <span class="blue">Browser</span>: ${browserName()}
-                    <span class="blue">Theme</span>: ${getTheme()}</pre>`);
+    
+    if (showFetch) {
+      print('<span class="muted">Fetching system info...</span>');
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        if (res.ok) {
+          const data = await res.json();
+          
+          const ua = navigator.userAgent;
+          let osName = 'Unknown';
+          if (ua.includes('Windows')) osName = 'Windows';
+          else if (ua.includes('Mac')) osName = 'macOS';
+          else if (ua.includes('Linux')) osName = 'Linux';
+          else if (ua.includes('Android')) osName = 'Android';
+          else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) osName = 'iOS';
+          
+          const lines = [
+            `<span class="ok">tomi@drkl</span>`,
+            `<span class="muted">------------------</span>`,
+            `<span class="blue">OS</span>: ${osName} (${data.country_name || 'Unknown'})`,
+            `<span class="blue">Host</span>: ${data.city || 'Unknown'}, ${data.region || 'Unknown'}`,
+            `<span class="blue">IP</span>: ${data.ip || 'Unknown'}`,
+            `<span class="blue">ISP</span>: ${data.org || 'Unknown'}`,
+            `<span class="blue">Uptime</span>: ${upStr}`,
+            `<span class="blue">Shell</span>: drkl-sh`,
+            `<span class="blue">Resolution</span>: ${window.screen.width}×${window.screen.height}`,
+            `<span class="blue">Browser</span>: ${browserName()}`,
+            `<span class="blue">Theme</span>: ${getTheme()}`,
+            `<span class="blue">Timezone</span>: ${data.timezone || 'Unknown'}`,
+            `<span class="muted">Lat: ${data.latitude || '?'}  Lon: ${data.longitude || '?'}</span>`,
+            `<span class="muted">ASN: ${data.asn || 'Unknown'}</span>`,
+          ];
+          print(`<pre>${lines.join('\n')}</pre>`);
+          return;
+        }
+      } catch (e) {
+        print(`<span class="err">Fetch failed: ${esc(e.message)}</span>`);
+      }
+    }
+    
+    // Local fallback
+    const lines = [
+      `<span class="ok">tomi@drkl</span>`,
+      `<span class="muted">------------------</span>`,
+      `<span class="blue">OS</span>: drkl.my.id 1.0`,
+      `<span class="blue">Host</span>: Terminal web`,
+      `<span class="blue">Uptime</span>: ${upStr}`,
+      `<span class="blue">Shell</span>: drkl-sh`,
+      `<span class="blue">Resolution</span>: ${window.screen.width}×${window.screen.height}`,
+      `<span class="blue">Browser</span>: ${browserName()}`,
+      `<span class="blue">Theme</span>: ${getTheme()}`,
+      `<span class="muted">Tip: use <span class="ok">neofetch -f</span> for geo info</span>`,
+    ];
+    print(`<pre>${lines.join('\n')}</pre>`);
   },
 
   banner() {
