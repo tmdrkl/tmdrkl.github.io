@@ -113,6 +113,7 @@ let chatMode = false;
 let chatHistory = [];
 let chatBusy = false;
 let chatModel = '';
+let chatModels = [];
 
 function enterChatMode() {
   chatMode = true;
@@ -142,12 +143,31 @@ async function loadChatModels() {
     const res = await fetch(`${WORKER_URL}/models`);
     if (!res.ok) return;
     const data = await res.json();
-    const models = Array.isArray(data.models) ? data.models : [];
-    if (models.length) {
+    chatModels = Array.isArray(data.models) ? data.models : [];
+    if (chatModels.length) {
       const preferred = 'openai/gpt-oss-120b';
-      chatModel = models.includes(preferred) ? preferred : models[0];
+      chatModel = chatModels.includes(preferred) ? preferred : chatModels[0];
     }
   } catch {}
+}
+
+async function showModels() {
+  if (!chatModels.length) {
+    print('<span class="muted">Loading models...</span>');
+    await loadChatModels();
+  }
+  if (!chatModels.length) {
+    print('<span class="err">No models available.</span>');
+    return;
+  }
+  print('<span class="ok">Available models:</span>');
+  print('');
+  chatModels.forEach(m => {
+    const active = m === chatModel ? ' <span class="ok">← active</span>' : '';
+    print(`  <span class="muted">•</span> ${esc(m)}${active}`);
+  });
+  print('');
+  print(`<span class="muted">Use /model &lt;name&gt; to switch.</span>`);
 }
 
 function cliFormat(text) {
@@ -577,14 +597,19 @@ input.addEventListener('keydown', (e) => {
     if (raw === '/exit' || raw === '/quit') { exitChatMode(); return; }
     if (raw === '/clear') { log.innerHTML = ''; return; }
     if (raw === '/help') {
-      print('<span class="muted">/exit    leave chat mode</span>');
-      print('<span class="muted">/clear   clear chat history</span>');
-      print('<span class="muted">/model   show current model</span>');
-      print('<span class="muted">/model X switch to model X</span>');
+      print('<span class="muted">/exit       leave chat mode</span>');
+      print('<span class="muted">/clear      clear screen</span>');
+      print('<span class="muted">/models     list available models</span>');
+      print('<span class="muted">/model      show current model</span>');
+      print('<span class="muted">/model X    switch to model X</span>');
+      return;
+    }
+    if (raw === '/models') {
+      showModels();
       return;
     }
     if (raw === '/model') {
-      print(`<span class="muted">model: ${esc(chatModel || 'none')}</span>`);
+      print(`<span class="muted">current: ${esc(chatModel || 'none')}</span>`);
       return;
     }
     if (raw.startsWith('/model ')) {
