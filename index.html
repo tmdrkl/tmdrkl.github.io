@@ -1,35 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>tomi@drkl ~ </title>
-<meta name="description" content="Personal drkl.my.id terminal — a terminal-style landing page. Tetris, contact, and fun stuff.">
-<meta property="og:title" content="tomi@drkl ~">
-<meta property="og:description" content="Personal drkl.my.id terminal — a terminal-style landing page. Tetris, contact, and fun stuff.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://www.drkl.my.id/">
-<meta property="og:site_name" content="drkl.my.id">
-<meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#2e3440">
-<meta name="robots" content="index, follow">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%232e3440'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a3be8c' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
-<link rel="preload" as="font" type="font/ttf" crossorigin="anonymous" href="fonts/JetBrainsMono-Regular.ttf">
-<link rel="preload" as="font" type="font/ttf" crossorigin="anonymous" href="fonts/JetBrainsMono-Medium.ttf">
-<link rel="preload" as="font" type="font/ttf" crossorigin="anonymous" href="fonts/JetBrainsMono-Bold.ttf">
-<link rel="stylesheet" href="style.css" id="theme-css">
-<script type="module" src="index.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>tomi@drkl ~</title>
+  <meta name="description" content="drkl.my.id — terminal-style landing page with Tetris, AI chat, and more.">
+  <meta property="og:title" content="tomi@drkl ~">
+  <meta property="og:description" content="drkl.my.id — terminal-style landing page with Tetris, AI chat, and more.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#2e3440">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%232e3440'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a3be8c' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="wrap">
-
   <header class="site">
     <div class="brand">drkl<span class="dim">.my.id</span></div>
     <nav>
-      <a href="chat.html" target="_blank" rel="noopener">chat</a>
-      <a href="tetris.html" target="_blank" rel="noopener">tetris</a>
-      <button class="theme-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle dark/light theme"></button>
+      <a href="tetris.html">tetris</a>
+      <a href="chat.html">chat</a>
+      <button class="theme-btn" id="themeToggle" aria-label="Toggle theme"></button>
     </nav>
   </header>
 
@@ -43,7 +35,7 @@
       <div class="row" id="inputline">
         <span class="prompt" id="prompt">tomi@drkl:~$</span>
         <div class="inputwrap">
-          <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autofocus aria-label="Terminal command" />
+          <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autofocus aria-label="Terminal command">
           <span id="suggest"></span>
         </div>
       </div>
@@ -58,7 +50,8 @@
     <span class="sep">|</span>
     <a href="mailto:to@drkl.my.id">email</a>
   </footer>
-
 </div>
+
+<script type="module" src="index.js"></script>
 </body>
 </html>
