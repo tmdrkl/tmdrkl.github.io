@@ -117,10 +117,14 @@ let chatModel = '';
 function enterChatMode() {
   chatMode = true;
   chatHistory = [];
-  promptEl.textContent = 'chat>';
-  titleText.textContent = 'chat mode — type /exit to leave';
-  print('<span class="ok">Entering chat mode.</span> AI responses stream in real-time.');
-  print('<span class="muted">Type your message and press Enter. /exit to leave. /model to change model.</span>');
+  promptEl.textContent = 'you>';
+  titleText.textContent = 'chat mode — /exit to leave';
+  print('');
+  print('<span class="muted">╔══════════════════════════════════════════╗</span>');
+  print('<span class="muted">║</span>  <span class="ok">AI Chat Mode</span>                           <span class="muted">║</span>');
+  print('<span class="muted">║</span>  /exit   leave    /model  change model  <span class="muted">║</span>');
+  print('<span class="muted">║</span>  /clear  reset    /help   chat commands <span class="muted">║</span>');
+  print('<span class="muted">╚══════════════════════════════════════════╝</span>');
   print('');
 }
 
@@ -129,7 +133,7 @@ function exitChatMode() {
   chatHistory = [];
   refreshPrompt();
   titleText.textContent = 'tomi@drkl: ~';
-  print('<span class="muted">Exited chat mode.</span>');
+  print('<span class="muted">── exited chat mode ──</span>');
   print('');
 }
 
@@ -146,13 +150,31 @@ async function loadChatModels() {
   } catch {}
 }
 
+function cliFormat(text) {
+  // Format markdown-like text for CLI: bold `text`, code `code`, separators
+  return text
+    .replace(/```([\s\S]*?)```/g, '<span class="chat-code">$1</span>')
+    .replace(/`([^`]+)`/g, '<span class="chat-inline">`$1`</span>')
+    .replace(/\*\*([^*]+)\*\*/g, '<span class="chat-bold">$1</span>')
+    .replace(/^---+$/gm, '<span class="muted">────────────────────────────────</span>')
+    .replace(/^# (.+)$/gm, '<span class="ok">$1</span>')
+    .replace(/^## (.+)$/gm, '<span class="blue">$1</span>');
+}
+
 async function sendChatMessage(text) {
   if (chatBusy) return;
 
   chatHistory.push({ role: 'user', content: text });
-  print(`<span class="cmd">${esc(text)}</span>`);
-  print('');
+  print(`<span class="chat-you">you></span> ${esc(text)}`);
 
+  // Separator
+  const sepEl = document.createElement('div');
+  sepEl.className = 'row muted';
+  sepEl.textContent = '· · ·';
+  log.appendChild(sepEl);
+  screen.scrollTop = screen.scrollHeight;
+
+  // AI reply container
   const replyEl = document.createElement('div');
   replyEl.className = 'row chat-reply';
   log.appendChild(replyEl);
@@ -179,15 +201,15 @@ async function sendChatMessage(text) {
 
     // Typewriter effect
     const timer = setInterval(() => {
-      const target = full.replace(/<br\s*\/?>/gi, '\n');
-      if (replyEl._shown < target.length) {
-        replyEl._shown = Math.min(target.length, (replyEl._shown || 0) + 3);
-        replyEl.textContent = target.slice(0, replyEl._shown);
+      const plain = full.replace(/<br\s*\/?>/gi, '\n');
+      if (replyEl._shown < plain.length) {
+        replyEl._shown = Math.min(plain.length, (replyEl._shown || 0) + 3);
+        replyEl.innerHTML = '<span class="chat-ai">ai></span> ' + cliFormat(plain.slice(0, replyEl._shown));
         screen.scrollTop = screen.scrollHeight;
       }
-      if (streamDone && (replyEl._shown || 0) >= target.length) {
+      if (streamDone && (replyEl._shown || 0) >= plain.length) {
         clearInterval(timer);
-        replyEl.textContent = target;
+        replyEl.innerHTML = '<span class="chat-ai">ai></span> ' + cliFormat(plain);
       }
     }, 25);
     replyEl._shown = 0;
@@ -214,18 +236,16 @@ async function sendChatMessage(text) {
     streamDone = true;
 
     if (!full) {
-      replyEl.textContent = '(no response)';
+      replyEl.innerHTML = '<span class="chat-ai">ai></span> <span class="muted">(no response)</span>';
     }
     chatHistory.push({ role: 'assistant', content: full });
   } catch (e) {
-    replyEl.textContent = `Error: ${e.message}`;
-    replyEl.classList.add('err');
+    replyEl.innerHTML = `<span class="chat-ai">ai></span> <span class="err">Error: ${esc(e.message)}</span>`;
     chatHistory.pop();
   } finally {
     chatBusy = false;
     input.disabled = false;
     input.focus();
-    print('');
   }
 }
 
@@ -555,13 +575,21 @@ input.addEventListener('keydown', (e) => {
   // ── Chat mode ──
   if (chatMode) {
     if (raw === '/exit' || raw === '/quit') { exitChatMode(); return; }
+    if (raw === '/clear') { log.innerHTML = ''; return; }
+    if (raw === '/help') {
+      print('<span class="muted">/exit    leave chat mode</span>');
+      print('<span class="muted">/clear   clear chat history</span>');
+      print('<span class="muted">/model   show current model</span>');
+      print('<span class="muted">/model X switch to model X</span>');
+      return;
+    }
     if (raw === '/model') {
-      print(`<span class="muted">Current model: ${esc(chatModel || 'none')}</span>`);
+      print(`<span class="muted">model: ${esc(chatModel || 'none')}</span>`);
       return;
     }
     if (raw.startsWith('/model ')) {
       chatModel = raw.slice(7).trim();
-      print(`<span class="muted">Model set to ${esc(chatModel)}</span>`);
+      print(`<span class="muted">model → ${esc(chatModel)}</span>`);
       return;
     }
     sendChatMessage(raw);

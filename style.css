@@ -153,7 +153,20 @@ footer.site a:hover { color: var(--blue); }
 .dir { color: var(--blue); }
 .blue { color: var(--blue); }
 pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25; }
-.chat-reply { color: var(--cyan); white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+.chat-reply { color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+.chat-you { color: var(--green); font-weight: 700; }
+.chat-ai { color: var(--cyan); font-weight: 700; }
+.chat-code {
+  display: block; background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 8px 12px; margin: 4px 0 8px;
+  font-size: 13px; line-height: 1.4; overflow-x: auto;
+  white-space: pre;
+}
+.chat-inline {
+  background: var(--code-bg); padding: 1px 5px; border-radius: 3px;
+  font-size: 13px; color: var(--yellow);
+}
+.chat-bold { color: var(--yellow); font-weight: 700; }
 
 /* --- Input --- */
 #inputline { display: flex; align-items: center; gap: 6px; }
