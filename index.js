@@ -617,12 +617,13 @@ input.addEventListener('keydown', (e) => {
     if (raw === '/exit' || raw === '/quit') { exitChatMode(); return; }
     if (raw === '/clear') { log.innerHTML = ''; return; }
     if (raw === '/help') {
-      print('<span class="muted">/exit       leave chat mode</span>');
-      print('<span class="muted">/clear      clear screen</span>');
-      print('<span class="muted">/models     list available models</span>');
-      print('<span class="muted">/model      show current model</span>');
-      print('<span class="muted">/model X    switch to model X</span>');
-      print('<span class="muted">/history    show chat history</span>');
+      print('<span class="muted">/exit          leave chat mode</span>');
+      print('<span class="muted">/clear         clear screen</span>');
+      print('<span class="muted">/models        list available models</span>');
+      print('<span class="muted">/model         show current model</span>');
+      print('<span class="muted">/model X       switch to model X</span>');
+      print('<span class="muted">/history       show chat history</span>');
+      print('<span class="muted">/clear-history reset chat memory</span>');
       return;
     }
     if (raw === '/models') {
@@ -631,6 +632,11 @@ input.addEventListener('keydown', (e) => {
     }
     if (raw === '/history') {
       showChatHistory();
+      return;
+    }
+    if (raw === '/clear-history') {
+      chatHistory = [];
+      print('<span class="muted">Chat history cleared.</span>');
       return;
     }
     if (raw === '/model') {
