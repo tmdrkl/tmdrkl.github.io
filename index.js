@@ -615,10 +615,12 @@ input.addEventListener('keydown', (e) => {
   // ── Chat mode ──
   if (chatMode) {
     if (raw === '/exit' || raw === '/quit') { exitChatMode(); return; }
-    if (raw === '/clear') { log.innerHTML = ''; chatHistory = []; return; }
+    if (raw === '/clear') { log.innerHTML = ''; return; }
+    if (raw === '/new') { chatHistory = []; print('<span class="muted">New conversation started.</span>'); return; }
     if (raw === '/help') {
       print('<span class="muted">/exit      leave chat mode</span>');
-      print('<span class="muted">/clear     clear screen &amp; history</span>');
+      print('<span class="muted">/clear     clear screen</span>');
+      print('<span class="muted">/new       new conversation</span>');
       print('<span class="muted">/models    list available models</span>');
       print('<span class="muted">/model     show current model</span>');
       print('<span class="muted">/model X   switch to model X</span>');
