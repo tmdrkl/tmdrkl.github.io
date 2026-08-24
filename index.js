@@ -1,11 +1,12 @@
 import { THEMES, getTheme, setTheme, themeRainBurst } from './theme.js';
 
 // ── DOM ──────────────────────────────────────────────
-const log     = document.getElementById('log');
-const screen  = document.getElementById('screen');
-const input   = document.getElementById('cmdInput');
-const promptEl= document.getElementById('prompt');
-const loadTime= Date.now();
+const log       = document.getElementById('log');
+const screen    = document.getElementById('screen');
+const input     = document.getElementById('cmdInput');
+const promptEl  = document.getElementById('prompt');
+const titleText = document.getElementById('titleText');
+const loadTime  = Date.now();
 
 // ── Helpers ──────────────────────────────────────────
 function print(html, cls) {
@@ -16,22 +17,26 @@ function print(html, cls) {
   screen.scrollTop = screen.scrollHeight;
 }
 
-function echo(cmd) {
-  print(`<span class="prompt">${esc(promptStr())}</span> <span class="cmd">${esc(cmd)}</span>`);
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function browserName() {
+  const ua = navigator.userAgent;
+  if (ua.includes('Edg/'))     return 'Edge';
+  if (ua.includes('Firefox/')) return 'Firefox';
+  if (ua.includes('Chrome/'))  return 'Chrome';
+  if (ua.includes('Safari/'))  return 'Safari';
+  return 'Mysterious browser';
 }
 
 // ── Virtual FS ───────────────────────────────────────
 const FS = {
   'about.txt': 'Tomi — likes everything new and fun.',
   'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.my.id',
-  'README.md': '# drkl.my.id\n\nThis terminal is a drkl.my.id project.\nRun tetris or chat to open those pages.',
+  'README.md': '# drkl.my.id\n\nA terminal with a built-in AI chat.\nType chat to start talking to the AI.',
   'projects': {
-    'tetris': 'A Tetris game — run: tetris',
-    'chat':   'AI chat powered by Groq — run: chat',
+    'terminal': 'This is it — the web terminal you are using right now.',
   },
   'notes': {
     'todo.txt': '- push website\n- make a blog\n- have lunch',
@@ -70,7 +75,7 @@ function getNode(path) {
 
 function isDir(n) { return !!n && typeof n === 'object'; }
 
-function tree(node, prefix, lines, depth) {
+function treeWalk(node, prefix, lines, depth) {
   const keys = Object.keys(node);
   keys.forEach((k, i) => {
     const last = i === keys.length - 1;
@@ -79,11 +84,11 @@ function tree(node, prefix, lines, depth) {
     lines.push(prefix + (last ? '└── ' : '├── ') + (d
       ? `<span class="dir">${esc(k)}/</span>`
       : `<span class="muted">${esc(k)}</span>`));
-    if (d && depth < 4) tree(child, prefix + (last ? '    ' : '│   '), lines, depth + 1);
+    if (d && depth < 4) treeWalk(child, prefix + (last ? '    ' : '│   '), lines, depth + 1);
   });
 }
 
-// ── Figlet banner ────────────────────────────────────
+// ── Figlet ───────────────────────────────────────────
 const FONT = {
   D: ['████','█  █','█  █','█  █','█  █','█  █','████'],
   R: ['████','█  █','█  █','████','█ █ ','█  █','█  █'],
@@ -100,16 +105,133 @@ function figlet(word) {
   return rows.join('\n');
 }
 
-function browserName() {
-  const ua = navigator.userAgent;
-  if (ua.includes('Edg/'))     return 'Edge';
-  if (ua.includes('Firefox/')) return 'Firefox';
-  if (ua.includes('Chrome/'))  return 'Chrome';
-  if (ua.includes('Safari/'))  return 'Safari';
-  return 'Mysterious browser';
+// ══════════════════════════════════════════════════════
+//  CHAT MODE
+// ══════════════════════════════════════════════════════
+const WORKER_URL = 'https://groq-chat.tomx13.workers.dev';
+let chatMode = false;
+let chatHistory = [];
+let chatBusy = false;
+let chatModel = '';
+
+function enterChatMode() {
+  chatMode = true;
+  chatHistory = [];
+  promptEl.textContent = 'chat>';
+  titleText.textContent = 'chat mode — type /exit to leave';
+  print('<span class="ok">Entering chat mode.</span> AI responses stream in real-time.');
+  print('<span class="muted">Type your message and press Enter. /exit to leave. /model to change model.</span>');
+  print('');
 }
 
-// ── Commands ─────────────────────────────────────────
+function exitChatMode() {
+  chatMode = false;
+  chatHistory = [];
+  refreshPrompt();
+  titleText.textContent = 'tomi@drkl: ~';
+  print('<span class="muted">Exited chat mode.</span>');
+  print('');
+}
+
+async function loadChatModels() {
+  try {
+    const res = await fetch(`${WORKER_URL}/models`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const models = Array.isArray(data.models) ? data.models : [];
+    if (models.length) {
+      const preferred = 'openai/gpt-oss-120b';
+      chatModel = models.includes(preferred) ? preferred : models[0];
+    }
+  } catch {}
+}
+
+async function sendChatMessage(text) {
+  if (chatBusy) return;
+
+  chatHistory.push({ role: 'user', content: text });
+  print(`<span class="cmd">${esc(text)}</span>`);
+  print('');
+
+  const replyEl = document.createElement('div');
+  replyEl.className = 'row chat-reply';
+  log.appendChild(replyEl);
+  screen.scrollTop = screen.scrollHeight;
+
+  chatBusy = true;
+  input.disabled = true;
+
+  try {
+    const res = await fetch(`${WORKER_URL}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: chatModel, messages: chatHistory }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '', full = '', streamDone = false;
+
+    // Typewriter effect
+    const timer = setInterval(() => {
+      const target = full.replace(/<br\s*\/?>/gi, '\n');
+      if (replyEl._shown < target.length) {
+        replyEl._shown = Math.min(target.length, (replyEl._shown || 0) + 3);
+        replyEl.textContent = target.slice(0, replyEl._shown);
+        screen.scrollTop = screen.scrollHeight;
+      }
+      if (streamDone && (replyEl._shown || 0) >= target.length) {
+        clearInterval(timer);
+        replyEl.textContent = target;
+      }
+    }, 25);
+    replyEl._shown = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let idx;
+      while ((idx = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, idx).trim();
+        buffer = buffer.slice(idx + 1);
+        if (!line.startsWith('data:')) continue;
+        const payload = line.slice(5).trim();
+        if (payload === '[DONE]') continue;
+        try {
+          const json = JSON.parse(payload);
+          const delta = json.choices?.[0]?.delta?.content;
+          if (delta) full += delta;
+        } catch {}
+      }
+    }
+    streamDone = true;
+
+    if (!full) {
+      replyEl.textContent = '(no response)';
+    }
+    chatHistory.push({ role: 'assistant', content: full });
+  } catch (e) {
+    replyEl.textContent = `Error: ${e.message}`;
+    replyEl.classList.add('err');
+    chatHistory.pop();
+  } finally {
+    chatBusy = false;
+    input.disabled = false;
+    input.focus();
+    print('');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  TERMINAL COMMANDS
+// ══════════════════════════════════════════════════════
 const HELP = {
   help:     'list available commands',
   about:    'a bit about me',
@@ -124,8 +246,7 @@ const HELP = {
   cat:      'show file contents',
   tree:     'directory tree',
   history:  'command history (-c to clear)',
-  tetris:   'open Tetris in a new tab',
-  chat:     'open AI chat in a new tab',
+  chat:     'start AI chat mode',
   clear:    'clear the screen',
   whoami:   'show current user',
   uname:    'system info',
@@ -221,7 +342,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     if (node === undefined) { print(`tree: no such file or directory: ${esc(args[0] || '')}`, 'err'); return; }
     if (!isDir(node))       { print(`tree: '${esc(args[0])}' is not a directory`, 'err'); return; }
     const lines = [];
-    tree(node, '', lines, 0);
+    treeWalk(node, '', lines, 0);
     print(lines.join('\n'));
   },
 
@@ -231,15 +352,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
     print(hist.map((h, i) => `${String(i + 1).padStart(3)}  ${esc(h)}`).join('\n'));
   },
 
-  tetris() {
-    print(`Opening <span class="ok">tetris.html</span>… <a href="tetris.html" target="_blank">click here</a>`);
-    window.open('tetris.html', '_blank');
-  },
-
-  chat() {
-    print(`Opening <span class="ok">chat.html</span>… <a href="chat.html" target="_blank">click here</a>`);
-    window.open('chat.html', '_blank');
-  },
+  chat() { enterChatMode(); },
 
   clear() { log.innerHTML = ''; hideList(); renderSuggestion(); },
 
@@ -247,11 +360,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
 
   uname() { print(`drklOS 1.0.0 — kernel drkl-sh 6.6.0 (${getTheme()})`); },
 
-  sudo(args) {
-    const cmd = args.join(' ');
-    if (!cmd) { print('usage: sudo <command>', 'err'); return; }
-    print(`tomi is not in the sudoers file. This incident will be reported.`, 'err');
-  },
+  sudo() { print('tomi is not in the sudoers file. This incident will be reported.', 'err'); },
 
   exit()  { print('logout — but you are still here. 😏 Type <span class="ok">clear</span> to start over.'); },
   rm()    { print('rm: read-only filesystem.', 'err'); },
@@ -270,8 +379,12 @@ const suggestEl   = document.getElementById('suggest');
 const suggestList = document.getElementById('suggestList');
 const commandList = Object.keys(commands);
 const PATH_CMDS   = { cd: true, ls: true, cat: true, tree: true };
+let hist = [];
+try { const h = JSON.parse(sessionStorage.getItem('drkl_hist')); if (Array.isArray(h)) hist = h; } catch {}
+let histIdx = -1;
+let pendingHist = '';
+let tabIdx = -1;
 
-// Measure text width for ghost suggestion positioning
 let _measureEl = null;
 function textWidth(s) {
   if (!_measureEl) {
@@ -285,11 +398,6 @@ function textWidth(s) {
   _measureEl.remove();
   return w;
 }
-let hist = [];
-try { const h = JSON.parse(sessionStorage.getItem('drkl_hist')); if (Array.isArray(h)) hist = h; } catch {}
-let histIdx = -1;
-let pendingHist = '';
-let tabIdx = -1;
 
 function completePath(partial) {
   const lastSlash = partial.lastIndexOf('/');
@@ -331,6 +439,7 @@ function setInput(v) {
 }
 
 function renderSuggestion() {
+  if (chatMode) { suggestEl.textContent = ''; suggestEl.style.visibility = 'hidden'; return; }
   const val = input.value;
   const m = getMatches(val);
   let suffix = '';
@@ -442,7 +551,25 @@ input.addEventListener('keydown', (e) => {
   input.value = '';
   hideList(); renderSuggestion();
   if (!raw) return;
-  echo(raw);
+
+  // ── Chat mode ──
+  if (chatMode) {
+    if (raw === '/exit' || raw === '/quit') { exitChatMode(); return; }
+    if (raw === '/model') {
+      print(`<span class="muted">Current model: ${esc(chatModel || 'none')}</span>`);
+      return;
+    }
+    if (raw.startsWith('/model ')) {
+      chatModel = raw.slice(7).trim();
+      print(`<span class="muted">Model set to ${esc(chatModel)}</span>`);
+      return;
+    }
+    sendChatMessage(raw);
+    return;
+  }
+
+  // ── Terminal mode ──
+  print(`<span class="prompt">${esc(promptStr())}</span> <span class="cmd">${esc(raw)}</span>`);
   if (raw !== hist[hist.length - 1]) {
     hist.push(raw);
     try { sessionStorage.setItem('drkl_hist', JSON.stringify(hist.slice(-200))); } catch {}
@@ -458,14 +585,14 @@ input.addEventListener('keydown', (e) => {
 // Click terminal to focus
 document.getElementById('term').addEventListener('click', () => input.focus());
 
-// Mobile: scroll input into view on focus
+// Mobile focus
 if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
   input.addEventListener('focus', () => {
     setTimeout(() => input.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300);
   });
 }
 
-// ── Boot sequence ────────────────────────────────────
+// ── Boot ─────────────────────────────────────────────
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SEEN_INTRO = 'drkl_seen_intro';
 let hasSeenIntro = false;
@@ -473,8 +600,8 @@ try { hasSeenIntro = localStorage.getItem(SEEN_INTRO) === '1'; } catch {}
 
 const BOOT_LINES = [
   'Welcome to <span class="ok">drkl.my.id</span>.',
-  `<span class="muted">drklOS 1.0.0 — drkl-sh shell · JetBrains Mono · ${getTheme()} theme</span>`,
-  'Type <span class="ok">help</span> for the list of commands.',
+  `<span class="muted">drklOS 1.0.0 — drkl-sh shell · ${getTheme()} theme</span>`,
+  'Type <span class="ok">help</span> for commands. Type <span class="ok">chat</span> to talk to AI.',
 ];
 
 let bootDone = false;
@@ -511,8 +638,9 @@ if (reducedMotion || hasSeenIntro) {
 }
 
 refreshPrompt();
+loadChatModels();
 
-// ── Theme toggle button ──────────────────────────────
+// ── Theme toggle ─────────────────────────────────────
 document.getElementById('themeToggle').addEventListener('click', () => {
   const cur  = getTheme();
   const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];

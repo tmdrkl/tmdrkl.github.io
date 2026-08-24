@@ -4,12 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>tomi@drkl ~</title>
-  <meta name="description" content="drkl.my.id — terminal-style landing page with Tetris, AI chat, and more.">
-  <meta property="og:title" content="tomi@drkl ~">
-  <meta property="og:description" content="drkl.my.id — terminal-style landing page with Tetris, AI chat, and more.">
-  <meta property="og:type" content="website">
+  <meta name="description" content="drkl.my.id — terminal with built-in AI chat">
   <meta name="theme-color" content="#2e3440">
-  <meta name="robots" content="index, follow">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%232e3440'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a3be8c' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -19,8 +15,6 @@
   <header class="site">
     <div class="brand">drkl<span class="dim">.my.id</span></div>
     <nav>
-      <a href="tetris.html">tetris</a>
-      <a href="chat.html">chat</a>
       <button class="theme-btn" id="themeToggle" aria-label="Toggle theme"></button>
     </nav>
   </header>
@@ -28,7 +22,7 @@
   <div class="term" id="term">
     <div class="titlebar">
       <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-      <span>tomi@drkl: ~</span>
+      <span id="titleText">tomi@drkl: ~</span>
     </div>
     <div id="screen" role="log" aria-live="polite">
       <div id="log"></div>
