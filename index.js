@@ -170,6 +170,10 @@ async function showModels() {
   print(`<span class="muted">Use /model &lt;name&gt; to switch.</span>`);
 }
 
+function formatTime(ts) {
+  return new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
 function showChatHistory() {
   if (!chatHistory.length) {
     print('<span class="muted">No messages yet.</span>');
@@ -177,17 +181,37 @@ function showChatHistory() {
   }
   print('<span class="ok">Chat history:</span>');
   print('');
-  chatHistory.forEach((msg, i) => {
+  chatHistory.forEach((msg) => {
+    const t = msg.time ? `<span class="muted">[${formatTime(msg.time)}]</span> ` : '';
     if (msg.role === 'user') {
-      print(`<span class="chat-you">you></span> ${esc(msg.content)}`);
+      print(`${t}<span class="chat-you">you></span> ${esc(msg.content)}`);
     } else {
-      // Show first 120 chars of AI response
-      const preview = msg.content.length > 120 ? msg.content.slice(0, 120) + '...' : msg.content;
-      print(`<span class="chat-ai">ai></span> ${esc(preview)}`);
+      print(`${t}<span class="chat-ai">ai></span> ${esc(msg.content)}`);
     }
   });
   print('');
   print(`<span class="muted">${chatHistory.length} messages total.</span>`);
+}
+
+function exportChatLog() {
+  if (!chatHistory.length) {
+    print('<span class="muted">No messages to export.</span>');
+    return;
+  }
+  let log = `drkl.my.id chat log\nModel: ${chatModel}\nDate: ${new Date().toLocaleString()}\n${'='.repeat(40)}\n\n`;
+  chatHistory.forEach((msg) => {
+    const t = msg.time ? `[${formatTime(msg.time)}] ` : '';
+    const role = msg.role === 'user' ? 'you' : 'ai';
+    log += `${t}${role}> ${msg.content}\n\n`;
+  });
+  const blob = new Blob([log], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `chat-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  print('<span class="muted">Chat log downloaded.</span>');
 }
 
 function cliFormat(text) {
@@ -204,7 +228,7 @@ function cliFormat(text) {
 async function sendChatMessage(text) {
   if (chatBusy) return;
 
-  chatHistory.push({ role: 'user', content: text });
+  chatHistory.push({ role: 'user', content: text, time: Date.now() });
   print(`<span class="chat-you">you></span> ${esc(text)}`);
 
   // Separator
@@ -278,7 +302,7 @@ async function sendChatMessage(text) {
     if (!full) {
       replyEl.innerHTML = '<span class="chat-ai">ai></span> <span class="muted">(no response)</span>';
     }
-    chatHistory.push({ role: 'assistant', content: full });
+    chatHistory.push({ role: 'assistant', content: full, time: Date.now() });
   } catch (e) {
     replyEl.innerHTML = `<span class="chat-ai">ai></span> <span class="err">Error: ${esc(e.message)}</span>`;
     chatHistory.pop();
@@ -625,6 +649,7 @@ input.addEventListener('keydown', (e) => {
       print('<span class="muted">/model     show current model</span>');
       print('<span class="muted">/model X   switch to model X</span>');
       print('<span class="muted">/history   show chat history</span>');
+      print('<span class="muted">/export    download chat log</span>');
       return;
     }
     if (raw === '/models') {
@@ -633,6 +658,10 @@ input.addEventListener('keydown', (e) => {
     }
     if (raw === '/history') {
       showChatHistory();
+      return;
+    }
+    if (raw === '/export') {
+      exportChatLog();
       return;
     }
 

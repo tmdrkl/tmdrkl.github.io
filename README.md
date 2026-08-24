@@ -46,7 +46,8 @@ A terminal-style landing page with a built-in AI chatbot.
 | `/models` | List available models |
 | `/model` | Show current model |
 | `/model X` | Switch to model X |
-| `/history` | Show chat history |
+| `/history` | Show full chat history with timestamps |
+| `/export` | Download chat log as text file |
 | `/help` | Show chat commands |
 
 ## Keyboard Shortcuts
