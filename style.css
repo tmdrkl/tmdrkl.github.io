@@ -202,6 +202,29 @@ pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25;
 .helplist { margin: 4px 0 0; padding-left: 18px; }
 .helplist li { margin: 2px 0; }
 
+/* --- Chat welcome box --- */
+.chat-welcome {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin: 8px 0;
+  background: var(--panel2);
+}
+.chat-welcome .chat-welcome-title {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+.chat-welcome-cmds {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  font-size: 14px;
+}
+.chat-welcome-cmds .cmd-name { color: var(--text); }
+.chat-welcome-cmds .cmd-desc { color: var(--muted); }
+
 /* --- Chat help table --- */
 .chat-help {
   display: grid;

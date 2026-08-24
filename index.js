@@ -121,11 +121,18 @@ function enterChatMode() {
   promptEl.textContent = 'you>';
   titleText.textContent = 'chat mode — /exit to leave';
   print('');
-  print('<span class="muted">╔══════════════════════════════════════════╗</span>');
-  print('<span class="muted">║</span>  <span class="ok">AI Chat Mode</span>                           <span class="muted">║</span>');
-  print('<span class="muted">║</span>  /exit   leave    /model  change model  <span class="muted">║</span>');
-  print('<span class="muted">║</span>  /clear  reset    /help   chat commands <span class="muted">║</span>');
-  print('<span class="muted">╚══════════════════════════════════════════╝</span>');
+  const cmds = [
+    ['/exit', 'leave chat mode'],
+    ['/clear', 'reset'],
+    ['/help', 'chat commands'],
+    ['/model', 'change model'],
+  ];
+  let cmdsHtml = '<span class="chat-welcome-cmds">';
+  cmds.forEach(([n, d]) => {
+    cmdsHtml += `<span class="cmd-name">${n}</span><span class="cmd-desc">${d}</span>`;
+  });
+  cmdsHtml += '</span>';
+  print(`<div class="chat-welcome"><span class="chat-welcome-title">AI Chat Mode</span>${cmdsHtml}</div>`);
   print('');
 }
 
