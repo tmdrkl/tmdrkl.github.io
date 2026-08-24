@@ -256,7 +256,7 @@ async function sendChatMessage(text) {
     const res = await fetch(`${WORKER_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: chatModel, messages: chatHistory }),
+      body: JSON.stringify({ model: chatModel, messages: chatHistory.map(({ role, content }) => ({ role, content })), }),
     });
 
     if (!res.ok) {
