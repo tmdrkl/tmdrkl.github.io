@@ -69,8 +69,16 @@ html, body {
 body {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   padding: 40px 16px;
+  min-height: 100vh;
+}
+.wrap {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  min-height: fit-content;
 }
 a { color: var(--blue); transition: color .15s; }
 a:hover { filter: brightness(1.2); }
@@ -108,7 +116,6 @@ footer.site a:hover { color: var(--blue); }
 }
 
 /* --- Terminal --- */
-.wrap { width: 100%; max-width: 700px; }
 
 .term {
   width: 100%;
@@ -242,18 +249,43 @@ pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25;
 
 /* --- Mobile --- */
 @media (max-width: 480px) {
-  body { padding: 0; font-size: 14px; align-items: flex-start; }
-  .wrap { max-width: 100%; }
-  header.site { padding: 10px 14px 0; }
-  footer.site { padding: 0 14px 10px; }
-  header.site nav { gap: 12px; }
-  #screen { height: calc(100vh - 110px); padding: 14px; min-height: 150px; max-height: none; }
-  .titlebar span { display: none; }
-  #cmdInput { font-size: 16px; padding: 6px 0; }
-  #inputline { padding: 0 20px 14px; }
-  .term { border-radius: 0; border-left: none; border-right: none; }
-  pre { font-size: 11px; }
-  .chat-help { font-size: 13px; gap: 2px 12px; }
+  body { padding: 0; font-size: 14px; align-items: flex-start; min-height: 100vh; }
+  .wrap { max-width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
+  header.site { padding: 8px 12px 0; margin-bottom: 8px; }
+  footer.site { padding: 0 12px 8px; margin-top: 8px; gap: 12px; }
+  header.site nav { gap: 8px; }
+  .site .brand { font-size: 14px; }
+  .site nav a { font-size: 12px; padding: 4px 0; }
+  footer.site a { font-size: 12px; }
+  #screen {
+    height: calc(100vh - 140px);
+    padding: 12px;
+    min-height: 200px;
+    max-height: none;
+  }
+  .titlebar { padding: 8px 12px; }
+  .titlebar span { display: inline; font-size: 11px; }
+  .dot { width: 9px; height: 9px; }
+  #cmdInput { font-size: 16px; padding: 8px 0; }
+  #inputline { padding: 0 12px 10px; gap: 8px; }
+  .term { border-radius: 0; border-left: none; border-right: none; border-bottom: none; }
+  pre { font-size: 11px; padding: 6px 8px; }
+  .chat-help { font-size: 12px; gap: 2px 10px; }
+  .chat-welcome { padding: 10px 12px; }
+  .chat-welcome-title { font-size: 14px !important; }
+  .chat-welcome-cmds { font-size: 12px; gap: 3px 10px; }
+  .chat-reply { font-size: 13px; line-height: 1.5; }
+  .row { font-size: 13px; }
+}
+
+@media (max-width: 360px) {
+  body { font-size: 13px; }
+  .site .brand { font-size: 13px; }
+  #screen { padding: 10px; height: calc(100vh - 130px); }
+  #cmdInput { font-size: 16px; }
+  .titlebar { padding: 6px 10px; }
+  .titlebar span { font-size: 10px; }
+  .dot { width: 8px; height: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
