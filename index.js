@@ -270,6 +270,21 @@ const suggestEl   = document.getElementById('suggest');
 const suggestList = document.getElementById('suggestList');
 const commandList = Object.keys(commands);
 const PATH_CMDS   = { cd: true, ls: true, cat: true, tree: true };
+
+// Measure text width for ghost suggestion positioning
+let _measureEl = null;
+function textWidth(s) {
+  if (!_measureEl) {
+    _measureEl = document.createElement('span');
+    _measureEl.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;pointer-events:none;';
+    _measureEl.style.font = getComputedStyle(input).font;
+  }
+  _measureEl.textContent = s;
+  document.body.appendChild(_measureEl);
+  const w = _measureEl.offsetWidth;
+  _measureEl.remove();
+  return w;
+}
 let hist = [];
 try { const h = JSON.parse(sessionStorage.getItem('drkl_hist')); if (Array.isArray(h)) hist = h; } catch {}
 let histIdx = -1;
@@ -325,6 +340,7 @@ function renderSuggestion() {
   }
   if (suffix) {
     suggestEl.textContent = suffix;
+    suggestEl.style.left = textWidth(val) + 'px';
     suggestEl.style.visibility = 'visible';
   } else {
     suggestEl.textContent = '';
