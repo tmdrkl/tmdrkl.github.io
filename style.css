@@ -1,49 +1,53 @@
 /* ===========================
-   drkl.my.id — unified theme
+   drkl.my.id — unified theme (gruvbox material)
    =========================== */
 
-/* --- Dark theme --- */
+/* --- Gruvbox Material Dark (medium contrast) --- */
 [data-theme="dark"] {
-  --bg: #2e3440;
-  --panel: #3b4252;
-  --panel2: #434c5e;
-  --border: #4c566a;
-  --text: #d8dee9;
-  --muted: #7b88a1;
-  --blue: #88c0d0;
-  --green: #a3be8c;
-  --yellow: #ebcb8b;
-  --red: #bf616a;
-  --cyan: #8fbcbb;
-  --btn-bg: #88c0d0;
-  --btn-text: #2e3440;
-  --btn-hover: #8fbcbb;
-  --accent: #88c0d0;
-  --term-shadow: 0 20px 50px rgba(0,0,0,.35), 0 0 40px rgba(136,192,208,.10);
-  --banner-glow: rgba(163,190,140,.35);
-  --code-bg: rgba(0,0,0,.35);
+  --bg: #282828;
+  --panel: #32302f;
+  --panel2: #3c3836;
+  --border: #504945;
+  --text: #e2cca9;
+  --muted: #928374;
+  --blue: #89b482;
+  --green: #a9b665;
+  --yellow: #e78a4e;
+  --red: #ea6962;
+  --cyan: #89b482;
+  --orange: #e78a4e;
+  --purple: #d3869b;
+  --btn-bg: #89b482;
+  --btn-text: #282828;
+  --btn-hover: #a9b665;
+  --accent: #89b482;
+  --term-shadow: 0 20px 50px rgba(0,0,0,.5), 0 0 40px rgba(137,180,130,.15);
+  --banner-glow: rgba(169,182,101,.35);
+  --code-bg: rgba(0,0,0,.45);
 }
 
-/* --- Light theme --- */
+/* --- Gruvbox Material Light (medium contrast) --- */
 [data-theme="light"] {
-  --bg: #eceff4;
-  --panel: #e5e9f0;
-  --panel2: #d8dee9;
-  --border: #c8ced8;
-  --text: #2e3440;
-  --muted: #4c566a;
-  --blue: #5e81ac;
-  --green: #a3be8c;
-  --yellow: #d08770;
-  --red: #bf616a;
-  --cyan: #88c0d0;
-  --btn-bg: #5e81ac;
-  --btn-text: #eceff4;
-  --btn-hover: #81a1c1;
-  --accent: #5e81ac;
-  --term-shadow: 0 20px 50px rgba(0,0,0,.08);
-  --banner-glow: rgba(94,129,172,.2);
-  --code-bg: rgba(0,0,0,.06);
+  --bg: #f2e5bc;
+  --panel: #ebdbb2;
+  --panel2: #d5c4a1;
+  --border: #bdae93;
+  --text: #282828;
+  --muted: #7c6f64;
+  --blue: #076678;
+  --green: #8fbf3f;
+  --yellow: #d65d0e;
+  --red: #c14a4a;
+  --cyan: #076678;
+  --orange: #d65d0e;
+  --purple: #8f3f71;
+  --btn-bg: #076678;
+  --btn-text: #f2e5bc;
+  --btn-hover: #458588;
+  --accent: #076678;
+  --term-shadow: 0 20px 50px rgba(0,0,0,.12);
+  --banner-glow: rgba(143,191,63,.25);
+  --code-bg: rgba(0,0,0,.1);
 }
 
 /* --- Base --- */
