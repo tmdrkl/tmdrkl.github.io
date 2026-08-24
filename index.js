@@ -1,3 +1,5 @@
+import { THEMES, getTheme, setTheme, themeRainBurst } from './theme.js';
+
 // --- Terminal logic ---
 const log = document.getElementById('log');
 const screen = document.getElementById('screen');
@@ -504,8 +506,10 @@ if (reducedMotion || hasSeenIntro) {
     document.addEventListener(ev, finishBoot, { once: true, passive: true }));
 }
 
-// --- Matrix rain disabled ---
-// const rainCanvas = document.getElementById('rain');
-// if (rainCanvas && !reducedMotion && window.innerWidth > 640) {
-//   ...
-// }
+// --- Theme toggle ---
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const cur = getTheme();
+  const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+  setTheme(next);
+  themeRainBurst(next);
+});

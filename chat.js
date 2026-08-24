@@ -209,5 +209,47 @@ input.addEventListener("input", () => {
   input.style.height = Math.min(input.scrollHeight, 140) + "px";
 });
 
+// --- Mobile keyboard handling ---
+const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+if (isMobile && window.visualViewport) {
+  const composer = document.getElementById("composer");
+  let pendingScroll = false;
+
+  function onKeyboardChange() {
+    if (pendingScroll) return;
+    pendingScroll = true;
+    requestAnimationFrame(() => {
+      pendingScroll = false;
+      const vk = window.visualViewport;
+      const keyboardOpen = vk.height < window.innerHeight * 0.75;
+      if (keyboardOpen) {
+        // Push composer to bottom of visible area
+        const offset = window.innerHeight - vk.height - vk.offsetTop;
+        composer.style.position = "fixed";
+        composer.style.bottom = offset + "px";
+        composer.style.left = "0";
+        composer.style.right = "0";
+        composer.style.zIndex = "10";
+        // Scroll input into view
+        input.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } else {
+        composer.style.position = "";
+        composer.style.bottom = "";
+        composer.style.left = "";
+        composer.style.right = "";
+        composer.style.zIndex = "";
+      }
+    });
+  }
+
+  window.visualViewport.addEventListener("resize", onKeyboardChange);
+  window.visualViewport.addEventListener("scroll", onKeyboardChange);
+  input.addEventListener("focus", () => {
+    setTimeout(() => {
+      input.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 300);
+  });
+}
+
 loadModels();
-if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) input.focus();
+if (isMobile) input.focus();
