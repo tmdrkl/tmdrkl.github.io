@@ -310,7 +310,6 @@ async function sendChatMessage(text) {
     chatHistory.push({ role: 'assistant', content: full, time: Date.now() });
   } catch (e) {
     replyEl.innerHTML = `<span class="chat-ai">ai></span> <span class="err">Error: ${esc(e.message)}</span>`;
-  }
   } finally {
     chatBusy = false;
     input.disabled = false;
