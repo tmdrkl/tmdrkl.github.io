@@ -174,7 +174,7 @@ function formatTime(ts) {
   return new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
-function showChatHistory() {
+function showChatHistory(full) {
   if (!chatHistory.length) {
     print('<span class="muted">No messages yet.</span>');
     return;
@@ -186,11 +186,16 @@ function showChatHistory() {
     if (msg.role === 'user') {
       print(`${t}<span class="chat-you">you></span> ${esc(msg.content)}`);
     } else {
-      print(`${t}<span class="chat-ai">ai></span> ${esc(msg.content)}`);
+      if (full) {
+        print(`${t}<span class="chat-ai">ai></span> ${esc(msg.content)}`);
+      } else {
+        const preview = msg.content.length > 120 ? msg.content.slice(0, 120) + '...' : msg.content;
+        print(`${t}<span class="chat-ai">ai></span> ${esc(preview)}`);
+      }
     }
   });
   print('');
-  print(`<span class="muted">${chatHistory.length} messages total.</span>`);
+  print(`<span class="muted">${chatHistory.length} messages total. /history -f for full.</span>`);
 }
 
 function exportChatLog() {
@@ -648,7 +653,7 @@ input.addEventListener('keydown', (e) => {
       print('<span class="muted">/models    list available models</span>');
       print('<span class="muted">/model     show current model</span>');
       print('<span class="muted">/model X   switch to model X</span>');
-      print('<span class="muted">/history   show chat history</span>');
+      print('<span class="muted">/history   show chat history (-f full)</span>');
       print('<span class="muted">/export    download chat log</span>');
       return;
     }
@@ -656,8 +661,8 @@ input.addEventListener('keydown', (e) => {
       showModels();
       return;
     }
-    if (raw === '/history') {
-      showChatHistory();
+    if (raw === '/history' || raw === '/history -f') {
+      showChatHistory(raw === '/history -f');
       return;
     }
     if (raw === '/export') {
