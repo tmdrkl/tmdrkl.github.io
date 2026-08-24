@@ -181,6 +181,53 @@ pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25;
 }
 .chat-bold { color: var(--yellow); font-weight: 700; }
 
+/* --- Chat tables --- */
+.chat-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.chat-table th,
+.chat-table td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.chat-table th {
+  background: var(--panel2);
+  color: var(--text);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.chat-table tr:nth-child(even) td {
+  background: var(--panel2);
+}
+.chat-table td {
+  color: var(--text);
+}
+@media (max-width: 480px) {
+  .chat-table {
+    font-size: 12px;
+    margin: 6px -12px;
+    padding: 0 12px 6px;
+    border-radius: 0;
+  }
+  .chat-table th,
+  .chat-table td {
+    padding: 5px 8px;
+    min-width: max-content;
+  }
+}
+
 /* --- Input --- */
 #inputline { display: flex; align-items: center; gap: 6px; }
 #inputline .prompt { flex-shrink: 0; }

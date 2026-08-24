@@ -227,14 +227,29 @@ function exportChatLog() {
 }
 
 function cliFormat(text) {
-  // Format markdown-like text for CLI: bold `text`, code `code`, separators
+  // Format markdown-like text for CLI: bold `text`, code `code`, separators, tables
   return text
     .replace(/```([\s\S]*?)```/g, '<span class="chat-code">$1</span>')
-    .replace(/`([^`]+)`/g, '<span class="chat-inline">`$1`</span>')
+    .replace(/`([^`]+)`/g, '<span class="chat-inline">$1</span>')
     .replace(/\*\*([^*]+)\*\*/g, '<span class="chat-bold">$1</span>')
     .replace(/^---+$/gm, '<span class="muted">────────────────────────────────</span>')
     .replace(/^# (.+)$/gm, '<span class="ok">$1</span>')
-    .replace(/^## (.+)$/gm, '<span class="blue">$1</span>');
+    .replace(/^## (.+)$/gm, '<span class="blue">$1</span>')
+    .replace(/\n\|([^\n]+)\|\n\|([-:| ]+)\|\n((?:\|[^\n]*\|\n?)+)/g, (match, header, separator, rows) => {
+      const cols = header.split('|').map(c => c.trim()).filter(Boolean);
+      const aligns = separator.split('|').map(a => {
+        const t = a.trim();
+        if (t.startsWith(':') && t.endsWith(':')) return 'center';
+        if (t.endsWith(':')) return 'right';
+        return 'left';
+      }).filter(Boolean);
+      const thead = '<thead><tr>' + cols.map((c, i) => `<th style="text-align:${aligns[i] || 'left'}">${esc(c)}</th>`).join('') + '</tr></thead>';
+      const tbody = '<tbody>' + rows.trim().split('\n').map(r => {
+        const cells = r.split('|').map(c => c.trim()).filter(Boolean);
+        return '<tr>' + cells.map((c, i) => `<td style="text-align:${aligns[i] || 'left'}">${esc(c)}</td>`).join('') + '</tr>';
+      }).join('') + '</tbody>';
+      return '\n<table class="chat-table">' + thead + tbody + '</table>\n';
+    });
 }
 
 async function sendChatMessage(text) {
