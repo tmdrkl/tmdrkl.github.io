@@ -1,53 +1,53 @@
 /* ===========================
-   drkl.my.id — unified theme (gruvbox material)
+   drkl.my.id — unified theme (gruvbox material hard)
    =========================== */
 
-/* --- Gruvbox Material Dark (medium contrast) --- */
+/* --- Gruvbox Material Dark (hard contrast) --- */
 [data-theme="dark"] {
-  --bg: #282828;
-  --panel: #32302f;
-  --panel2: #3c3836;
-  --border: #504945;
-  --text: #e2cca9;
-  --muted: #928374;
-  --blue: #89b482;
-  --green: #a9b665;
-  --yellow: #e78a4e;
-  --red: #ea6962;
-  --cyan: #89b482;
-  --orange: #e78a4e;
+  --bg: #1d2021;
+  --panel: #282828;
+  --panel2: #32302f;
+  --border: #665c54;
+  --text: #d4be98;
+  --muted: #a89984;
+  --blue: #83a598;
+  --green: #b8bb26;
+  --yellow: #fe8019;
+  --red: #fb4934;
+  --cyan: #8ec07c;
+  --orange: #fe8019;
   --purple: #d3869b;
-  --btn-bg: #89b482;
-  --btn-text: #282828;
-  --btn-hover: #a9b665;
-  --accent: #89b482;
-  --term-shadow: 0 20px 50px rgba(0,0,0,.5), 0 0 40px rgba(137,180,130,.15);
-  --banner-glow: rgba(169,182,101,.35);
-  --code-bg: rgba(0,0,0,.45);
+  --btn-bg: #83a598;
+  --btn-text: #1d2021;
+  --btn-hover: #b8bb26;
+  --accent: #83a598;
+  --term-shadow: 0 20px 50px rgba(0,0,0,.6), 0 0 40px rgba(131,165,152,.15);
+  --banner-glow: rgba(184,187,38,.35);
+  --code-bg: rgba(0,0,0,.5);
 }
 
-/* --- Gruvbox Material Light (medium contrast) --- */
+/* --- Gruvbox Material Light (hard contrast) --- */
 [data-theme="light"] {
-  --bg: #f2e5bc;
-  --panel: #ebdbb2;
-  --panel2: #d5c4a1;
-  --border: #bdae93;
-  --text: #282828;
+  --bg: #f9f5d7;
+  --panel: #fbf1c7;
+  --panel2: #ebdbb2;
+  --border: #a89984;
+  --text: #3c3836;
   --muted: #7c6f64;
   --blue: #076678;
-  --green: #8fbf3f;
+  --green: #98971a;
   --yellow: #d65d0e;
-  --red: #c14a4a;
-  --cyan: #076678;
+  --red: #cc241d;
+  --cyan: #427b58;
   --orange: #d65d0e;
   --purple: #8f3f71;
   --btn-bg: #076678;
-  --btn-text: #f2e5bc;
+  --btn-text: #f9f5d7;
   --btn-hover: #458588;
   --accent: #076678;
-  --term-shadow: 0 20px 50px rgba(0,0,0,.12);
-  --banner-glow: rgba(143,191,63,.25);
-  --code-bg: rgba(0,0,0,.1);
+  --term-shadow: 0 20px 50px rgba(0,0,0,.15);
+  --banner-glow: rgba(152,151,26,.25);
+  --code-bg: rgba(0,0,0,.12);
 }
 
 /* --- Base --- */
