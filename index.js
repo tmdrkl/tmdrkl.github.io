@@ -125,6 +125,7 @@ function enterChatMode() {
     ['/exit', 'leave chat mode'],
     ['/clear', 'reset'],
     ['/help', 'chat commands'],
+    ['/login <PIN>', 'owner: lift rate limit'],
     ['/model', 'change model'],
   ];
   let cmdsHtml = '<span class="chat-welcome-cmds">';
@@ -175,6 +176,78 @@ async function showModels() {
   });
   print('');
   print(`<span class="muted">Use /model &lt;name&gt; to switch.</span>`);
+}
+
+async function chatLogin(pin) {
+  if (!pin) {
+    print('usage: <span class="ok">/login &lt;PIN&gt;</span>');
+    return;
+  }
+  print('<span class="muted">Verifying PIN...</span>');
+  try {
+    const res = await fetch(`${WORKER_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.error || `HTTP ${res.status}`);
+    }
+    const d = await res.json();
+    sessionStorage.setItem('drkl_chat_token', d.token);
+    print('<span class="ok">PIN verified — rate limit lifted for 24h.</span>');
+  } catch (e) {
+    print(`<span class="err">Login failed: ${esc(e.message)}</span>`);
+  }
+}
+
+async function showChatStats() {
+  print('<span class="muted">Fetching stats...</span>');
+  const chatToken = sessionStorage.getItem('drkl_chat_token') || '';
+  try {
+    const res = await fetch(`${WORKER_URL}/stats`, {
+      headers: chatToken ? { Authorization: 'Bearer ' + chatToken } : {},
+    });
+    if (!res.ok) {
+      if (res.status === 401) throw new Error('login needed — run /login <PIN> first');
+      throw new Error(`HTTP ${res.status}`);
+    }
+    const s = await res.json();
+    if (s.error) throw new Error(s.error);
+
+    const lines = [
+      `<span class="ok">Chat usage stats</span>`,
+      `<span class="muted">---------------------------</span>`,
+      `<span class="blue">Total chats</span>: ${s.totalChats}`,
+      `<span class="blue">Total tokens</span>: ${s.totalTokens}`,
+      `<span class="blue">Prompt tokens</span>: ${s.promptTokens}`,
+      `<span class="blue">Completion tokens</span>: ${s.completionTokens}`,
+      `<span class="blue">Avg tokens/chat</span>: ${s.avgTokensPerChat}`,
+    ];
+
+    if (s.byDay && s.byDay.length) {
+      const recent = s.byDay.slice(0, 5)
+        .map(d => `  ${esc(d.date)} — ${d.chats} chats · ${d.tokens} tokens`)
+        .join('\n');
+      lines.push(`<span class="blue">Recent days</span>\n${recent}`);
+    }
+    if (s.models && s.models.length) {
+      lines.push(`<span class="blue">Top models</span>`);
+      s.models.slice(0, 3).forEach(m => {
+        lines.push(`  ${esc(m.model)} — ${m.count} chats · ${m.ptok + m.ctok} tokens`);
+      });
+    }
+    if (s.logins && s.logins.length) {
+      lines.push(`<span class="blue">Login history</span>`);
+      s.logins.slice(0, 5).forEach(l => {
+        lines.push(`  ${esc(l.ip)} — ${esc(l.time)}`);
+      });
+    }
+    print(`<pre>${lines.join('\n')}</pre>`);
+  } catch (e) {
+    print(`<span class="err">Fetch failed: ${esc(e.message)}</span>`);
+  }
 }
 
 function formatTime(ts) {
@@ -275,9 +348,10 @@ async function sendChatMessage(text) {
   input.disabled = true;
 
   try {
+    const chatToken = sessionStorage.getItem('drkl_chat_token') || '';
     const res = await fetch(`${WORKER_URL}/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(chatToken ? { Authorization: 'Bearer ' + chatToken } : {}) },
       body: JSON.stringify({ model: chatModel, messages: chatHistory.map(({ role, content }) => ({ role, content })), }),
     });
 
@@ -722,6 +796,8 @@ input.addEventListener('keydown', (e) => {
         ['/models', 'list available models'],
         ['/model', 'show current model'],
         ['/model X', 'switch to model X'],
+        ['/login <PIN>', 'owner: lift rate limit'],
+        ['/stats', 'chat usage stats'],
         ['/history', 'show chat history (-f full)'],
         ['/export', 'download chat log'],
       ];
@@ -735,6 +811,14 @@ input.addEventListener('keydown', (e) => {
     }
     if (raw.toLowerCase().trim() === '/models') {
       showModels();
+      return;
+    }
+    if (cmd === '/stats') {
+      showChatStats();
+      return;
+    }
+    if (cmd.startsWith('/login ')) {
+      chatLogin(cmd.slice(7).trim());
       return;
     }
     if (cmd === '/history' || cmd === '/history -f') {

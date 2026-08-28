@@ -46,6 +46,8 @@ A terminal-style landing page with a built-in AI chatbot.
 | `/models` | List available models |
 | `/model` | Show current model |
 | `/model X` | Switch to model X |
+| `/login <PIN>` | Owner: lift rate limit for 24h |
+| `/stats` | Show chat usage stats (chats & tokens) |
 | `/history` | Show full chat history with timestamps |
 | `/export` | Download chat log as text file |
 | `/help` | Show chat commands |
