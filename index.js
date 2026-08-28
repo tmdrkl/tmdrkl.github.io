@@ -42,6 +42,65 @@ const FS = {
     'todo.txt': '- push website\n- make a blog\n- have lunch',
     'ide.txt':  'try making another game on drkl.my.id',
   },
+  'blog': {
+    'mulai.md': [
+      '# Selamat datang di drkl.my.id',
+      '',
+      'Situs ini dimulai dari satu ide sederhana: membuat landing page personal',
+      'yang tidak membosankan. Alih-alih halaman statis biasa, saya bikin terminal',
+      'web interaktif yang bisa dipakai asli — lengkap dengan virtual filesystem.',
+      '',
+      '## Fitur',
+      '',
+      '- **Terminal** — `ls`, `cd`, `cat`, `tree`, `neofetch`, dan lainnya',
+      '- **AI Chat** — ketik `chat` untuk ngobrol dengan AI (Groq)',
+      '- **Tema** — dark/light, ikut preferensi sistem atau manual',
+      '- **History** — riwayat perintah tersimpan antar sesi',
+      '',
+      'Situs ini berjalan 100% di sisi klien. Backend hanya dipakai untuk AI chat.',
+      '',
+      'Selamat menjelajah. Ketik `help` untuk daftar perintah.'
+    ].join('\n'),
+    'ai-chat.md': [
+      '# Di balik AI chat',
+      '',
+      'Ketika kamu ketik `chat`, browser berbicara ke Cloudflare Worker yang',
+      'meneruskan pertanyaan ke API Groq. Semua jawaban di-streaming agar',
+      'terasa seperti mengetik.',
+      '',
+      '## Menjaga biaya tetap waras',
+      '',
+      '- **Rate limit** — 50 percakapan per IP per 24 jam',
+      '- **Usage tracking** — jumlah chat & token tersimpan di Durable Object',
+      '- **PIN owner** — `/login <PIN>` membuka limit & `/stats` untuk pemilik',
+      '',
+      '## Coba sendiri',
+      '',
+      'Ketik `chat`, lalu `/help` untuk melihat perintah yang tersedia.',
+      '`/stats` menampilkan statistik pemakaian (khusus pemilik yang sudah login).'
+    ].join('\n'),
+    'stack.md': [
+      '# Stack',
+      '',
+      'Situs ini dibangun tanpa framework:',
+      '',
+      '| Bagian     | Teknologi                    |',
+      '|------------|------------------------------|',
+      '| Frontend   | Vanilla HTML/CSS/JS          |',
+      '| Warna      | Gruvbox Material             |',
+      '| AI chat    | Groq via Cloudflare Worker   |',
+      '| Penyimpanan| Durable Objects (Cloudflare) |',
+      '| Hosting    | GitHub Pages                 |',
+      '',
+      '## Roadmap',
+      '',
+      '- Blog (sudah: `blog` + `read`)',
+      '- Dashboard statistik visual (`dashboard`)',
+      '- Satu lagi game kecil',
+      '',
+      'Lihat kode di [github.com/tmdrkl](https://github.com/tmdrkl).'
+    ].join('\n'),
+  },
 };
 
 let cwd = ['~'];
@@ -241,7 +300,8 @@ async function showChatStats() {
     if (s.logins && s.logins.length) {
       lines.push(`<span class="blue">Login history</span>`);
       s.logins.slice(0, 5).forEach(l => {
-        lines.push(`  ${esc(l.ip)} — ${esc(l.time)}`);
+        const where = l.country && l.country !== '??' ? esc(l.country) : '??';
+        lines.push(`  ${esc(l.ip)} (${where}) — ${esc(l.time)}`);
       });
     }
     print(`<pre>${lines.join('\n')}</pre>`);
@@ -431,6 +491,9 @@ const HELP = {
   tree:     'directory tree',
   history:  'command history (-c to clear)',
   chat:     'start AI chat mode',
+  blog:     'list blog posts',
+  read:     'read a blog post (read 1 | read name.md)',
+  dashboard:'open the visual stats dashboard',
   clear:    'clear the screen',
   whoami:   'show current user',
   uname:    'system info',
@@ -472,10 +535,10 @@ async neofetch(args) {
     if (showFetch) {
       print('<span class="muted">Fetching system info...</span>');
       try {
-        const res = await fetch('https://ipapi.co/json/');
+        const res = await fetch(`${WORKER_URL}/geo`);
         if (res.ok) {
           const data = await res.json();
-          
+
           const ua = navigator.userAgent;
           let osName = 'Unknown';
           if (ua.includes('Windows')) osName = 'Windows';
@@ -483,22 +546,20 @@ async neofetch(args) {
           else if (ua.includes('Linux')) osName = 'Linux';
           else if (ua.includes('Android')) osName = 'Android';
           else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) osName = 'iOS';
-          
+
           const lines = [
             `<span class="ok">tomi@drkl</span>`,
             `<span class="muted">------------------</span>`,
-            `<span class="blue">OS</span>: ${osName} (${data.country_name || 'Unknown'})`,
-            `<span class="blue">Host</span>: ${data.city || 'Unknown'}, ${data.region || 'Unknown'}`,
-            `<span class="blue">IP</span>: ${data.ip || 'Unknown'}`,
-            `<span class="blue">ISP</span>: ${data.org || 'Unknown'}`,
+            `<span class="blue">OS</span>: ${osName}`,
+            `<span class="blue">Host</span>: drkl.my.id (via Cloudflare edge)`,
+            `<span class="blue">IP</span>: ${esc(data.ip || 'Unknown')}`,
+            `<span class="blue">Country</span>: ${esc(data.country || 'Unknown')}`,
             `<span class="blue">Uptime</span>: ${upStr}`,
             `<span class="blue">Shell</span>: drkl-sh`,
             `<span class="blue">Resolution</span>: ${window.screen.width}×${window.screen.height}`,
             `<span class="blue">Browser</span>: ${browserName()}`,
             `<span class="blue">Theme</span>: ${getTheme()}`,
-            `<span class="blue">Timezone</span>: ${data.timezone || 'Unknown'}`,
-            `<span class="muted">Lat: ${data.latitude || '?'}  Lon: ${data.longitude || '?'}</span>`,
-            `<span class="muted">ASN: ${data.asn || 'Unknown'}</span>`,
+            `<span class="muted">Geo data berasal dari Worker sendiri (tanpa pihak ketiga)</span>`,
           ];
           print(`<pre>${lines.join('\n')}</pre>`);
           return;
@@ -582,6 +643,40 @@ async neofetch(args) {
     print(hist.map((h, i) => `${String(i + 1).padStart(3)}  ${esc(h)}`).join('\n'));
   },
 
+  blog() {
+    const names = Object.keys(FS.blog);
+    if (!names.length) { print('(empty)', 'muted'); return; }
+    print('<span class="ok">Blog posts</span> — use <span class="ok">read &lt;n&gt;</span> or <span class="ok">read &lt;name.md&gt;</span>');
+    print('');
+    names.forEach((name, i) => {
+      const title = (String(FS.blog[name]).match(/^#\s+(.+)$/m) || [])[1] || name;
+      print(`  <span class="ok">${i + 1}.</span> ${esc(title)} <span class="muted">(${esc(name)})</span>`);
+    });
+  },
+
+  read(args) {
+    if (chatMode) { print('read: keluar dari chat mode dulu (/exit)', 'err'); return; }
+    if (!args.length) { print('read: usage: read <n> | read <name>', 'err'); return; }
+    const names = Object.keys(FS.blog);
+    let name = null;
+    const n = args[0];
+    if (/^\d+$/.test(n)) {
+      const idx = parseInt(n, 10);
+      if (idx < 1 || idx > names.length) { print(`read: no post #${n}`, 'err'); return; }
+      name = names[idx - 1];
+    } else {
+      const guess = n.endsWith('.md') ? n : n + '.md';
+      if (names.includes(guess)) name = guess;
+    }
+    if (!name) { print(`read: no such post "${esc(args[0])}"`, 'err'); return; }
+    print(cliFormat(String(FS.blog[name])));
+  },
+
+  dashboard() {
+    print('<span class="muted">Opening dashboard...</span>');
+    setTimeout(() => { location.href = 'stats.html'; }, 400);
+  },
+
   chat() { enterChatMode(); },
 
   clear() { log.innerHTML = ''; hideList(); renderSuggestion(); },
@@ -608,7 +703,7 @@ async neofetch(args) {
 const suggestEl   = document.getElementById('suggest');
 const suggestList = document.getElementById('suggestList');
 const commandList = Object.keys(commands);
-const PATH_CMDS   = { cd: true, ls: true, cat: true, tree: true };
+const PATH_CMDS   = { cd: true, ls: true, cat: true, tree: true, read: true };
 let hist = [];
 try { const h = JSON.parse(sessionStorage.getItem('drkl_hist')); if (Array.isArray(h)) hist = h; } catch {}
 let histIdx = -1;

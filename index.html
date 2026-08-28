@@ -7,10 +7,50 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>tomi@drkl ~</title>
-  <meta name="description" content="drkl.my.id — terminal with built-in AI chat">
-  <meta name="theme-color" content="#282828">
+  <meta name="description" content="drkl.my.id — terminal web interaktif dengan AI chat bawaan. Terminal, blog, dan bot AI dalam satu halaman.">
+  <meta name="theme-color" content="#1d2021">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%23282828'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a9b665' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css?v=4">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('drkl_theme');
+        if (t !== 'dark' && t !== 'light') {
+          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="drkl.my.id">
+  <meta property="og:title" content="tomi@drkl ~">
+  <meta property="og:description" content="Terminal web interaktif dengan AI chat bawaan. Ketik `chat` untuk mulai ngobrol.">
+  <meta property="og:url" content="https://drkl.my.id/">
+  <meta property="og:image" content="https://drkl.my.id/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="tomi@drkl ~">
+  <meta name="twitter:description" content="Terminal web interaktif dengan AI chat bawaan.">
+  <meta name="twitter:image" content="https://drkl.my.id/og.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "drkl.my.id",
+    "url": "https://drkl.my.id/",
+    "description": "Terminal web interaktif dengan AI chat bawaan.",
+    "author": {
+      "@type": "Person",
+      "name": "Tomi",
+      "url": "https://github.com/tmdrkl",
+      "sameAs": ["https://t.me/tmdrkl", "mailto:to@drkl.my.id"]
+    }
+  }
+  </script>
 </head>
 <body>
 
@@ -49,6 +89,6 @@
   </footer>
 </div>
 
-<script type="module" src="index.js?v=10"></script>
+<script type="module" src="index.js?v=11"></script>
 </body>
 </html>

@@ -28,6 +28,9 @@ A terminal-style landing page with a built-in AI chatbot.
 | `tree` | Directory tree |
 | `history` | Command history (`-c` to clear) |
 | `chat` | Start AI chat mode |
+| `blog` | List blog posts |
+| `read` | Read a blog post: `read 1` or `read name.md` |
+| `dashboard` | Open the visual stats dashboard |
 | `clear` | Clear the screen |
 | `whoami` | Show current user |
 | `uname` | System info |

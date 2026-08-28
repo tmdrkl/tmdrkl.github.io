@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>drkl — stats</title>
+<meta name="theme-color" content="#1d2021">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%23282828'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a9b665' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
+<script>
+(function(){try{var t=localStorage.getItem('drkl_theme');if(t!=='dark'&&t!=='light'){t=(matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+<style>
+:root{
+  --bg:#282828; --fg:#ebdbb2; --dim:#928374; --accent:#a9b665; --blue:#83a598;
+  --card:#1d2021; --border:#3c3836; --bar:#a9b665;
+}
+[data-theme="light"]{
+  --bg:#fbf1c7; --fg:#3c3836; --dim:#928374; --accent:#79740e; --blue:#076678;
+  --card:#f9f5d7; --border:#d5c4a1; --bar:#79740e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--fg);
+  font:14px/1.55 "JetBrains Mono","Iosevka",ui-monospace,Menlo,Consolas,monospace;
+  padding:24px;max-width:880px;margin:0 auto;
+}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+h1{font-size:18px;color:var(--accent);font-weight:700}
+h1 span{color:var(--dim)}
+a.back{color:var(--blue);text-decoration:none}
+a.back:hover{text-decoration:underline}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px}
+.card .k{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.card .v{font-size:24px;font-weight:700;color:var(--accent);margin-top:4px}
+.card .s{font-size:11px;color:var(--dim);margin-top:2px}
+h2{font-size:13px;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin:22px 0 10px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:150px}
+.bars .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.bars .fill{width:100%;background:var(--bar);border-radius:3px 3px 0 0;min-height:2px}
+.bars .lbl{font-size:10px;color:var(--dim);writing-mode:vertical-rl;transform:rotate(180deg);overflow:hidden;white-space:nowrap}
+.empty{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
+th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.err{color:#fb4934;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px}
+.hint{color:var(--dim);font-size:12px;margin-top:8px}
+code{background:var(--bg);padding:1px 5px;border-radius:4px;color:var(--accent)}
+footer{margin-top:28px;color:var(--dim);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>drkl<span>.my.id</span> — dashboard stats</h1>
+  <a class="back" href="/">&larr; kembali ke terminal</a>
+</header>
+
+<div id="err" class="err" hidden></div>
+
+<section class="grid">
+  <div class="card"><div class="k">Total chats</div><div class="v" id="chats">—</div><div class="s">percakapan AI</div></div>
+  <div class="card"><div class="k">Total tokens</div><div class="v" id="tokens">—</div><div class="s"><span id="pt">—</span> prompt · <span id="ct">—</span> completion</div></div>
+  <div class="card"><div class="k">Avg tokens/chat</div><div class="v" id="avg">—</div></div>
+  <div class="card"><div class="k">Top model</div><div class="v" id="top">—</div><div class="s" id="topsub"></div></div>
+</section>
+
+<h2>Chat per hari</h2>
+<div id="byday" class="bars"><span class="empty">Belum ada data.</span></div>
+
+<h2>Model</h2>
+<table id="models"></table>
+
+<h2>History login (IP + waktu)</h2>
+<table id="logins"></table>
+
+<footer>Data diambil langsung dari Cloudflare Worker — hanya untuk pemilik yang sudah login.</footer>
+
+<script>
+const WORKER_URL = 'https://groq-chat.tomx13.workers.dev';
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
+
+async function main(){
+  const token = sessionStorage.getItem('drkl_chat_token') || '';
+  if (!token) return fail('Belum login. Ketik <code>chat</code> lalu <code>/login &lt;PIN&gt;</code> di terminal, buka kembali halaman ini.');
+  let s;
+  try {
+    const res = await fetch(WORKER_URL + '/stats', { headers: { Authorization: 'Bearer ' + token } });
+    if (res.status === 401) return fail('Sesi login berakhir atau IP berubah. Login ulang di terminal: <code>chat</code> → <code>/login &lt;PIN&gt;</code>.');
+    if (!res.ok) return fail('Fetch stats gagal (HTTP ' + res.status + ').');
+    s = await res.json();
+  } catch (e) {
+    return fail('Tidak bisa mencapai worker: ' + esc(e.message));
+  }
+
+  $('chats').textContent = fmt(s.totalChats);
+  $('tokens').textContent = fmt(s.totalTokens);
+  $('pt').textContent = fmt(s.promptTokens);
+  $('ct').textContent = fmt(s.completionTokens);
+  $('avg').textContent = fmt(s.avgTokensPerChat);
+
+  const byDay = (s.byDay || []).slice(0, 14);
+  const box = $('byday');
+  box.innerHTML = '';
+  if (!byDay.length) { box.innerHTML = '<span class="empty">Belum ada data.</span>'; }
+  else {
+    const max = Math.max(...byDay.map(d => d.chats), 1);
+    byDay.forEach(d => {
+      const col = document.createElement('div');
+      col.className = 'col';
+      const fill = document.createElement('div');
+      fill.className = 'fill';
+      fill.style.height = Math.max(2, Math.round((d.chats / max) * 130)) + 'px';
+      fill.title = d.chats + ' chats';
+      const lbl = document.createElement('div');
+      lbl.className = 'lbl';
+      lbl.textContent = d.date.slice(5) + ' · ' + d.chats;
+      col.appendChild(fill); col.appendChild(lbl);
+      box.appendChild(col);
+    });
+  }
+
+  const models = s.models || [];
+  const mt = $('models');
+  mt.innerHTML = models.length ? (
+    '<tr><th>Model</th><th>Chats</th><th>Prompt</th><th>Completion</th></tr>' +
+    models.map(m => `<tr><td>${esc(m.model)}</td><td>${fmt(m.count)}</td><td>${fmt(m.ptok)}</td><td>${fmt(m.ctok)}</td></tr>`).join('')
+  ) : '<tr><td class="empty">Belum ada data.</td></tr>';
+
+  if (models[0]) { $('top').textContent = models[0].model; $('topsub').textContent = models[0].count + ' chats'; }
+
+  const logins = s.logins || [];
+  const lt = $('logins');
+  lt.innerHTML = logins.length ? (
+    '<tr><th>IP</th><th>Country</th><th>Waktu (UTC)</th></tr>' +
+    logins.map(l => `<tr><td>${esc(l.ip)}</td><td>${esc(l.country || '—')}</td><td>${esc(l.time)}</td></tr>`).join('')
+  ) : '<tr><td class="empty">Belum ada login tercatat.</td></tr>';
+}
+
+function fail(msg){ const e=$('err'); e.innerHTML=msg; e.hidden=false; }
+main();
+</script>
+</body>
+</html>

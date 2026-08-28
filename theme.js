@@ -3,7 +3,8 @@ export const THEME_META = { dark: '#1d2021', light: '#f9f5d7' };
 
 export function getTheme() {
   const v = localStorage.getItem('drkl_theme');
-  return THEMES.includes(v) ? v : 'dark';
+  if (THEMES.includes(v)) return v;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
 
 export function setTheme(t) {
