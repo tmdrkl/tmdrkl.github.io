@@ -360,14 +360,35 @@ function exportChatLog() {
 }
 
 function cliFormat(text) {
-  // Format markdown-like text for CLI: bold `text`, code `code`, separators, tables
-  return text
-    .replace(/```([\s\S]*?)```/g, '<span class="chat-code">$1</span>')
+  // Format markdown-like text for CLI: bold, code, lists, tables, headings
+  const safe = esc(text);
+
+  // Pull fenced code blocks out first so later rules can't touch them
+  const blocks = [];
+  const noBlocks = safe.replace(/```(\w+)?[\s\n]*([\s\S]*?)```/g, (_m, lang, code) => {
+    blocks.push({ lang: lang || '', code });
+    return '\u0000CODE' + (blocks.length - 1) + '\u0000';
+  });
+
+  const body = noBlocks
     .replace(/`([^`]+)`/g, '<span class="chat-inline">$1</span>')
     .replace(/\*\*([^*]+)\*\*/g, '<span class="chat-bold">$1</span>')
+    .replace(/\*([^*\n]+)\*/g, '<span class="chat-italic">$1</span>')
     .replace(/^---+$/gm, '<span class="muted">────────────────────────────────</span>')
-    .replace(/^# (.+)$/gm, '<span class="ok">$1</span>')
-    .replace(/^## (.+)$/gm, '<span class="blue">$1</span>')
+    .replace(/^&gt;\s*(.*)$/gm, '<span class="chat-quote">$1</span>')
+    .replace(/^(#{1,6})\s+(.+)$/gm, (_m, hashes, content) => {
+      const cls = hashes.length === 1 ? 'chat-h1' : hashes.length === 2 ? 'chat-h2' : 'chat-h3';
+      return `<span class="${cls}">${content}</span>`;
+    })
+    .replace(/^([-*+])\s+(?:\[(?:[ xX])\]\s+)?(.+)$/gm, (_m, marker, content) => {
+      const task = _m.match(/\[([ xX])\]/);
+      if (task) {
+        const done = /x/i.test(task[1]);
+        return `<span class="chat-task${done ? ' done' : ''}">${done ? '☑' : '☐'} ${content}</span>`;
+      }
+      return `<span class="chat-bullet">${marker}</span> ${content}`;
+    })
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<span class="chat-num">$1</span> $2')
     .replace(/\n\|([^\n]+)\|\n\|([-:| ]+)\|\n((?:\|[^\n]*\|\n?)+)/g, (match, header, separator, rows) => {
       const cols = header.split('|').map(c => c.trim()).filter(Boolean);
       const aligns = separator.split('|').map(a => {
@@ -376,13 +397,19 @@ function cliFormat(text) {
         if (t.endsWith(':')) return 'right';
         return 'left';
       }).filter(Boolean);
-      const thead = '<thead><tr>' + cols.map((c, i) => `<th style="text-align:${aligns[i] || 'left'}">${esc(c)}</th>`).join('') + '</tr></thead>';
+      const thead = '<thead><tr>' + cols.map((c, i) => `<th style="text-align:${aligns[i] || 'left'}">${c}</th>`).join('') + '</tr></thead>';
       const tbody = '<tbody>' + rows.trim().split('\n').map(r => {
         const cells = r.split('|').map(c => c.trim()).filter(Boolean);
-        return '<tr>' + cells.map((c, i) => `<td style="text-align:${aligns[i] || 'left'}">${esc(c)}</td>`).join('') + '</tr>';
+        return '<tr>' + cells.map((c, i) => `<td style="text-align:${aligns[i] || 'left'}">${c}</td>`).join('') + '</tr>';
       }).join('') + '</tbody>';
       return '\n<table class="chat-table">' + thead + tbody + '</table>\n';
     });
+
+  return body.replace(/\u0000CODE(\d+)\u0000/g, (_m, i) => {
+    const b = blocks[Number(i)];
+    const lang = b.lang ? `<span class="chat-code-lang">${b.lang}</span>` : '';
+    return `<span class="chat-code">${lang}${b.code}</span>`;
+  });
 }
 
 async function sendChatMessage(text) {
