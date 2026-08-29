@@ -646,41 +646,62 @@ function cliFormat(text) {
     return '\u0000CODE' + (blocks.length - 1) + '\u0000';
   });
 
-  const body = noBlocks
+  // Process tables FIRST (before lists) to prevent table rows being caught as list items
+  // More robust table regex: handles optional leading/trailing pipes, multiple rows
+  let body = noBlocks.replace(/\n?\|([^\n]+)\|\n\|([-:| ]+)\|\n((?:\|[^\n]*\|\n?)+)/g, (match, header, separator, rows) => {
+    const cols = header.split('|').map(c => c.trim()).filter(Boolean);
+    const aligns = separator.split('|').map(a => {
+      const t = a.trim();
+      if (t.startsWith(':') && t.endsWith(':')) return 'center';
+      if (t.endsWith(':')) return 'right';
+      return 'left';
+    }).filter(Boolean);
+    const thead = '<thead><tr>' + cols.map((c, i) => `<th style="text-align:${aligns[i] || 'left'}">${c}</th>`).join('') + '</tr></thead>';
+    const tbody = '<tbody>' + rows.trim().split('\n').map(r => {
+      const cells = r.split('|').map(c => c.trim()).filter(Boolean);
+      return '<tr>' + cells.map((c, i) => `<td style="text-align:${aligns[i] || 'left'}">${c}</td>`).join('') + '</tr>';
+    }).join('') + '</tbody>';
+    return '\n<table class="chat-table">' + thead + tbody + '</table>\n';
+  });
+
+  // Also handle tables without leading newline (at start of text)
+  body = body.replace(/^\|([^\n]+)\|\n\|([-:| ]+)\|\n((?:\|[^\n]*\|\n?)+)/g, (match, header, separator, rows) => {
+    const cols = header.split('|').map(c => c.trim()).filter(Boolean);
+    const aligns = separator.split('|').map(a => {
+      const t = a.trim();
+      if (t.startsWith(':') && t.endsWith(':')) return 'center';
+      if (t.endsWith(':')) return 'right';
+      return 'left';
+    }).filter(Boolean);
+    const thead = '<thead><tr>' + cols.map((c, i) => `<th style="text-align:${aligns[i] || 'left'}">${c}</th>`).join('') + '</tr></thead>';
+    const tbody = '<tbody>' + rows.trim().split('\n').map(r => {
+      const cells = r.split('|').map(c => c.trim()).filter(Boolean);
+      return '<tr>' + cells.map((c, i) => `<td style="text-align:${aligns[i] || 'left'}">${c}</td>`).join('') + '</tr>';
+    }).join('') + '</tbody>';
+    return '<table class="chat-table">' + thead + tbody + '</table>\n';
+  });
+
+  body = body
     .replace(/`([^`]+)`/g, '<span class="chat-inline">$1</span>')
     .replace(/\*\*([^*]+)\*\*/g, '<span class="chat-bold">$1</span>')
     .replace(/\*([^*\n]+)\*/g, '<span class="chat-italic">$1</span>')
     .replace(/^---+$/gm, '<span class="muted">────────────────────────────────</span>')
-    .replace(/^&gt;\s*(.*)$/gm, '<span class="chat-quote">$1</span>')
+    .replace(/^>\s*(.*)$/gm, '<span class="chat-quote">$1</span>')
     .replace(/^(#{1,6})\s+(.+)$/gm, (_m, hashes, content) => {
       const cls = hashes.length === 1 ? 'chat-h1' : hashes.length === 2 ? 'chat-h2' : 'chat-h3';
       return `<span class="${cls}">${content}</span>`;
     })
-    .replace(/^([-*+])\s+(?:\[(?:[ xX])\]\s+)?(.+)$/gm, (_m, marker, content) => {
-      const task = _m.match(/\[([ xX])\]/);
-      if (task) {
-        const done = /x/i.test(task[1]);
-        return `<span class="chat-task${done ? ' done' : ''}">${done ? '☑' : '☐'} ${content}</span>`;
-      }
-      return `<span class="chat-bullet">${marker}</span> ${content}`;
+    // Task lists: - [ ] or - [x]
+    .replace(/^([-*+])\s+\[([ xX])\]\s+(.+)$/gm, (_m, marker, checked, content) => {
+      const done = /x/i.test(checked);
+      return `<span class="chat-task${done ? ' done' : ''}">${done ? '☑' : '☐'} ${content}</span>`;
     })
-    .replace(/^(\d+)\.\s+(.+)$/gm, '<span class="chat-num">$1</span> $2')
-    .replace(/\n\|([^\n]+)\|\n\|([-:| ]+)\|\n((?:\|[^\n]*\|\n?)+)/g, (match, header, separator, rows) => {
-      const cols = header.split('|').map(c => c.trim()).filter(Boolean);
-      const aligns = separator.split('|').map(a => {
-        const t = a.trim();
-        if (t.startsWith(':') && t.endsWith(':')) return 'center';
-        if (t.endsWith(':')) return 'right';
-        return 'left';
-      }).filter(Boolean);
-      const thead = '<thead><tr>' + cols.map((c, i) => `<th style="text-align:${aligns[i] || 'left'}">${c}</th>`).join('') + '</tr></thead>';
-      const tbody = '<tbody>' + rows.trim().split('\n').map(r => {
-        const cells = r.split('|').map(c => c.trim()).filter(Boolean);
-        return '<tr>' + cells.map((c, i) => `<td style="text-align:${aligns[i] || 'left'}">${c}</td>`).join('') + '</tr>';
-      }).join('') + '</tbody>';
-      return '\n<table class="chat-table">' + thead + tbody + '</table>\n';
-    });
+    // Bullet lists (but NOT table rows - exclude lines starting with |)
+    .replace(/^([-*+])\s+(?!\|)(.+)$/gm, '<span class="chat-bullet">$1</span> $2')
+    // Numbered lists
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<span class="chat-num">$1</span> $2');
 
+  // Restore code blocks
   return body.replace(/\u0000CODE(\d+)\u0000/g, (_m, i) => {
     const b = blocks[Number(i)];
     const highlighted = highlightCode(b.code, b.lang);
@@ -689,7 +710,6 @@ function cliFormat(text) {
   });
 }
 
-// Syntax highlighting for code blocks
 function highlightCode(code, lang) {
   if (!lang) return esc(code);
   
@@ -1433,6 +1453,109 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
     setTimeout(() => input.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300);
   });
 }
+
+// ── Mobile Toolbar ────────────────────────────────────
+function initMobileToolbar() {
+  const toolbar = document.getElementById('mobileToolbar');
+  if (!toolbar) return;
+
+  let ctrlActive = false;
+
+  function simulateKey(key, ctrl = false) {
+    const event = new KeyboardEvent('keydown', {
+      key,
+      ctrlKey: ctrl,
+      bubbles: true,
+      cancelable: true
+    });
+    input.dispatchEvent(event);
+  }
+
+  toolbar.addEventListener('click', (e) => {
+    const btn = e.target.closest('.toolbar-btn');
+    if (!btn) return;
+
+    const key = btn.dataset.key;
+    e.preventDefault();
+
+    switch (key) {
+      case 'tab':
+        simulateKey('Tab', ctrlActive);
+        break;
+      case 'up':
+        simulateKey('ArrowUp', ctrlActive);
+        break;
+      case 'down':
+        simulateKey('ArrowDown', ctrlActive);
+        break;
+      case 'ctrl':
+        ctrlActive = !ctrlActive;
+        btn.classList.toggle('ctrl-active', ctrlActive);
+        break;
+      case 'esc':
+        simulateKey('Escape', ctrlActive);
+        break;
+      case 'pipe':
+        const pos = input.selectionStart;
+        const val = input.value;
+        input.value = val.slice(0, pos) + '|' + val.slice(pos);
+        input.setSelectionRange(pos + 1, pos + 1);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.focus();
+        break;
+    }
+
+    if (key !== 'ctrl') {
+      ctrlActive = false;
+      const ctrlBtn = toolbar.querySelector('[data-key="ctrl"]');
+      if (ctrlBtn) ctrlBtn.classList.remove('ctrl-active');
+      input.focus();
+    }
+
+    if (key !== 'ctrl') {
+      input.focus();
+    }
+  });
+
+  // Swipe gestures for history navigation
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+
+  screen.addEventListener('touchstart', (e) => {
+    if (editorMode || chatMode) return;
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+
+  screen.addEventListener('touchend', (e) => {
+    if (editorMode || chatMode) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+    const deltaTime = Date.now() - touchStartTime;
+
+    // Horizontal swipe (left/right) for history
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50 && deltaTime < 300) {
+      if (deltaX > 0) {
+        // Swipe right - previous history
+        goHistory(-1);
+      } else {
+        // Swipe left - next history
+        goHistory(1);
+      }
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Prevent toolbar buttons from stealing focus
+  toolbar.addEventListener('mousedown', (e) => e.preventDefault());
+  toolbar.addEventListener('touchstart', (e) => e.preventDefault());
+}
+
+initMobileToolbar();
 
 // ── Boot ─────────────────────────────────────────────
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -60,11 +60,13 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 html, body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg);
   color: var(--text);
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 15px;
   transition: background .3s, color .3s;
+  -webkit-text-size-adjust: 100%;
 }
 body {
   display: flex;
@@ -72,6 +74,7 @@ body {
   align-items: flex-start;
   padding: 40px 16px;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 .wrap {
   width: 100%;
@@ -142,6 +145,7 @@ footer.site a:hover { color: var(--blue); }
 
 #screen {
   height: calc(100vh - 220px);
+  height: calc(100dvh - 220px);
   max-height: 600px;
   min-height: 200px;
   overflow-y: auto;
@@ -329,8 +333,8 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
 
 /* --- Mobile --- */
 @media (max-width: 480px) {
-  body { padding: 0; font-size: 14px; align-items: flex-start; min-height: 100vh; }
-  .wrap { max-width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
+  body { padding: 0; font-size: 14px; align-items: flex-start; min-height: 100vh; min-height: 100dvh; }
+  .wrap { max-width: 100%; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
   header.site { padding: 8px 12px 0; margin-bottom: 8px; }
   footer.site { padding: 0 12px 8px; margin-top: 8px; gap: 12px; }
   header.site nav { gap: 8px; }
@@ -339,6 +343,7 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
   footer.site a { font-size: 12px; }
   #screen {
     height: calc(100vh - 140px);
+    height: calc(100dvh - 140px);
     padding: 12px;
     min-height: 200px;
     max-height: none;
@@ -361,7 +366,7 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
 @media (max-width: 360px) {
   body { font-size: 13px; }
   .site .brand { font-size: 13px; }
-  #screen { padding: 10px; height: calc(100vh - 130px); }
+  #screen { padding: 10px; height: calc(100vh - 130px); height: calc(100dvh - 130px); }
   #cmdInput { font-size: 16px; }
   .titlebar { padding: 6px 10px; }
   .titlebar span { font-size: 10px; }
@@ -398,4 +403,149 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
 }
 input[placeholder*="Editing mode"] {
   border-bottom: 2px solid var(--blue);
+}
+
+/* --- Mobile Toolbar --- */
+.mobile-toolbar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.3);
+}
+
+@media (max-width: 768px) {
+  .mobile-toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  body {
+    padding-bottom: 90px;
+  }
+  
+  @supports (height: 100dvh) {
+    body {
+      padding-bottom: 90px;
+    }
+  }
+}
+
+.toolbar-btn {
+  appearance: none;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 14px;
+  min-width: 56px;
+  min-height: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .1s, color .1s, transform .05s;
+}
+
+.toolbar-btn:active {
+  transform: scale(0.95);
+  background: var(--border);
+}
+
+.toolbar-btn:hover {
+  background: var(--border);
+  color: var(--cyan);
+}
+
+.toolbar-btn.ctrl-active {
+  background: var(--blue);
+  color: var(--bg);
+  border-color: var(--blue);
+}
+
+@media (max-width: 480px) {
+  .toolbar-btn {
+    padding: 12px 16px;
+    min-width: 60px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .toolbar-btn {
+    padding: 10px 12px;
+    min-width: 52px;
+    font-size: 12px;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .mobile-toolbar {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  
+  .toolbar-btn {
+    padding: 8px 12px;
+    min-width: 48px;
+    min-height: 40px;
+    font-size: 12px;
+  }
+  
+  body {
+    padding-bottom: 70px;
+  }
+  
+  #screen {
+    height: calc(100dvh - 100px) !important;
+  }
+  
+  header.site {
+    padding: 4px 8px 0;
+    margin-bottom: 4px;
+  }
+  
+  footer.site {
+    padding: 0 8px 4px;
+    margin-top: 4px;
+  }
+  
+  .titlebar {
+    padding: 6px 10px;
+  }
+  
+  #inputline {
+    padding: 0 8px 6px;
+  }
+}
+
+/* Touch-friendly suggestions */
+@media (pointer: coarse) {
+  #suggestList span {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+  }
+  
+  #suggestList {
+    gap: 6px 16px;
+    padding: 6px 0 10px;
+  }
+}
+
+/* Prevent zoom on input focus (iOS) */
+@media screen and (max-width: 768px) {
+  #cmdInput {
+    font-size: 16px !important;
+  }
 }

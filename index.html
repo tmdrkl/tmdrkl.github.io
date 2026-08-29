@@ -10,7 +10,7 @@
   <meta name="description" content="drkl.my.id — terminal web interaktif dengan AI chat bawaan. Terminal, blog, dan bot AI dalam satu halaman.">
   <meta name="theme-color" content="#1d2021">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%23282828'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a9b665' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
   <script>
     (function () {
       try {
@@ -80,6 +80,15 @@
     </div>
   </div>
 
+  <div class="mobile-toolbar" id="mobileToolbar" aria-label="Mobile keyboard shortcuts">
+    <button type="button" class="toolbar-btn" data-key="tab" aria-label="Tab autocomplete">Tab</button>
+    <button type="button" class="toolbar-btn" data-key="up" aria-label="History up">↑</button>
+    <button type="button" class="toolbar-btn" data-key="down" aria-label="History down">↓</button>
+    <button type="button" class="toolbar-btn" data-key="ctrl" aria-label="Control key">Ctrl</button>
+    <button type="button" class="toolbar-btn" data-key="esc" aria-label="Escape">Esc</button>
+    <button type="button" class="toolbar-btn" data-key="pipe" aria-label="Pipe">|</button>
+  </div>
+
   <footer class="site">
     <a href="https://github.com/tmdrkl" target="_blank" rel="noopener">github</a>
     <span class="sep">|</span>
@@ -89,6 +98,6 @@
   </footer>
 </div>
 
-<script type="module" src="index.js?v=11"></script>
+<script type="module" src="index.js?v=13"></script>
 </body>
 </html>
