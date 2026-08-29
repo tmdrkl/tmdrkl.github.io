@@ -31,7 +31,7 @@ function browserName() {
 }
 
 // ── Virtual FS ───────────────────────────────────────
-const FS = {
+const BASE_FS = {
   'about.txt': 'Tomi — likes everything new and fun.',
   'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.my.id',
   'README.md': '# drkl.my.id\n\nA terminal with a built-in AI chat.\nType chat to start talking to the AI.',
@@ -103,6 +103,41 @@ const FS = {
   },
 };
 
+// User-created filesystem (persisted in localStorage)
+let userFS = {};
+try {
+  const saved = localStorage.getItem('drkl_userfs');
+  if (saved) userFS = JSON.parse(saved);
+} catch {}
+
+function saveUserFS() {
+  try {
+    localStorage.setItem('drkl_userfs', JSON.stringify(userFS));
+  } catch {}
+}
+
+// Merge base FS with user FS (user FS takes precedence)
+function getMergedFS() {
+  const merged = JSON.parse(JSON.stringify(BASE_FS));
+  deepMerge(merged, userFS);
+  return merged;
+}
+
+function deepMerge(target, source) {
+  for (const key of Object.keys(source)) {
+    if (source[key] === null) {
+      delete target[key];
+    } else if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+      if (!target[key] || typeof target[key] !== 'object') target[key] = {};
+      deepMerge(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+}
+
+let FS = getMergedFS();
+
 let cwd = ['~'];
 
 function pwdStr()    { return '~' + (cwd.length > 1 ? '/' + cwd.slice(1).join('/') : ''); }
@@ -132,7 +167,248 @@ function getNode(path) {
   return node;
 }
 
+function setNode(path, value) {
+  const merged = getMergedFS();
+  let node = merged;
+  for (let i = 1; i < path.length - 1; i++) {
+    const seg = path[i];
+    if (!node[seg] || typeof node[seg] !== 'object') node[seg] = {};
+    node = node[seg];
+  }
+  node[path[path.length - 1]] = value;
+  userFS = merged;
+  saveUserFS();
+  FS = getMergedFS();
+}
+
+function deleteNode(path) {
+  const merged = getMergedFS();
+  let node = merged;
+  for (let i = 1; i < path.length - 1; i++) {
+    const seg = path[i];
+    if (!node[seg] || typeof node[seg] !== 'object') return false;
+    node = node[seg];
+  }
+  const last = path[path.length - 1];
+  if (!(last in node)) return false;
+  delete node[last];
+  userFS = merged;
+  saveUserFS();
+  FS = getMergedFS();
+  return true;
+}
+
 function isDir(n) { return !!n && typeof n === 'object'; }
+
+// Terminal text editor state
+let editorMode = false;
+let editorFile = '';
+let editorContent = '';
+let editorCursor = 0;
+let editorLines = [];
+
+function openEditor(filename, content) {
+  editorMode = true;
+  editorFile = filename;
+  editorContent = content;
+  editorLines = content.split('\n');
+  editorCursor = editorContent.length;
+  
+  print('');
+  print('<span class="ok">─'.repeat(50) + '</span>');
+  print(`<span class="ok">EDITOR</span> — <span class="blue">${esc(filename)}</span> <span class="muted">(${editorLines.length} lines)</span>`);
+  print('<span class="muted">Type your content. Press <span class="ok">Ctrl+S</span> to save, <span class="ok">Ctrl+X</span> to exit.</span>');
+  print('<span class="ok">─'.repeat(50) + '</span>');
+  print('');
+  
+  // Show content with line numbers
+  editorLines.forEach((line, i) => {
+    const num = String(i + 1).padStart(3);
+    print(`<span class="muted">${num}</span> <span class="editor-line">${esc(line)}</span>`);
+  });
+  
+  // Show cursor position
+  print(`<span class="muted">${String(editorLines.length + 1).padStart(3)}</span> <span class="editor-cursor">▋</span>`);
+  
+  // Change input handler
+  input.placeholder = 'Editing mode — Ctrl+S save, Ctrl+X exit';
+  input.style.background = 'var(--code-bg)';
+}
+
+function closeEditor(saved) {
+  editorMode = false;
+  editorFile = '';
+  editorContent = '';
+  editorLines = [];
+  editorCursor = 0;
+  input.placeholder = '';
+  input.style.background = 'transparent';
+  print('<span class="ok">─'.repeat(50) + '</span>');
+  if (saved) {
+    print('<span class="ok">File saved.</span>');
+  } else {
+    print('<span class="muted">Editor closed (no changes saved).</span>');
+  }
+  print('');
+}
+
+function saveEditor() {
+  setNode(resolvePath(editorFile), editorContent);
+  closeEditor(true);
+}
+
+function handleEditorInput(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const before = editorContent.slice(0, editorCursor);
+    const after = editorContent.slice(editorCursor);
+    editorContent = before + '\n' + after;
+    editorCursor = before.length + 1;
+    renderEditor();
+    return;
+  }
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    if (editorCursor > 0) {
+      const before = editorContent.slice(0, editorCursor - 1);
+      const after = editorContent.slice(editorCursor);
+      editorContent = before + after;
+      editorCursor--;
+      renderEditor();
+    }
+    return;
+  }
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    if (editorCursor > 0) editorCursor--;
+    renderEditor();
+    return;
+  }
+  if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    if (editorCursor < editorContent.length) editorCursor++;
+    renderEditor();
+    return;
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    // Move up one line
+    const lines = editorContent.split('\n');
+    let pos = 0;
+    let lineIdx = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (pos + lines[i].length >= editorCursor) {
+        lineIdx = i;
+        break;
+      }
+      pos += lines[i].length + 1; // +1 for newline
+    }
+    if (lineIdx > 0) {
+      const prevLineLen = lines[lineIdx - 1].length;
+      const col = editorCursor - pos;
+      editorCursor = pos - lines[lineIdx].length - 1 + Math.min(col, prevLineLen);
+    } else {
+      editorCursor = 0;
+    }
+    renderEditor();
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const lines = editorContent.split('\n');
+    let pos = 0;
+    let lineIdx = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (pos + lines[i].length >= editorCursor) {
+        lineIdx = i;
+        break;
+      }
+      pos += lines[i].length + 1;
+    }
+    if (lineIdx < lines.length - 1) {
+      const nextLineLen = lines[lineIdx + 1].length;
+      const col = editorCursor - pos;
+      editorCursor = pos + lines[lineIdx].length + 1 + Math.min(col, nextLineLen);
+    } else {
+      editorCursor = editorContent.length;
+    }
+    renderEditor();
+    return;
+  }
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault();
+    saveEditor();
+    return;
+  }
+  if (e.ctrlKey && e.key === 'x') {
+    e.preventDefault();
+    closeEditor(false);
+    return;
+  }
+  // Regular character input
+  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    const before = editorContent.slice(0, editorCursor);
+    const after = editorContent.slice(editorCursor);
+    editorContent = before + e.key + after;
+    editorCursor++;
+    renderEditor();
+    return;
+  }
+}
+
+function renderEditor() {
+  editorLines = editorContent.split('\n');
+  // Clear the screen and re-render
+  log.innerHTML = '';
+  print('');
+  print('<span class="ok">─'.repeat(50) + '</span>');
+  print(`<span class="ok">EDITOR</span> — <span class="blue">${esc(editorFile)}</span> <span class="muted">(${editorLines.length} lines)</span>`);
+  print('<span class="muted">Type your content. Press <span class="ok">Ctrl+S</span> to save, <span class="ok">Ctrl+X</span> to exit.</span>');
+  print('<span class="ok">─'.repeat(50) + '</span>');
+  print('');
+  
+  editorLines.forEach((line, i) => {
+    const num = String(i + 1).padStart(3);
+    print(`<span class="muted">${num}</span> <span class="editor-line">${esc(line)}</span>`);
+  });
+  
+  // Show cursor position
+  const lines = editorContent.split('\n');
+  let pos = 0;
+  let cursorLine = 0;
+  for (let i = 0; i < lines.length; i++) {
+    if (pos + lines[i].length >= editorCursor) {
+      cursorLine = i;
+      break;
+    }
+    pos += lines[i].length + 1;
+  }
+  const cursorCol = editorCursor - pos;
+  const cursorLineNum = String(cursorLine + 1).padStart(3);
+  print(`<span class="muted">${cursorLineNum}</span> <span class="editor-line">${esc(lines[cursorLine].slice(0, cursorCol))}<span class="editor-cursor">▋</span>${esc(lines[cursorLine].slice(cursorCol))}</span>`);
+  
+  // Show remaining lines if cursor is not on last line
+  for (let i = cursorLine + 1; i < lines.length; i++) {
+    const num = String(i + 1).padStart(3);
+    print(`<span class="muted">${num}</span> <span class="editor-line">${esc(lines[i])}</span>`);
+  }
+  
+  screen.scrollTop = screen.scrollHeight;
+}
+
+function renderNeofetch(ascii, info) {
+  const maxAsciiWidth = Math.max(...ascii.map(l => l.length));
+  const paddedAscii = ascii.map((l, i) => `<span class="ascii-line-${i}">${l}</span>` + ' '.repeat(maxAsciiWidth - l.length));
+  const maxLines = Math.max(paddedAscii.length, info.length);
+  const lines = [];
+  for (let i = 0; i < maxLines; i++) {
+    const left = paddedAscii[i] || ' '.repeat(maxAsciiWidth);
+    const right = info[i] || '';
+    lines.push(`${left}  ${right}`);
+  }
+  return lines.join('\n');
+}
 
 function treeWalk(node, prefix, lines, depth) {
   const keys = Object.keys(node);
@@ -407,9 +683,64 @@ function cliFormat(text) {
 
   return body.replace(/\u0000CODE(\d+)\u0000/g, (_m, i) => {
     const b = blocks[Number(i)];
+    const highlighted = highlightCode(b.code, b.lang);
     const lang = b.lang ? `<span class="chat-code-lang">${b.lang}</span>` : '';
-    return `<span class="chat-code">${lang}${b.code}</span>`;
+    return `<span class="chat-code">${lang}${highlighted}</span>`;
   });
+}
+
+// Syntax highlighting for code blocks
+function highlightCode(code, lang) {
+  if (!lang) return esc(code);
+  
+  const keywords = {
+    js: ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'finally', 'throw', 'new', 'this', 'class', 'extends', 'import', 'export', 'from', 'async', 'await', 'yield', 'typeof', 'instanceof', 'delete', 'void', 'debugger'],
+    ts: ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'finally', 'throw', 'new', 'this', 'class', 'extends', 'import', 'export', 'from', 'async', 'await', 'yield', 'typeof', 'instanceof', 'delete', 'void', 'debugger', 'interface', 'type', 'enum', 'namespace', 'declare', 'abstract', 'implements', 'public', 'private', 'protected', 'readonly', 'static'],
+    py: ['def', 'class', 'if', 'elif', 'else', 'for', 'while', 'break', 'continue', 'return', 'try', 'except', 'finally', 'raise', 'import', 'from', 'as', 'with', 'as', 'lambda', 'yield', 'global', 'nonlocal', 'assert', 'del', 'pass', 'in', 'is', 'not', 'and', 'or', 'None', 'True', 'False', 'async', 'await'],
+    sh: ['if', 'then', 'else', 'elif', 'fi', 'for', 'in', 'do', 'done', 'while', 'until', 'case', 'esac', 'function', 'return', 'break', 'continue', 'local', 'export', 'readonly', 'declare', 'source', '.', 'exit', 'set', 'unset', 'alias', 'unalias'],
+    html: ['div', 'span', 'p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'form', 'input', 'button', 'select', 'option', 'textarea', 'script', 'style', 'link', 'meta', 'head', 'body', 'html', '!DOCTYPE'],
+    css: ['color', 'background', 'font', 'margin', 'padding', 'border', 'width', 'height', 'display', 'position', 'top', 'left', 'right', 'bottom', 'flex', 'grid', 'align', 'justify', 'content', 'gap', 'overflow', 'z-index', 'transform', 'transition', 'animation', '@media', '@keyframes'],
+  };
+  
+  const kw = keywords[lang.toLowerCase()] || [];
+  const kwPattern = kw.length ? new RegExp(`\\b(${kw.join('|')})\\b`, 'g') : null;
+  
+  let highlighted = esc(code);
+  
+  // Strings (double and single quoted)
+  highlighted = highlighted.replace(/"(?:[^"\\]|\\.)*"/g, '<span class="hl-str">$&</span>');
+  highlighted = highlighted.replace(/'(?:[^'\\]|\\.)*'/g, '<span class="hl-str">$&</span>');
+  
+  // Template literals (JS/TS)
+  highlighted = highlighted.replace(/`(?:[^`\\]|\\.)*`/g, '<span class="hl-str">$&</span>');
+  
+  // Comments
+  highlighted = highlighted.replace(/\/\/.*$/gm, '<span class="hl-comment">$&</span>');
+  highlighted = highlighted.replace(/\/\*[\s\S]*?\*\//g, '<span class="hl-comment">$&</span>');
+  highlighted = highlighted.replace(/#.*$/gm, '<span class="hl-comment">$&</span>');
+  
+  // Numbers
+  highlighted = highlighted.replace(/\b\d+\.?\d*\b/g, '<span class="hl-num">$&</span>');
+  
+  // Keywords
+  if (kwPattern) {
+    highlighted = highlighted.replace(kwPattern, '<span class="hl-kw">$&</span>');
+  }
+  
+  // Functions (identifier followed by ()
+  highlighted = highlighted.replace(/\b([a-zA-Z_$][\w$]*)\s*\(/g, '<span class="hl-func">$1</span>(');
+  
+  // Class/Type names (PascalCase)
+  highlighted = highlighted.replace(/\b([A-Z][a-zA-Z0-9]*)\b/g, '<span class="hl-type">$1</span>');
+  
+  // Decorators / annotations
+  highlighted = highlighted.replace(/@\w+/g, '<span class="hl-decorator">$&</span>');
+  
+  return highlighted;
+}
+
+function isNearBottom() {
+  return screen.scrollHeight - screen.scrollTop - screen.clientHeight < 50;
 }
 
 async function sendChatMessage(text) {
@@ -423,13 +754,13 @@ async function sendChatMessage(text) {
   sepEl.className = 'row muted';
   sepEl.textContent = '· · ·';
   log.appendChild(sepEl);
-  screen.scrollTop = screen.scrollHeight;
+  if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
 
   // AI reply container
   const replyEl = document.createElement('div');
   replyEl.className = 'row chat-reply';
   log.appendChild(replyEl);
-  screen.scrollTop = screen.scrollHeight;
+  if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
 
   chatBusy = true;
   input.disabled = true;
@@ -457,11 +788,12 @@ async function sendChatMessage(text) {
       if (replyEl._shown < plain.length) {
         replyEl._shown = Math.min(plain.length, (replyEl._shown || 0) + 3);
         replyEl.innerHTML = '<span class="chat-ai">ai></span> ' + cliFormat(plain.slice(0, replyEl._shown));
-        screen.scrollTop = screen.scrollHeight;
+        if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
       }
       if (streamDone && (replyEl._shown || 0) >= plain.length) {
         clearInterval(timer);
         replyEl.innerHTML = '<span class="chat-ai">ai></span> ' + cliFormat(plain);
+        if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
       }
     }, 25);
     replyEl._shown = 0;
@@ -510,7 +842,7 @@ const HELP = {
   neofetch: 'system info in neofetch style (-f to fetch geo/IP)',
   banner:   'display the drkl logo',
   date:     'current date & time',
-  echo:     'display text, e.g. echo hello',
+  echo:     'display text, e.g. echo hello (supports > and >> redirection)',
   ls:       'list directory contents',
   cd:       'change directory',
   pwd:      'print working directory',
@@ -527,7 +859,10 @@ const HELP = {
   sudo:     'run as root (will fail)',
   theme:    'switch theme (dark|light)',
   exit:     'exit the terminal',
-  rm:       'delete files (read-only)',
+  rm:       'delete files or directories (-r for recursive)',
+  mkdir:    'create a directory',
+  touch:    'create an empty file',
+  edit:     'edit a file in the terminal text editor',
 };
 
 const commands = {
@@ -557,7 +892,23 @@ async neofetch(args) {
     const up = Math.floor((Date.now() - loadTime) / 1000);
     const upStr = up < 60 ? `${up}s`
       : up < 3600 ? `${Math.floor(up/60)}m ${up%60}s`
-      : `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m`;
+      : `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)m}`;
+    
+    // ASCII art for neofetch (side-by-side)
+    const asciiArt = [
+      '        ████████',
+      '      ████████████',
+      '    ████    ████████',
+      '  ████        ██████',
+      ' ████          ██████',
+      '████            ██████',
+      '████            ██████',
+      ' ████          ██████',
+      '  ████        ██████',
+      '    ████    ████████',
+      '      ████████████',
+      '        ████████',
+    ];
     
     if (showFetch) {
       print('<span class="muted">Fetching system info...</span>');
@@ -574,7 +925,7 @@ async neofetch(args) {
           else if (ua.includes('Android')) osName = 'Android';
           else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) osName = 'iOS';
 
-          const lines = [
+          const infoLines = [
             `<span class="ok">tomi@drkl</span>`,
             `<span class="muted">------------------</span>`,
             `<span class="blue">OS</span>: ${osName}`,
@@ -588,7 +939,7 @@ async neofetch(args) {
             `<span class="blue">Theme</span>: ${getTheme()}`,
             `<span class="muted">Geo data berasal dari Worker sendiri (tanpa pihak ketiga)</span>`,
           ];
-          print(`<pre>${lines.join('\n')}</pre>`);
+          print(`<pre class="neofetch">${renderNeofetch(asciiArt, infoLines)}</pre>`);
           return;
         }
       } catch (e) {
@@ -597,7 +948,7 @@ async neofetch(args) {
     }
     
     // Local fallback
-    const lines = [
+    const infoLines = [
       `<span class="ok">tomi@drkl</span>`,
       `<span class="muted">------------------</span>`,
       `<span class="blue">OS</span>: drkl.my.id 1.0`,
@@ -609,7 +960,7 @@ async neofetch(args) {
       `<span class="blue">Theme</span>: ${getTheme()}`,
       `<span class="muted">Tip: use <span class="ok">neofetch -f</span> for geo info</span>`,
     ];
-    print(`<pre>${lines.join('\n')}</pre>`);
+    print(`<pre class="neofetch">${renderNeofetch(asciiArt, infoLines)}</pre>`);
   },
 
   banner() {
@@ -621,7 +972,30 @@ async neofetch(args) {
     print(new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' }));
   },
 
-  echo(args) { print(esc(args.join(' '))); },
+  echo(args) { 
+    // Handle redirection: echo "text" > file or echo "text" >> file
+    const redirectIdx = args.findIndex(a => a === '>' || a === '>>');
+    if (redirectIdx > 0) {
+      const append = args[redirectIdx] === '>>';
+      const fileArg = args[redirectIdx + 1];
+      if (!fileArg) { print('echo: missing file for redirection', 'err'); return; }
+      const text = args.slice(0, redirectIdx).join(' ');
+      const path = resolvePath(fileArg);
+      const parent = path.slice(0, -1);
+      const name = path[path.length - 1];
+      const parentNode = getNode(parent);
+      if (!parentNode || !isDir(parentNode)) { 
+        print(`echo: cannot write to '${esc(fileArg)}': No such file or directory`, 'err'); 
+        return; 
+      }
+      const existing = getNode(path);
+      const newContent = append && existing && !isDir(existing) ? existing + '\n' + text : text;
+      setNode(path, newContent);
+      print(`<span class="muted">Written to ${esc(fileArg)}</span>`);
+    } else {
+      print(esc(args.join(' ')));
+    }
+  },
 
   ls(args) {
     const p = args[0] ? resolvePath(args[0]) : cwd;
@@ -715,7 +1089,72 @@ async neofetch(args) {
   sudo() { print('tomi is not in the sudoers file. This incident will be reported.', 'err'); },
 
   exit()  { print('logout — but you are still here. 😏 Type <span class="ok">clear</span> to start over.'); },
-  rm()    { print('rm: read-only filesystem.', 'err'); },
+
+  rm(args) {
+    const recursive = args.includes('-r') || args.includes('-R');
+    const targets = args.filter(a => !a.startsWith('-'));
+    if (!targets.length) { print('rm: usage: rm [-r] <file|dir>...', 'err'); return; }
+    for (const target of targets) {
+      const path = resolvePath(target);
+      const node = getNode(path);
+      if (node === undefined) { print(`rm: cannot remove '${esc(target)}': No such file or directory`, 'err'); continue; }
+      if (isDir(node) && !recursive) { print(`rm: cannot remove '${esc(target)}': Is a directory (use -r)`, 'err'); continue; }
+      if (deleteNode(path)) {
+        print(`removed '${esc(target)}'`);
+      } else {
+        print(`rm: failed to remove '${esc(target)}'`, 'err');
+      }
+    }
+  },
+
+  mkdir(args) {
+    if (!args.length) { print('mkdir: usage: mkdir <dir>...', 'err'); return; }
+    for (const dir of args) {
+      const path = resolvePath(dir);
+      const parent = path.slice(0, -1);
+      const name = path[path.length - 1];
+      const parentNode = getNode(parent);
+      if (!parentNode || !isDir(parentNode)) { print(`mkdir: cannot create directory '${esc(dir)}': No such file or directory`, 'err'); continue; }
+      if (name in parentNode) { print(`mkdir: cannot create directory '${esc(dir)}': File exists`, 'err'); continue; }
+      setNode(path, {});
+      print(`created directory '${esc(dir)}'`);
+    }
+  },
+
+  touch(args) {
+    if (!args.length) { print('touch: usage: touch <file>...', 'err'); return; }
+    for (const file of args) {
+      const path = resolvePath(file);
+      const parent = path.slice(0, -1);
+      const name = path[path.length - 1];
+      const parentNode = getNode(parent);
+      if (!parentNode || !isDir(parentNode)) { print(`touch: cannot touch '${esc(file)}': No such file or directory`, 'err'); continue; }
+      if (!(name in parentNode)) {
+        setNode(path, '');
+        print(`created file '${esc(file)}'`);
+      } else {
+        print(`touch: '${esc(file)}' already exists (use echo > to overwrite)`);
+      }
+    }
+  },
+
+  edit(args) {
+    if (!args.length) { print('edit: usage: edit <file>', 'err'); return; }
+    const path = resolvePath(args[0]);
+    const parent = path.slice(0, -1);
+    const name = path[path.length - 1];
+    const parentNode = getNode(parent);
+    if (!parentNode || !isDir(parentNode)) { print(`edit: cannot edit '${esc(args[0])}': No such file or directory`, 'err'); return; }
+    const content = getNode(path);
+    if (content === undefined) {
+      setNode(path, '');
+      openEditor(args[0], '');
+    } else if (isDir(content)) {
+      print(`edit: '${esc(args[0])}' is a directory`, 'err');
+    } else {
+      openEditor(args[0], content);
+    }
+  },
 
   theme(args) {
     const t = args[0];
@@ -730,7 +1169,7 @@ async neofetch(args) {
 const suggestEl   = document.getElementById('suggest');
 const suggestList = document.getElementById('suggestList');
 const commandList = Object.keys(commands);
-const PATH_CMDS   = { cd: true, ls: true, cat: true, tree: true, read: true };
+const PATH_CMDS   = { cd: true, ls: true, cat: true, tree: true, read: true, rm: true, mkdir: true, touch: true, edit: true };
 let hist = [];
 try { const h = JSON.parse(sessionStorage.getItem('drkl_hist')); if (Array.isArray(h)) hist = h; } catch {}
 let histIdx = -1;
@@ -873,6 +1312,12 @@ function goHistory(dir) {
 input.addEventListener('input', () => { hideList(); renderSuggestion(); });
 
 input.addEventListener('keydown', (e) => {
+  // Editor mode handling
+  if (editorMode) {
+    handleEditorInput(e);
+    return;
+  }
+
   // Ctrl combos
   if (e.ctrlKey && e.key === 'l') { e.preventDefault(); log.innerHTML = ''; hideList(); renderSuggestion(); return; }
   if (e.ctrlKey && e.key === 'u') { e.preventDefault(); input.value = ''; hideList(); renderSuggestion(); return; }

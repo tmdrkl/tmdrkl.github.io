@@ -166,6 +166,24 @@ footer.site a:hover { color: var(--blue); }
 .dir { color: var(--blue); }
 .blue { color: var(--blue); }
 pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25; }
+pre.neofetch { font-size: 13px; line-height: 1.4; }
+
+/* Neofetch ASCII art coloring */
+[data-theme="dark"] pre.neofetch {
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
+}
+pre.neofetch .ascii-line-0 { color: var(--blue); }
+pre.neofetch .ascii-line-1 { color: var(--blue); }
+pre.neofetch .ascii-line-2 { color: var(--cyan); }
+pre.neofetch .ascii-line-3 { color: var(--cyan); }
+pre.neofetch .ascii-line-4 { color: var(--green); }
+pre.neofetch .ascii-line-5 { color: var(--green); }
+pre.neofetch .ascii-line-6 { color: var(--yellow); }
+pre.neofetch .ascii-line-7 { color: var(--yellow); }
+pre.neofetch .ascii-line-8 { color: var(--orange); }
+pre.neofetch .ascii-line-9 { color: var(--orange); }
+pre.neofetch .ascii-line-10 { color: var(--red); }
+pre.neofetch .ascii-line-11 { color: var(--red); }
 .chat-reply { color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.5; user-select: text; -webkit-user-select: text; }
 .chat-you { color: var(--green); font-weight: 700; }
 .chat-ai { color: var(--cyan); font-weight: 700; }
@@ -352,4 +370,32 @@ pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25;
 
 @media (prefers-reduced-motion: reduce) {
   .theme-btn.switching { animation: none; }
+}
+
+/* Syntax highlighting for code blocks in chat */
+.hl-kw { color: var(--purple); font-weight: 600; }
+.hl-str { color: var(--green); }
+.hl-comment { color: var(--muted); font-style: italic; }
+.hl-num { color: var(--orange); }
+.hl-func { color: var(--blue); }
+.hl-type { color: var(--yellow); font-weight: 600; }
+.hl-decorator { color: var(--cyan); }
+
+/* Terminal text editor */
+.editor-line { font-family: inherit; white-space: pre; }
+.editor-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.2em;
+  background: var(--blue);
+  animation: blink 1s infinite;
+  vertical-align: text-bottom;
+  margin: 0 1px;
+}
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+input[placeholder*="Editing mode"] {
+  border-bottom: 2px solid var(--blue);
 }
