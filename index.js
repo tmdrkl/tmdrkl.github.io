@@ -892,7 +892,7 @@ async neofetch(args) {
     const up = Math.floor((Date.now() - loadTime) / 1000);
     const upStr = up < 60 ? `${up}s`
       : up < 3600 ? `${Math.floor(up/60)}m ${up%60}s`
-      : `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)m}`;
+      : `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)m}s`;
     
     // ASCII art for neofetch (side-by-side)
     const asciiArt = [
