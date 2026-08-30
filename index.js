@@ -859,7 +859,8 @@ const HELP = {
   help:     'list available commands',
   about:    'a bit about me',
   links:    'contacts & github',
-  neofetch: 'system info in neofetch style (-f to fetch geo/IP)',
+  neofetch: 'system info in neofetch style',
+  fetch:    'system info with geo/IP (via Cloudflare edge)',
   banner:   'display the drkl logo',
   date:     'current date & time',
   echo:     'display text, e.g. echo hello (supports > and >> redirection)',
@@ -908,13 +909,11 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   },
 
 async neofetch(args) {
-    const showFetch = args.includes('--fetch') || args.includes('-f');
     const up = Math.floor((Date.now() - loadTime) / 1000);
     const upStr = up < 60 ? `${up}s`
       : up < 3600 ? `${Math.floor(up/60)}m ${up%60}s`
       : `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m`;
     
-    // ASCII art for neofetch (side-by-side)
     const asciiArt = [
       '        ████████',
       '      ████████████',
@@ -930,44 +929,6 @@ async neofetch(args) {
       '        ████████',
     ];
     
-    if (showFetch) {
-      print('<span class="muted">Fetching system info...</span>');
-      try {
-        const res = await fetch(`${WORKER_URL}/geo`);
-        if (res.ok) {
-          const data = await res.json();
-
-          const ua = navigator.userAgent;
-          let osName = 'Unknown';
-          if (ua.includes('Windows')) osName = 'Windows';
-          else if (ua.includes('Mac')) osName = 'macOS';
-          else if (ua.includes('Linux')) osName = 'Linux';
-          else if (ua.includes('Android')) osName = 'Android';
-          else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) osName = 'iOS';
-
-          const infoLines = [
-            `<span class="ok">tomi@drkl</span>`,
-            `<span class="muted">------------------</span>`,
-            `<span class="blue">OS</span>: ${osName}`,
-            `<span class="blue">Host</span>: drkl.my.id (via Cloudflare edge)`,
-            `<span class="blue">IP</span>: ${esc(data.ip || 'Unknown')}`,
-            `<span class="blue">Country</span>: ${esc(data.country || 'Unknown')}`,
-            `<span class="blue">Uptime</span>: ${upStr}`,
-            `<span class="blue">Shell</span>: drkl-sh`,
-            `<span class="blue">Resolution</span>: ${window.screen.width}×${window.screen.height}`,
-            `<span class="blue">Browser</span>: ${browserName()}`,
-            `<span class="blue">Theme</span>: ${getTheme()}`,
-            `<span class="muted">Geo data berasal dari Worker sendiri (tanpa pihak ketiga)</span>`,
-          ];
-          print(`<pre class="neofetch">${renderNeofetch(asciiArt, infoLines)}</pre>`);
-          return;
-        }
-      } catch (e) {
-        print(`<span class="err">Fetch failed: ${esc(e.message)}</span>`);
-      }
-    }
-    
-    // Local fallback
     const infoLines = [
       `<span class="ok">tomi@drkl</span>`,
       `<span class="muted">------------------</span>`,
@@ -978,9 +939,63 @@ async neofetch(args) {
       `<span class="blue">Resolution</span>: ${window.screen.width}×${window.screen.height}`,
       `<span class="blue">Browser</span>: ${browserName()}`,
       `<span class="blue">Theme</span>: ${getTheme()}`,
-      `<span class="muted">Tip: use <span class="ok">neofetch -f</span> for geo info</span>`,
     ];
     print(`<pre class="neofetch">${renderNeofetch(asciiArt, infoLines)}</pre>`);
+  },
+
+  async fetch() {
+    const up = Math.floor((Date.now() - loadTime) / 1000);
+    const upStr = up < 60 ? `${up}s`
+      : up < 3600 ? `${Math.floor(up/60)}m ${up%60}s`
+      : `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m`;
+    
+    const asciiArt = [
+      '        ████████',
+      '      ████████████',
+      '    ████    ████████',
+      '  ████        ██████',
+      ' ████          ██████',
+      '████            ██████',
+      '████            ██████',
+      ' ████          ██████',
+      '  ████        ██████',
+      '    ████    ████████',
+      '      ████████████',
+      '        ████████',
+    ];
+    
+    try {
+      const res = await fetch(`${WORKER_URL}/geo`);
+      if (res.ok) {
+        const data = await res.json();
+
+        const ua = navigator.userAgent;
+        let osName = 'Unknown';
+        if (ua.includes('Windows')) osName = 'Windows';
+        else if (ua.includes('Mac')) osName = 'macOS';
+        else if (ua.includes('Linux')) osName = 'Linux';
+        else if (ua.includes('Android')) osName = 'Android';
+        else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) osName = 'iOS';
+
+        const infoLines = [
+          `<span class="ok">tomi@drkl</span>`,
+          `<span class="muted">------------------</span>`,
+          `<span class="blue">OS</span>: ${osName}`,
+          `<span class="blue">Host</span>: drkl.my.id (via Cloudflare edge)`,
+          `<span class="blue">IP</span>: ${esc(data.ip || 'Unknown')}`,
+          `<span class="blue">Country</span>: ${esc(data.country || 'Unknown')}`,
+          `<span class="blue">Uptime</span>: ${upStr}`,
+          `<span class="blue">Shell</span>: drkl-sh`,
+          `<span class="blue">Resolution</span>: ${window.screen.width}×${window.screen.height}`,
+          `<span class="blue">Browser</span>: ${browserName()}`,
+          `<span class="blue">Theme</span>: ${getTheme()}`,
+        ];
+        print(`<pre class="neofetch">${renderNeofetch(asciiArt, infoLines)}</pre>`);
+        return;
+      }
+    } catch (e) {
+      print(`<span class="err">Fetch failed: ${esc(e.message)}</span>`);
+    }
   },
 
   banner() {
@@ -1447,117 +1462,6 @@ input.addEventListener('keydown', (e) => {
 // Click terminal to focus
 document.getElementById('term').addEventListener('click', () => input.focus());
 
-// Mobile focus
-if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-  input.addEventListener('focus', () => {
-    setTimeout(() => input.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300);
-  });
-}
-
-// ── Mobile Toolbar ────────────────────────────────────
-function initMobileToolbar() {
-  const toolbar = document.getElementById('mobileToolbar');
-  if (!toolbar) return;
-
-  let ctrlActive = false;
-
-  function simulateKey(key, ctrl = false) {
-    const event = new KeyboardEvent('keydown', {
-      key,
-      ctrlKey: ctrl,
-      bubbles: true,
-      cancelable: true
-    });
-    input.dispatchEvent(event);
-  }
-
-  toolbar.addEventListener('click', (e) => {
-    const btn = e.target.closest('.toolbar-btn');
-    if (!btn) return;
-
-    const key = btn.dataset.key;
-    e.preventDefault();
-
-    switch (key) {
-      case 'tab':
-        simulateKey('Tab', ctrlActive);
-        break;
-      case 'up':
-        simulateKey('ArrowUp', ctrlActive);
-        break;
-      case 'down':
-        simulateKey('ArrowDown', ctrlActive);
-        break;
-      case 'ctrl':
-        ctrlActive = !ctrlActive;
-        btn.classList.toggle('ctrl-active', ctrlActive);
-        break;
-      case 'esc':
-        simulateKey('Escape', ctrlActive);
-        break;
-      case 'pipe':
-        const pos = input.selectionStart;
-        const val = input.value;
-        input.value = val.slice(0, pos) + '|' + val.slice(pos);
-        input.setSelectionRange(pos + 1, pos + 1);
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.focus();
-        break;
-    }
-
-    if (key !== 'ctrl') {
-      ctrlActive = false;
-      const ctrlBtn = toolbar.querySelector('[data-key="ctrl"]');
-      if (ctrlBtn) ctrlBtn.classList.remove('ctrl-active');
-      input.focus();
-    }
-
-    if (key !== 'ctrl') {
-      input.focus();
-    }
-  });
-
-  // Swipe gestures for history navigation
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchStartTime = 0;
-
-  screen.addEventListener('touchstart', (e) => {
-    if (editorMode || chatMode) return;
-    const touch = e.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-    touchStartTime = Date.now();
-  }, { passive: true });
-
-  screen.addEventListener('touchend', (e) => {
-    if (editorMode || chatMode) return;
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - touchStartX;
-    const deltaY = touch.clientY - touchStartY;
-    const deltaTime = Date.now() - touchStartTime;
-
-    // Horizontal swipe (left/right) for history
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50 && deltaTime < 300) {
-      if (deltaX > 0) {
-        // Swipe right - previous history
-        goHistory(-1);
-      } else {
-        // Swipe left - next history
-        goHistory(1);
-      }
-      e.preventDefault();
-    }
-  }, { passive: false });
-
-  // Prevent toolbar buttons from stealing focus
-  toolbar.addEventListener('mousedown', (e) => e.preventDefault());
-  toolbar.addEventListener('touchstart', (e) => e.preventDefault());
-}
-
-initMobileToolbar();
-
-// ── Boot ─────────────────────────────────────────────
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SEEN_INTRO = 'drkl_seen_intro';
 let hasSeenIntro = false;
