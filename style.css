@@ -1,57 +1,31 @@
 /* ===========================
-   drkl.my.id — unified theme (gruvbox material hard)
+   drkl.my.id — terminal theme
+   Color tokens live in theme-tokens.css (shared with stats.html).
    =========================== */
-
-/* --- Gruvbox Material Dark (hard contrast) --- */
-[data-theme="dark"] {
-  --bg: #1d2021;
-  --panel: #282828;
-  --panel2: #32302f;
-  --border: #665c54;
-  --text: #d4be98;
-  --muted: #a89984;
-  --blue: #83a598;
-  --green: #b8bb26;
-  --yellow: #fe8019;
-  --red: #fb4934;
-  --cyan: #8ec07c;
-  --orange: #fe8019;
-  --purple: #d3869b;
-  --btn-bg: #83a598;
-  --btn-text: #1d2021;
-  --btn-hover: #b8bb26;
-  --accent: #83a598;
-  --term-shadow: 0 20px 50px rgba(0,0,0,.6), 0 0 40px rgba(131,165,152,.15);
-  --banner-glow: rgba(184,187,38,.35);
-  --code-bg: rgba(0,0,0,.5);
-}
-
-/* --- Gruvbox Material Light (hard contrast) --- */
-[data-theme="light"] {
-  --bg: #f9f5d7;
-  --panel: #fbf1c7;
-  --panel2: #ebdbb2;
-  --border: #a89984;
-  --text: #3c3836;
-  --muted: #7c6f64;
-  --blue: #076678;
-  --green: #98971a;
-  --yellow: #d65d0e;
-  --red: #cc241d;
-  --cyan: #427b58;
-  --orange: #d65d0e;
-  --purple: #8f3f71;
-  --btn-bg: #076678;
-  --btn-text: #f9f5d7;
-  --btn-hover: #458588;
-  --accent: #076678;
-  --term-shadow: 0 20px 50px rgba(0,0,0,.15);
-  --banner-glow: rgba(152,151,26,.25);
-  --code-bg: rgba(0,0,0,.12);
-}
 
 /* --- Base --- */
 * { box-sizing: border-box; }
+
+/* Visible only to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed; left: max(8px, env(safe-area-inset-left)); top: -80px; z-index: 1000;
+  background: var(--panel2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 14px; font-size: 13px; text-decoration: none;
+  transition: top .15s;
+}
+.skip-link:focus { top: max(8px, env(safe-area-inset-top)); }
 a:focus-visible, button:focus-visible, input:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
@@ -73,6 +47,9 @@ body {
   justify-content: center;
   align-items: flex-start;
   padding: 40px 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
   min-height: 100vh;
   min-height: 100dvh;
 }
@@ -333,10 +310,17 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
 
 /* --- Mobile --- */
 @media (max-width: 480px) {
-  body { padding: 0; font-size: 14px; align-items: flex-start; min-height: 100vh; min-height: 100dvh; }
+  body {
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    font-size: 14px;
+    align-items: flex-start;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
   .wrap { max-width: 100%; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
-  header.site { padding: 8px 12px 0; margin-bottom: 8px; }
-  footer.site { padding: 0 12px 8px; margin-top: 8px; gap: 12px; }
+  header.site { padding: 8px 12px 0; padding-left: max(12px, env(safe-area-inset-left)); margin-bottom: 8px; }
+  footer.site { padding: 0 12px 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); margin-top: 8px; gap: 12px; }
   header.site nav { gap: 8px; }
   .site .brand { font-size: 14px; }
   .site nav a { font-size: 12px; padding: 4px 0; }
@@ -352,7 +336,7 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
   .titlebar span { display: inline; font-size: 11px; }
   .dot { width: 9px; height: 9px; }
   #cmdInput { font-size: 16px; padding: 8px 0; }
-  #inputline { padding: 0 12px 10px; gap: 8px; }
+  #inputline { padding: 0 12px 10px; padding-left: max(12px, env(safe-area-inset-left)); gap: 8px; }
   .term { border-radius: 0; border-left: none; border-right: none; border-bottom: none; }
   pre { font-size: 11px; padding: 6px 8px; }
   .chat-help { font-size: 12px; gap: 2px 10px; }

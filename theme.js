@@ -13,6 +13,10 @@ export function setTheme(t) {
   const btn = document.getElementById('themeToggle');
   if (btn) {
     btn.textContent = t === 'light' ? '🌙' : '☀️';
+    // The icon alone is not an accessible name — say what the click will do.
+    const next = t === 'light' ? 'dark' : 'light';
+    btn.setAttribute('aria-label', `Switch to ${next} theme`);
+    btn.title = `Switch to ${next} theme`;
     btn.classList.add('switching');
     setTimeout(() => btn.classList.remove('switching'), 420);
   }
@@ -21,6 +25,7 @@ export function setTheme(t) {
 }
 
 export function themeRainBurst(theme) {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const c = document.createElement('canvas');
   c.style.cssText = 'position:fixed;inset:0;z-index:9999;width:100%;height:100%;pointer-events:none;transition:opacity .35s ease';
   document.body.appendChild(c);

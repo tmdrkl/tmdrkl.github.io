@@ -1,0 +1,49 @@
+/* ===========================
+   drkl.my.id — shared theme tokens (gruvbox material hard)
+   Loaded by index.html and stats.html so both pages stay in sync.
+   =========================== */
+
+/* --- Gruvbox Material Dark (hard contrast) --- */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1d2021;
+  --panel: #282828;
+  --panel2: #32302f;
+  --border: #665c54;
+  --text: #d4be98;
+  --muted: #a89984;
+  --blue: #83a598;
+  --green: #b8bb26;
+  --yellow: #fe8019;
+  --red: #fb4934;
+  --cyan: #8ec07c;
+  --orange: #fe8019;
+  --purple: #d3869b;
+  --term-shadow: 0 20px 50px rgba(0,0,0,.6), 0 0 40px rgba(131,165,152,.15);
+  --code-bg: rgba(0,0,0,.5);
+}
+
+/* --- Gruvbox Material Light (hard contrast) --- */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f9f5d7;
+  --panel: #fbf1c7;
+  --panel2: #ebdbb2;
+  --border: #a89984;
+  --text: #3c3836;
+  --muted: #7c6f64;
+  --blue: #076678;
+  --green: #98971a;
+  --yellow: #d65d0e;
+  --red: #cc241d;
+  --cyan: #427b58;
+  --orange: #d65d0e;
+  --purple: #8f3f71;
+  --term-shadow: 0 20px 50px rgba(0,0,0,.15);
+  --code-bg: rgba(0,0,0,.12);
+}
+
+/* Fallback if data-theme never gets applied (e.g. scripts blocked) */
+:root {
+  color-scheme: dark;
+}

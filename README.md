@@ -6,7 +6,7 @@ A terminal-style landing page with a built-in AI chatbot.
 
 - **Terminal** — interactive shell with commands like `ls`, `cd`, `cat`, `tree`, `neofetch`
 - **AI Chat** — type `chat` to enter chat mode, powered by Groq
-- **Theme toggle** — dark/light Nord theme with animated switch
+- **Theme toggle** — dark/light Gruvbox theme with animated switch
 - **Tab autocomplete** — command and path completion
 - **History** — command history persists across sessions
 
@@ -18,9 +18,10 @@ A terminal-style landing page with a built-in AI chatbot.
 | `about` | A bit about me |
 | `links` | Contact info & GitHub |
 | `neofetch` | System info in neofetch style |
+| `fetch` | System info with geo/IP (via Cloudflare edge) |
 | `banner` | Display the drkl logo |
 | `date` | Current date & time |
-| `echo` | Display text, e.g. `echo hello` |
+| `echo` | Display text, e.g. `echo hello` (supports `>` / `>>`) |
 | `ls` | List directory contents |
 | `cd` | Change directory |
 | `pwd` | Print working directory |
@@ -37,7 +38,10 @@ A terminal-style landing page with a built-in AI chatbot.
 | `sudo` | Run as root (will fail) |
 | `theme` | Switch theme (`dark` or `light`) |
 | `exit` | Exit the terminal |
-| `rm` | Delete files (read-only) |
+| `rm` | Delete files or directories (`-r` for recursive) |
+| `mkdir` | Create a directory |
+| `touch` | Create an empty file |
+| `edit` | Edit a file in the terminal text editor |
 
 ## Chat Commands
 
@@ -67,10 +71,21 @@ A terminal-style landing page with a built-in AI chatbot.
 | `Ctrl+C` | Cancel current input |
 | `Esc` | Close suggestions |
 
+## Files
+
+| File | Purpose |
+|------|---------|
+| `index.html` | Terminal page markup |
+| `style.css` | Terminal styles |
+| `theme-tokens.css` | Shared Gruvbox Material tokens (terminal + dashboard) |
+| `theme.js` | Theme read/write, toggle button, rain-burst effect |
+| `index.js` | Virtual filesystem, commands, chat mode |
+| `stats.html` | Owner-only usage dashboard |
+
 ## Stack
 
 - Vanilla HTML/CSS/JS (no frameworks)
-- Nord color theme
+- Gruvbox Material color theme (dark/light)
 - Groq API for AI responses
 - Hosted on GitHub Pages
 
