@@ -232,6 +232,7 @@ function openEditor(filename, content) {
   
   // Change input handler
   input.placeholder = 'Editing mode — Ctrl+S save, Ctrl+X exit';
+  input.setAttribute('aria-label', `Editing ${filename} — Ctrl+S to save, Ctrl+X to exit`);
   input.style.background = 'var(--code-bg)';
 }
 
@@ -242,6 +243,7 @@ function closeEditor(saved) {
   editorLines = [];
   editorCursor = 0;
   input.placeholder = '';
+  input.setAttribute('aria-label', 'Terminal command');
   input.style.background = 'transparent';
   print('<span class="ok">─'.repeat(50) + '</span>');
   if (saved) {
@@ -444,15 +446,25 @@ function figlet(word) {
 //  CHAT MODE
 // ══════════════════════════════════════════════════════
 const WORKER_URL = 'https://groq-chat.tomx13.workers.dev';
+const DEFAULT_MODEL = 'openai/gpt-oss-120b';
+// Models have a token limit and every message is billed, so long conversations
+// only send their most recent turns as context.
+const MAX_CONTEXT_MESSAGES = 24;
+
 let chatMode = false;
 let chatHistory = [];
 let chatBusy = false;
-let chatModel = '';
+let chatAbort = null;
+let chatModel = DEFAULT_MODEL;
 let chatModels = [];
+let lastPrompt = '';
+let trimNoticeShown = false;
 
 function enterChatMode() {
   chatMode = true;
   chatHistory = [];
+  lastPrompt = '';
+  trimNoticeShown = false;
   promptEl.textContent = 'you>';
   titleText.textContent = 'chat mode — /exit to leave';
   print('');
@@ -460,6 +472,8 @@ function enterChatMode() {
     ['/exit', 'leave chat mode'],
     ['/clear', 'reset'],
     ['/help', 'chat commands'],
+    ['/stop', 'interrupt the answer (Esc)'],
+    ['/retry', 'ask the last question again'],
     ['/login <PIN>', 'owner: lift rate limit'],
     ['/model', 'change model'],
   ];
@@ -488,8 +502,7 @@ async function loadChatModels() {
     const data = await res.json();
     chatModels = Array.isArray(data.models) ? data.models : [];
     if (chatModels.length) {
-      const preferred = 'openai/gpt-oss-120b';
-      chatModel = chatModels.includes(preferred) ? preferred : chatModels[0];
+      chatModel = chatModels.includes(DEFAULT_MODEL) ? DEFAULT_MODEL : chatModels[0];
     }
   } catch {}
 }
@@ -637,18 +650,24 @@ function exportChatLog() {
 
 function cliFormat(text) {
   // Format markdown-like text for CLI: bold, code, lists, tables, headings
-  const safe = esc(text);
 
-  // Pull fenced code blocks out first so later rules can't touch them
+  // Pull fenced code blocks out of the RAW text first, so later rules can't
+  // touch them and their contents get escaped exactly once (inside
+  // highlightCode). Escaping here as well would display—and copy—"&amp;&amp;"
+  // instead of "&&".
   const blocks = [];
-  const noBlocks = safe.replace(/```(\w+)?[\s\n]*([\s\S]*?)```/g, (_m, lang, code) => {
+  // The optional \n? before the closing fence keeps the last line newline out of
+  // the block, so the rendered block has no blank tail and copy is exact.
+  const noBlocks = String(text).replace(/```(\w+)?[\s\n]*([\s\S]*?)\n?```/g, (_m, lang, code) => {
     blocks.push({ lang: lang || '', code });
     return '\u0000CODE' + (blocks.length - 1) + '\u0000';
   });
 
+  const safe = esc(noBlocks);
+
   // Process tables FIRST (before lists) to prevent table rows being caught as list items
   // More robust table regex: handles optional leading/trailing pipes, multiple rows
-  let body = noBlocks.replace(/\n?\|([^\n]+)\|\n\|([-:| ]+)\|\n((?:\|[^\n]*\|\n?)+)/g, (match, header, separator, rows) => {
+  let body = safe.replace(/\n?\|([^\n]+)\|\n\|([-:| ]+)\|\n((?:\|[^\n]*\|\n?)+)/g, (match, header, separator, rows) => {
     const cols = header.split('|').map(c => c.trim()).filter(Boolean);
     const aligns = separator.split('|').map(a => {
       const t = a.trim();
@@ -705,10 +724,20 @@ function cliFormat(text) {
   return body.replace(/\u0000CODE(\d+)\u0000/g, (_m, i) => {
     const b = blocks[Number(i)];
     const highlighted = highlightCode(b.code, b.lang);
-    const lang = b.lang ? `<span class="chat-code-lang">${b.lang}</span>` : '';
-    return `<span class="chat-code">${lang}${highlighted}</span>`;
+    const lang = b.lang ? `<span class="chat-code-lang">${esc(b.lang)}</span>` : '';
+    return `<pre class="chat-code">${lang}<code>${highlighted}</code></pre>`;
   });
 }
+
+// Languages where "#" starts a line comment. Elsewhere (CSS "#fff", HTML ids)
+// it is just a character.
+const HL_HASH_COMMENT = new Set([
+  'py', 'python', 'sh', 'bash', 'zsh', 'shell', 'yaml', 'yml', 'rb', 'ruby',
+  'perl', 'pl', 'make', 'makefile', 'dockerfile', 'toml', 'ini', 'conf', 'r',
+  'jl', 'julia', 'ps1', 'awk', 'cr', 'nim',
+]);
+// Languages with no line comments at all (so "//" stays a plain character).
+const HL_NO_LINE_COMMENT = new Set(['html', 'xml', 'svg', 'css', 'scss', 'less', 'json', 'md', 'markdown']);
 
 function highlightCode(code, lang) {
   if (!lang) return esc(code);
@@ -722,59 +751,140 @@ function highlightCode(code, lang) {
     css: ['color', 'background', 'font', 'margin', 'padding', 'border', 'width', 'height', 'display', 'position', 'top', 'left', 'right', 'bottom', 'flex', 'grid', 'align', 'justify', 'content', 'gap', 'overflow', 'z-index', 'transform', 'transition', 'animation', '@media', '@keyframes'],
   };
   
-  const kw = keywords[lang.toLowerCase()] || [];
-  const kwPattern = kw.length ? new RegExp(`\\b(${kw.join('|')})\\b`, 'g') : null;
-  
-  let highlighted = esc(code);
-  
-  // Strings (double and single quoted)
-  highlighted = highlighted.replace(/"(?:[^"\\]|\\.)*"/g, '<span class="hl-str">$&</span>');
-  highlighted = highlighted.replace(/'(?:[^'\\]|\\.)*'/g, '<span class="hl-str">$&</span>');
-  
-  // Template literals (JS/TS)
-  highlighted = highlighted.replace(/`(?:[^`\\]|\\.)*`/g, '<span class="hl-str">$&</span>');
-  
-  // Comments
-  highlighted = highlighted.replace(/\/\/.*$/gm, '<span class="hl-comment">$&</span>');
-  highlighted = highlighted.replace(/\/\*[\s\S]*?\*\//g, '<span class="hl-comment">$&</span>');
-  highlighted = highlighted.replace(/#.*$/gm, '<span class="hl-comment">$&</span>');
-  
-  // Numbers
-  highlighted = highlighted.replace(/\b\d+\.?\d*\b/g, '<span class="hl-num">$&</span>');
-  
-  // Keywords
-  if (kwPattern) {
-    highlighted = highlighted.replace(kwPattern, '<span class="hl-kw">$&</span>');
+  const lc = String(lang).toLowerCase();
+  const kwSet = new Set(keywords[lc] || []);
+  const hashComment  = HL_HASH_COMMENT.has(lc);
+  const slashComment = !hashComment && !HL_NO_LINE_COMMENT.has(lc);
+  const blockComment = !hashComment;
+
+  const src = String(code);
+  const tag = (cls, text) => `<span class="${cls}">${esc(text)}</span>`;
+  const at = (re, i) => { re.lastIndex = i; const m = re.exec(src); return (m && m.index === i) ? m[0] : null; };
+
+  // Sticky regexes, scanned left to right in one pass. Because nothing is ever
+  // re-scanned, markup emitted for one token can't be matched as the next one —
+  // that is what used to turn `<span class="hl-num">` into
+  // `<<span class="hl-kw">span</span> class="hl-num">`.
+  const RE_LINE_SLASH = /\/\/[^\n]*/y;
+  const RE_LINE_HASH  = /#[^\n]*/y;
+  const RE_BLOCK      = /\/\*[\s\S]*?\*\//y;
+  const RE_DQ         = /"(?:[^"\\]|\\.)*"/y;
+  const RE_SQ         = /'(?:[^'\\]|\\.)*'/y;
+  const RE_BT         = /`(?:[^`\\]|\\.)*`/y;
+  const RE_DECORATOR  = /@[A-Za-z_$][\w$]*/y;
+  const RE_NUMBER     = /\d+\.?\d*/y;
+  const RE_WORD       = /[A-Za-z_$][\w$]*/y;
+
+  let out = '';
+  let i = 0;
+  while (i < src.length) {
+    let m = (slashComment && at(RE_LINE_SLASH, i)) || (hashComment && at(RE_LINE_HASH, i)) || (blockComment && at(RE_BLOCK, i));
+    if (m) { out += tag('hl-comment', m); i += m.length; continue; }
+
+    m = at(RE_DQ, i) || at(RE_SQ, i) || at(RE_BT, i);
+    if (m) { out += tag('hl-str', m); i += m.length; continue; }
+
+    m = at(RE_DECORATOR, i);
+    if (m) { out += tag('hl-decorator', m); i += m.length; continue; }
+
+    m = at(RE_NUMBER, i);
+    if (m) { out += tag('hl-num', m); i += m.length; continue; }
+
+    m = at(RE_WORD, i);
+    if (m) {
+      const isCall = /^\s*\(/.test(src.slice(i + m.length));
+      const cls = kwSet.has(m) ? 'hl-kw' : (isCall ? 'hl-func' : (/^[A-Z]/.test(m) ? 'hl-type' : null));
+      out += cls ? tag(cls, m) : esc(m);
+      i += m.length;
+      continue;
+    }
+
+    // Anything else (whitespace, punctuation) — escape one code point at a time
+    // so surrogate pairs are not split.
+    const ch = String.fromCodePoint(src.codePointAt(i));
+    out += esc(ch);
+    i += ch.length;
   }
-  
-  // Functions (identifier followed by ()
-  highlighted = highlighted.replace(/\b([a-zA-Z_$][\w$]*)\s*\(/g, '<span class="hl-func">$1</span>(');
-  
-  // Class/Type names (PascalCase)
-  highlighted = highlighted.replace(/\b([A-Z][a-zA-Z0-9]*)\b/g, '<span class="hl-type">$1</span>');
-  
-  // Decorators / annotations
-  highlighted = highlighted.replace(/@\w+/g, '<span class="hl-decorator">$&</span>');
-  
-  return highlighted;
+  return out;
+}
+
+// Copy buttons are attached only once an answer has finished streaming, so they
+// never show up on a half-rendered markdown block.
+function addCopyButtons(root) {
+  root.querySelectorAll('pre.chat-code').forEach((block) => {
+    if (block.querySelector('.copy-btn')) return;
+    const codeEl = block.querySelector('code');
+    if (!codeEl) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-btn';
+    btn.textContent = 'copy';
+    btn.setAttribute('aria-label', 'Copy this code block');
+    btn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const label = (text, ok) => {
+        btn.textContent = text;
+        btn.classList.toggle('done', !!ok);
+        setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('done'); }, 1400);
+      };
+      if (!navigator.clipboard) { label('unavailable'); return; }
+      navigator.clipboard.writeText(codeEl.textContent)
+        .then(() => label('copied', true))
+        .catch(() => label('failed'));
+    });
+    block.appendChild(btn);
+  });
 }
 
 function isNearBottom() {
   return screen.scrollHeight - screen.scrollTop - screen.clientHeight < 50;
 }
 
-async function sendChatMessage(text) {
+function contextMessages() {
+  let msgs = chatHistory.map(({ role, content }) => ({ role, content }));
+  if (msgs.length > MAX_CONTEXT_MESSAGES) msgs = msgs.slice(-MAX_CONTEXT_MESSAGES);
+  // Never start the context on an assistant turn.
+  while (msgs.length && msgs[0].role !== 'user') msgs.shift();
+  return msgs;
+}
+
+function stopChat() {
+  if (chatBusy && chatAbort) chatAbort.abort();
+}
+
+async function sendChatMessage(text, isRetry = false) {
   if (chatBusy) return;
 
-  chatHistory.push({ role: 'user', content: text, time: Date.now() });
-  print(`<span class="chat-you">you></span> ${esc(text)}`);
+  const AI_PREFIX = '<span class="chat-ai">ai></span> ';
+  let pushedUser = false;
 
-  // Separator
+  if (isRetry) {
+    // After a failure the user turn was dropped from history, so put it back —
+    // but if it is still there, don't send it twice.
+    const last = chatHistory[chatHistory.length - 1];
+    if (!last || last.role !== 'user' || last.content !== text) {
+      chatHistory.push({ role: 'user', content: text, time: Date.now() });
+      pushedUser = true;
+    }
+    print(`<span class="muted">↻ retrying:</span> ${esc(text)}`);
+  } else {
+    chatHistory.push({ role: 'user', content: text, time: Date.now() });
+    pushedUser = true;
+    lastPrompt = text;
+    print(`<span class="chat-you">you></span> ${esc(text)}`);
+  }
+
+  const context = contextMessages();
+  if (context.length < chatHistory.length && !trimNoticeShown) {
+    trimNoticeShown = true;
+    print(`<span class="muted">(long chat — only the last ${MAX_CONTEXT_MESSAGES} messages are sent as context)</span>`);
+  }
+
+  // Status line: the "generating" indicator and the stop hint in one.
   const sepEl = document.createElement('div');
   sepEl.className = 'row muted';
-  sepEl.textContent = '· · ·';
+  sepEl.textContent = '· · ·  (Esc to stop)';
   log.appendChild(sepEl);
-  if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
 
   // AI reply container
   const replyEl = document.createElement('div');
@@ -783,40 +893,59 @@ async function sendChatMessage(text) {
   if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
 
   chatBusy = true;
-  input.disabled = true;
+  const ctrl = new AbortController();
+  chatAbort = ctrl;
+  // Defer screen reader announcements until the answer is complete, otherwise
+  // the typewriter re-announces the whole reply every 25ms.
+  screen.setAttribute('aria-busy', 'true');
+
+  let full = '', revealed = 0, streamDone = false, timer = null;
+
+  const plainText = () => full.replace(/<br\s*\/?>/gi, '\n');
+  const paint = () => {
+    replyEl.innerHTML = AI_PREFIX + cliFormat(plainText().slice(0, revealed));
+  };
+
+  // Typewriter effect — accelerates through bursts so a long answer doesn't
+  // keep typing for ages after the network already finished.
+  timer = setInterval(() => {
+    const plain = plainText();
+    const backlog = plain.length - revealed;
+    if (backlog > 0) {
+      revealed = Math.min(plain.length, revealed + Math.max(3, Math.ceil(backlog / 10)));
+      paint();
+      if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
+    }
+    if (streamDone && revealed >= plain.length) {
+      clearInterval(timer);
+      timer = null;
+      replyEl.innerHTML = AI_PREFIX + cliFormat(plain);
+      addCopyButtons(replyEl);
+      screen.removeAttribute('aria-busy');
+      if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
+    }
+  }, 25);
 
   try {
     const chatToken = sessionStorage.getItem('drkl_chat_token') || '';
     const res = await fetch(`${WORKER_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(chatToken ? { Authorization: 'Bearer ' + chatToken } : {}) },
-      body: JSON.stringify({ model: chatModel, messages: chatHistory.map(({ role, content }) => ({ role, content })), }),
+      body: JSON.stringify({ model: chatModel, messages: context }),
+      signal: ctrl.signal,
     });
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || `HTTP ${res.status}`);
+      const retryAfter = res.headers.get('Retry-After');
+      const hint = res.status === 429 && retryAfter ? ` — try again in ${retryAfter}s` : '';
+      throw new Error((data.error || `HTTP ${res.status}`) + hint);
     }
+    if (!res.body) throw new Error('empty response stream');
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = '', full = '', streamDone = false;
-
-    // Typewriter effect
-    const timer = setInterval(() => {
-      const plain = full.replace(/<br\s*\/?>/gi, '\n');
-      if (replyEl._shown < plain.length) {
-        replyEl._shown = Math.min(plain.length, (replyEl._shown || 0) + 3);
-        replyEl.innerHTML = '<span class="chat-ai">ai></span> ' + cliFormat(plain.slice(0, replyEl._shown));
-        if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
-      }
-      if (streamDone && (replyEl._shown || 0) >= plain.length) {
-        clearInterval(timer);
-        replyEl.innerHTML = '<span class="chat-ai">ai></span> ' + cliFormat(plain);
-        if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
-      }
-    }, 25);
-    replyEl._shown = 0;
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
@@ -829,26 +958,60 @@ async function sendChatMessage(text) {
         buffer = buffer.slice(idx + 1);
         if (!line.startsWith('data:')) continue;
         const payload = line.slice(5).trim();
-        if (payload === '[DONE]') continue;
+        if (!payload || payload === '[DONE]') continue;
+        let json;
         try {
-          const json = JSON.parse(payload);
-          const delta = json.choices?.[0]?.delta?.content;
-          if (delta) full += delta;
-        } catch {}
+          json = JSON.parse(payload);
+        } catch {
+          continue;
+        }
+        // The worker can also report a failure mid-stream; surface it instead of
+        // silently ending up with an empty bubble.
+        if (json.error) throw new Error(typeof json.error === 'string' ? json.error : (json.error.message || 'stream error'));
+        const delta = json.choices?.[0]?.delta?.content;
+        if (delta) full += delta;
       }
     }
     streamDone = true;
 
     if (!full) {
-      replyEl.innerHTML = '<span class="chat-ai">ai></span> <span class="muted">(no response)</span>';
+      if (timer) { clearInterval(timer); timer = null; }
+      replyEl.innerHTML = AI_PREFIX + '<span class="muted">(no response)</span>';
+      screen.removeAttribute('aria-busy');
+      if (pushedUser) chatHistory.pop();
+    } else {
+      chatHistory.push({ role: 'assistant', content: full, time: Date.now() });
     }
-    chatHistory.push({ role: 'assistant', content: full, time: Date.now() });
   } catch (e) {
-    replyEl.innerHTML = `<span class="chat-ai">ai></span> <span class="err">Error: ${esc(e.message)}</span>`;
+    if (timer) { clearInterval(timer); timer = null; }
+    screen.removeAttribute('aria-busy');
+    if (e.name === 'AbortError') {
+      const partial = plainText();
+      revealed = partial.length;
+      if (partial) {
+        chatHistory.push({ role: 'assistant', content: partial, time: Date.now() });
+        paint();
+        addCopyButtons(replyEl);
+        print('<span class="muted">generation stopped — partial answer kept.</span>');
+      } else {
+        if (pushedUser) chatHistory.pop();
+        replyEl.remove();
+        print('<span class="muted">generation stopped.</span>');
+      }
+    } else {
+      // Drop the unanswered turn so the next request still alternates
+      // user/assistant; the text stays in lastPrompt for /retry.
+      if (pushedUser) chatHistory.pop();
+      replyEl.innerHTML = `${AI_PREFIX}<span class="err">Error: ${esc(e.message)}</span>` +
+        (lastPrompt ? ' <span class="muted">— /retry to try again</span>' : '');
+    }
   } finally {
     chatBusy = false;
-    input.disabled = false;
-    input.focus();
+    chatAbort = null;
+    sepEl.remove();
+    // Only take focus back when it wasn't deliberately moved somewhere else.
+    const active = document.activeElement;
+    if (!active || active === document.body || active === input) input.focus({ preventScroll: true });
   }
 }
 
@@ -1358,6 +1521,7 @@ input.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.key === 'u') { e.preventDefault(); input.value = ''; hideList(); renderSuggestion(); return; }
   if (e.ctrlKey && e.key === 'c') {
     e.preventDefault();
+    if (chatBusy) stopChat();
     if (input.value) print('^C', 'muted');
     input.value = '';
     hideList(); renderSuggestion();
@@ -1372,7 +1536,12 @@ input.addEventListener('keydown', (e) => {
     hideList(); renderSuggestion();
     return;
   }
-  if (e.key === 'Escape') { e.preventDefault(); hideList(); renderSuggestion(); return; }
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    if (chatBusy) stopChat();
+    hideList(); renderSuggestion();
+    return;
+  }
   if (e.key === 'Tab')    { e.preventDefault(); doTab(); return; }
   if (e.key === 'ArrowRight' && input.selectionStart === input.value.length) { acceptSuggestion(); return; }
   if (e.key === 'ArrowUp')   { e.preventDefault(); goHistory(-1); return; }
@@ -1387,14 +1556,45 @@ input.addEventListener('keydown', (e) => {
   // ── Chat mode ──
   if (chatMode) {
     const cmd = raw.toLowerCase().trim();
+    // Args are taken from `raw`, never from the lowercased copy — model names and
+    // the owner PIN are case sensitive.
+    const arg = raw.slice(raw.indexOf(' ') + 1).trim();
+
+    // Slash commands stay available while an answer is streaming.
+    if (!cmd.startsWith('/') && chatBusy) {
+      // Don't throw away what was typed — put it back and let them send it later.
+      setInput(raw);
+      renderSuggestion();
+      print('<span class="muted">still generating — press Esc to stop, or /stop.</span>');
+      return;
+    }
     if (cmd === '/exit' || cmd === '/quit') { exitChatMode(); return; }
     if (cmd === '/clear') { log.innerHTML = ''; return; }
-    if (cmd === '/new') { chatHistory = []; print('<span class="muted">New conversation started.</span>'); return; }
+    if (cmd === '/new') {
+      chatHistory = [];
+      lastPrompt = '';
+      trimNoticeShown = false;
+      print('<span class="muted">New conversation started.</span>');
+      return;
+    }
+    if (cmd === '/stop') {
+      if (chatBusy) stopChat();
+      else print('<span class="muted">nothing is generating.</span>');
+      return;
+    }
+    if (cmd === '/retry') {
+      const prompt = lastPrompt || (chatHistory.filter(m => m.role === 'user').pop() || {}).content;
+      if (!prompt) { print('<span class="muted">nothing to retry yet.</span>'); return; }
+      sendChatMessage(prompt, true);
+      return;
+    }
     if (cmd === '/help') {
       const cmds = [
         ['/exit', 'leave chat mode'],
         ['/clear', 'clear screen'],
         ['/new', 'new conversation'],
+        ['/stop', 'interrupt the answer (Esc)'],
+        ['/retry', 'ask the last question again'],
         ['/models', 'list available models'],
         ['/model', 'show current model'],
         ['/model X', 'switch to model X'],
@@ -1420,7 +1620,7 @@ input.addEventListener('keydown', (e) => {
       return;
     }
     if (cmd.startsWith('/login ')) {
-      chatLogin(cmd.slice(7).trim());
+      chatLogin(arg);
       return;
     }
     if (cmd === '/history' || cmd === '/history -f') {
@@ -1433,12 +1633,14 @@ input.addEventListener('keydown', (e) => {
     }
 
     if (cmd === '/model') {
-      print(`<span class="muted">current: ${esc(chatModel || 'none')}</span>`);
+      print(`<span class="muted">current: ${esc(chatModel)}${chatModels.length ? '' : ' (default)'}</span>`);
       return;
     }
     if (cmd.startsWith('/model ')) {
-      chatModel = cmd.slice(7).trim();
-      print(`<span class="muted">model → ${esc(chatModel)}</span>`);
+      if (!arg) { print('usage: <span class="ok">/model &lt;name&gt;</span> — see /models'); return; }
+      chatModel = arg;
+      const known = !chatModels.length || chatModels.includes(arg);
+      print(`<span class="muted">model → ${esc(chatModel)}</span>${known ? '' : ' <span class="err">(not in /models — the request may fail)</span>'}`);
       return;
     }
     sendChatMessage(raw);
@@ -1459,8 +1661,19 @@ input.addEventListener('keydown', (e) => {
   else print(`command not found: ${esc(raw)}. Type <span class="ok">help</span>.`, 'err');
 });
 
-// Click terminal to focus
-document.getElementById('term').addEventListener('click', () => input.focus());
+// Click terminal to focus — but never steal focus while text is being selected,
+// and on touch devices leave the scrollback alone so tapping it to copy text
+// does not pop the on-screen keyboard open.
+const coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+document.getElementById('term').addEventListener('click', (e) => {
+  // Leave buttons and links alone — stealing focus from a copy button (or a
+  // keyboard user) would undo the click.
+  if (e.target.closest && e.target.closest('button, a')) return;
+  const sel = window.getSelection && window.getSelection();
+  if (sel && String(sel).length) return;
+  if (coarsePointer && log.contains(e.target)) return;
+  input.focus({ preventScroll: true });
+});
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SEEN_INTRO = 'drkl_seen_intro';

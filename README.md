@@ -6,6 +6,9 @@ A terminal-style landing page with a built-in AI chatbot.
 
 - **Terminal** — interactive shell with commands like `ls`, `cd`, `cat`, `tree`, `neofetch`
 - **AI Chat** — type `chat` to enter chat mode, powered by Groq
+  - streaming answers you can interrupt with `Esc` / `/stop`
+  - markdown + syntax-highlighted code blocks with a copy button
+  - long chats keep the last 24 messages as context
 - **Theme toggle** — dark/light Gruvbox theme with animated switch
 - **Tab autocomplete** — command and path completion
 - **History** — command history persists across sessions
@@ -50,6 +53,8 @@ A terminal-style landing page with a built-in AI chatbot.
 | `/exit` | Leave chat mode |
 | `/clear` | Clear screen |
 | `/new` | Start new conversation (clear history) |
+| `/stop` | Interrupt the answer (`Esc` or `Ctrl+C` also work) |
+| `/retry` | Send the last question again |
 | `/models` | List available models |
 | `/model` | Show current model |
 | `/model X` | Switch to model X |
@@ -68,8 +73,8 @@ A terminal-style landing page with a built-in AI chatbot.
 | `Ctrl+L` | Clear screen |
 | `Ctrl+U` | Clear input line |
 | `Ctrl+W` | Delete word |
-| `Ctrl+C` | Cancel current input |
-| `Esc` | Close suggestions |
+| `Esc` | Close suggestions / stop the AI mid-answer |
+| `Ctrl+C` | Cancel input / stop the AI mid-answer |
 
 ## Files
 

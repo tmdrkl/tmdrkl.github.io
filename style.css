@@ -172,8 +172,23 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
   display: block; background: var(--code-bg); border: 1px solid var(--border);
   border-radius: 4px; padding: 8px 12px; margin: 4px 0 8px;
   font-size: 13px; line-height: 1.4; overflow-x: auto;
-  white-space: pre;
+  white-space: pre; position: relative;
 }
+.chat-code code { font: inherit; color: inherit; background: none; padding: 0; }
+
+/* Copy button on finished code blocks */
+.copy-btn {
+  position: absolute; top: 5px; right: 5px;
+  font: inherit; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--panel2); color: var(--muted);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 2px 7px; cursor: pointer;
+  opacity: .7; transition: opacity .15s, color .15s, border-color .15s;
+}
+.chat-code:hover .copy-btn,
+.copy-btn:hover,
+.copy-btn:focus-visible { opacity: 1; color: var(--blue); }
+.copy-btn.done { color: var(--green); border-color: var(--green); }
 .chat-inline {
   background: var(--code-bg); padding: 1px 5px; border-radius: 3px;
   font-size: 13px; color: var(--yellow);
