@@ -42,6 +42,7 @@ html, body {
   transition: background .3s, color .3s;
   -webkit-text-size-adjust: 100%;
 }
+html { overflow-x: hidden; max-width: 100vw; }
 body {
   display: flex;
   justify-content: center;
@@ -52,6 +53,8 @@ body {
   padding-bottom: max(40px, env(safe-area-inset-bottom));
   min-height: 100vh;
   min-height: 100dvh;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 .wrap {
   width: 100%;
@@ -104,6 +107,9 @@ footer.site a:hover { color: var(--blue); }
   border-radius: 8px;
   box-shadow: var(--term-shadow);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .titlebar {
@@ -121,24 +127,27 @@ footer.site a:hover { color: var(--blue); }
 .titlebar span { margin-left: 8px; color: var(--muted); font-size: 13px; }
 
 #screen {
+  flex: 1 1 auto;
   height: calc(100vh - 220px);
   height: calc(100dvh - 220px);
   max-height: 600px;
   min-height: 200px;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 18px 20px;
   line-height: 1.45;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
   user-select: text;
   -webkit-user-select: text;
+  min-width: 0;
 }
 #screen::-webkit-scrollbar { width: 8px; }
 #screen::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::selection { background: var(--blue); color: var(--bg); }
 
 /* --- Terminal text --- */
-.row { white-space: pre-wrap; word-break: break-word; user-select: text; -webkit-user-select: text; }
+.row { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; max-width: 100%; }
 .prompt { color: var(--green); }
 .cmd { color: var(--text); }
 .muted { color: var(--muted); }
@@ -146,25 +155,26 @@ footer.site a:hover { color: var(--blue); }
 .ok { color: var(--yellow); }
 .dir { color: var(--blue); }
 .blue { color: var(--blue); }
-pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25; }
-pre.neofetch { font-size: 13px; line-height: 1.4; }
+pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre.neofetch, pre.fastfetch { font-size: 13px; line-height: 1.4; }
 
-/* Neofetch ASCII art coloring */
-[data-theme="dark"] pre.neofetch {
+/* Fastfetch ASCII art coloring (pre.neofetch kept as alias) */
+[data-theme="dark"] pre.neofetch,
+[data-theme="dark"] pre.fastfetch {
   background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
 }
-pre.neofetch .ascii-line-0 { color: var(--blue); }
-pre.neofetch .ascii-line-1 { color: var(--blue); }
-pre.neofetch .ascii-line-2 { color: var(--cyan); }
-pre.neofetch .ascii-line-3 { color: var(--cyan); }
-pre.neofetch .ascii-line-4 { color: var(--green); }
-pre.neofetch .ascii-line-5 { color: var(--green); }
-pre.neofetch .ascii-line-6 { color: var(--yellow); }
-pre.neofetch .ascii-line-7 { color: var(--yellow); }
-pre.neofetch .ascii-line-8 { color: var(--orange); }
-pre.neofetch .ascii-line-9 { color: var(--orange); }
-pre.neofetch .ascii-line-10 { color: var(--red); }
-pre.neofetch .ascii-line-11 { color: var(--red); }
+pre.neofetch .ascii-line-0, pre.fastfetch .ascii-line-0 { color: var(--blue); }
+pre.neofetch .ascii-line-1, pre.fastfetch .ascii-line-1 { color: var(--blue); }
+pre.neofetch .ascii-line-2, pre.fastfetch .ascii-line-2 { color: var(--cyan); }
+pre.neofetch .ascii-line-3, pre.fastfetch .ascii-line-3 { color: var(--cyan); }
+pre.neofetch .ascii-line-4, pre.fastfetch .ascii-line-4 { color: var(--green); }
+pre.neofetch .ascii-line-5, pre.fastfetch .ascii-line-5 { color: var(--green); }
+pre.neofetch .ascii-line-6, pre.fastfetch .ascii-line-6 { color: var(--yellow); }
+pre.neofetch .ascii-line-7, pre.fastfetch .ascii-line-7 { color: var(--yellow); }
+pre.neofetch .ascii-line-8, pre.fastfetch .ascii-line-8 { color: var(--orange); }
+pre.neofetch .ascii-line-9, pre.fastfetch .ascii-line-9 { color: var(--orange); }
+pre.neofetch .ascii-line-10, pre.fastfetch .ascii-line-10 { color: var(--red); }
+pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
 .chat-reply { color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.5; user-select: text; -webkit-user-select: text; }
 .chat-you { color: var(--green); font-weight: 700; }
 .chat-ai { color: var(--cyan); font-weight: 700; }
@@ -257,9 +267,21 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
   }
 }
 
-/* --- Input --- */
+/* --- Input (sticky footer outside the scroll area) --- */
+#inputbar {
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  padding: 10px 20px 12px;
+  flex-shrink: 0;
+}
 #inputline { display: flex; align-items: center; gap: 6px; }
-#inputline .prompt { flex-shrink: 0; }
+#inputline .prompt {
+  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .inputwrap { position: relative; flex: 1; min-width: 0; overflow: hidden; }
 #cmdInput {
   width: 100%; padding: 0; background: transparent; border: none; outline: none;
@@ -329,29 +351,38 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
     padding: 0;
     padding-bottom: env(safe-area-inset-bottom);
     font-size: 14px;
-    align-items: flex-start;
+    align-items: stretch;
     min-height: 100vh;
     min-height: 100dvh;
   }
-  .wrap { max-width: 100%; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+  .wrap { max-width: 100%; flex: 1; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; min-width: 0; }
   header.site { padding: 8px 12px 0; padding-left: max(12px, env(safe-area-inset-left)); margin-bottom: 8px; }
   footer.site { padding: 0 12px 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); margin-top: 8px; gap: 12px; }
   header.site nav { gap: 8px; }
   .site .brand { font-size: 14px; }
   .site nav a { font-size: 12px; padding: 4px 0; }
   footer.site a { font-size: 12px; }
+  .term { flex: 1; min-height: 0; }
   #screen {
-    height: calc(100vh - 140px);
-    height: calc(100dvh - 140px);
+    flex: 1 1 auto;
+    height: auto;
     padding: 12px;
-    min-height: 200px;
+    min-height: 0;
     max-height: none;
   }
-  .titlebar { padding: 8px 12px; }
+  .titlebar { padding: 8px 12px; flex-shrink: 0; }
   .titlebar span { display: inline; font-size: 11px; }
   .dot { width: 9px; height: 9px; }
+  #inputbar {
+    position: sticky;
+    bottom: 0;
+    padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
   #cmdInput { font-size: 16px; padding: 8px 0; }
-  #inputline { padding: 0 12px 10px; padding-left: max(12px, env(safe-area-inset-left)); gap: 8px; }
+  #inputline { padding: 0; gap: 8px; }
+  #inputline .prompt { max-width: 38vw; font-size: 13px; }
   .term { border-radius: 0; border-left: none; border-right: none; border-bottom: none; }
   pre { font-size: 11px; padding: 6px 8px; }
   .chat-help { font-size: 12px; gap: 2px 10px; }
@@ -365,8 +396,9 @@ pre.neofetch .ascii-line-11 { color: var(--red); }
 @media (max-width: 360px) {
   body { font-size: 13px; }
   .site .brand { font-size: 13px; }
-  #screen { padding: 10px; height: calc(100vh - 130px); height: calc(100dvh - 130px); }
+  #screen { padding: 10px; }
   #cmdInput { font-size: 16px; }
+  #inputline .prompt { max-width: 32vw; font-size: 12px; }
   .titlebar { padding: 6px 10px; }
   .titlebar span { font-size: 10px; }
   .dot { width: 8px; height: 8px; }

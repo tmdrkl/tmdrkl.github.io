@@ -4,7 +4,7 @@ A terminal-style landing page with a built-in AI chatbot.
 
 ## Features
 
-- **Terminal** — interactive shell with commands like `ls`, `cd`, `cat`, `tree`, `neofetch`
+- **Terminal** — interactive shell with commands like `ls`, `cd`, `cat`, `tree`, `fastfetch`
 - **AI Chat** — type `chat` to enter chat mode, powered by Groq
   - streaming answers you can interrupt with `Esc` / `/stop`
   - markdown + syntax-highlighted code blocks with a copy button
@@ -20,7 +20,7 @@ A terminal-style landing page with a built-in AI chatbot.
 | `help` | List available commands |
 | `about` | A bit about me |
 | `links` | Contact info & GitHub |
-| `neofetch` | System info in neofetch style |
+| `fastfetch` | System info in fastfetch style (`neofetch` still works as an alias) |
 | `fetch` | System info with geo/IP (via Cloudflare edge) |
 | `banner` | Display the drkl logo |
 | `date` | Current date & time |

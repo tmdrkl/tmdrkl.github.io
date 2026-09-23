@@ -52,7 +52,7 @@ const BASE_FS = {
       '',
       '## Fitur',
       '',
-      '- **Terminal** — `ls`, `cd`, `cat`, `tree`, `neofetch`, dan lainnya',
+      '- **Terminal** — `ls`, `cd`, `cat`, `tree`, `fastfetch`, dan lainnya',
       '- **AI Chat** — ketik `chat` untuk ngobrol dengan AI (Groq)',
       '- **Tema** — dark/light, ikut preferensi sistem atau manual',
       '- **History** — riwayat perintah tersimpan antar sesi',
@@ -399,7 +399,14 @@ function renderEditor() {
   screen.scrollTop = screen.scrollHeight;
 }
 
-function renderNeofetch(ascii, info) {
+function renderFastfetch(ascii, info) {
+  // On narrow screens side-by-side ASCII + info overflows — stack vertically.
+  try {
+    if (window.innerWidth && window.innerWidth < 480) {
+      const art = ascii.map((l, i) => `<span class="ascii-line-${i}">${l}</span>`).join('\n');
+      return art + '\n' + info.join('\n');
+    }
+  } catch {}
   const maxAsciiWidth = Math.max(...ascii.map(l => l.length));
   const paddedAscii = ascii.map((l, i) => `<span class="ascii-line-${i}">${l}</span>` + ' '.repeat(maxAsciiWidth - l.length));
   const maxLines = Math.max(paddedAscii.length, info.length);
@@ -1022,7 +1029,8 @@ const HELP = {
   help:     'list available commands',
   about:    'a bit about me',
   links:    'contacts & github',
-  neofetch: 'system info in neofetch style',
+  neofetch: 'system info in fastfetch style (alias of fastfetch)',
+  fastfetch:'system info in fastfetch style',
   fetch:    'system info with geo/IP (via Cloudflare edge)',
   banner:   'display the drkl logo',
   date:     'current date & time',
@@ -1071,12 +1079,12 @@ Telegram: <a href="https://t.me/tmdrkl" target="_blank">@tmdrkl</a>
 Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
   },
 
-async neofetch(args) {
+  async fastfetch(args) {
     const up = Math.floor((Date.now() - loadTime) / 1000);
-    const upStr = up < 60 ? `${up}s`
-      : up < 3600 ? `${Math.floor(up/60)}m ${up%60}s`
-      : `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m`;
-    
+    const upStr = up < 60 ? `${up} secs`
+      : up < 3600 ? `${Math.floor(up/60)} mins ${up%60} secs`
+      : `${Math.floor(up/3600)} hours ${Math.floor((up%3600)/60)} mins`;
+
     const asciiArt = [
       '        ████████',
       '      ████████████',
@@ -1091,20 +1099,29 @@ async neofetch(args) {
       '      ████████████',
       '        ████████',
     ];
-    
+
+    const cores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} cores` : 'unknown';
+    const mem = navigator.deviceMemory ? `~${navigator.deviceMemory} GB` : null;
+
     const infoLines = [
       `<span class="ok">tomi@drkl</span>`,
       `<span class="muted">------------------</span>`,
-      `<span class="blue">OS</span>: drkl.my.id 1.0`,
-      `<span class="blue">Host</span>: Terminal web`,
+      `<span class="blue">OS</span>: drklOS 1.0.0`,
+      `<span class="blue">Host</span>: drkl.my.id (web terminal)`,
+      `<span class="blue">Kernel</span>: drkl-sh 6.6.0`,
       `<span class="blue">Uptime</span>: ${upStr}`,
       `<span class="blue">Shell</span>: drkl-sh`,
       `<span class="blue">Resolution</span>: ${window.screen.width}×${window.screen.height}`,
       `<span class="blue">Browser</span>: ${browserName()}`,
+      `<span class="blue">CPU</span>: ${cores}`,
+      ...(mem ? [`<span class="blue">Memory</span>: ${mem}`] : []),
       `<span class="blue">Theme</span>: ${getTheme()}`,
     ];
-    print(`<pre class="neofetch">${renderNeofetch(asciiArt, infoLines)}</pre>`);
+    print(`<pre class="fastfetch">${renderFastfetch(asciiArt, infoLines)}</pre>`);
   },
+
+  // Backwards-compat alias: `neofetch` still works.
+  async neofetch(args) { return commands.fastfetch(args); },
 
   async fetch() {
     const up = Math.floor((Date.now() - loadTime) / 1000);
@@ -1153,7 +1170,7 @@ async neofetch(args) {
           `<span class="blue">Browser</span>: ${browserName()}`,
           `<span class="blue">Theme</span>: ${getTheme()}`,
         ];
-        print(`<pre class="neofetch">${renderNeofetch(asciiArt, infoLines)}</pre>`);
+        print(`<pre class="fastfetch">${renderFastfetch(asciiArt, infoLines)}</pre>`);
         return;
       }
     } catch (e) {
@@ -1673,6 +1690,24 @@ document.getElementById('term').addEventListener('click', (e) => {
   if (sel && String(sel).length) return;
   if (coarsePointer && log.contains(e.target)) return;
   input.focus({ preventScroll: true });
+});
+
+// ── Mobile keyboard / viewport handling ──
+// visualViewport shrinks when the on-screen keyboard opens — keep the latest
+// output visible without relying on fragile 100dvh - Npx hacks.
+if (window.visualViewport) {
+  let vvT = null;
+  window.visualViewport.addEventListener('resize', () => {
+    clearTimeout(vvT);
+    vvT = setTimeout(() => {
+      if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
+    }, 50);
+  });
+}
+input.addEventListener('focus', () => {
+  setTimeout(() => {
+    if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
+  }, 150);
 });
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
