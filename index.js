@@ -141,8 +141,30 @@ let FS = getMergedFS();
 let cwd = ['~'];
 
 function pwdStr()    { return '~' + (cwd.length > 1 ? '/' + cwd.slice(1).join('/') : ''); }
-function promptStr() { return `tomi@drkl:${pwdStr()}$`; }
+function promptStr() { return `${getUsername()}@drkl:${pwdStr()}$`; }
 function refreshPrompt() { promptEl.textContent = promptStr(); }
+function refreshTitle()  { titleText.textContent = `${getUsername()}@drkl: ~`; }
+
+// ── Visitor username (per-browser, stored in localStorage) ──
+const DEFAULT_USER = 'guest';
+const USER_RE = /^[a-z0-9_-]{1,16}$/;
+
+function getUsername() {
+  try {
+    const u = localStorage.getItem('drkl_username');
+    if (u && USER_RE.test(u)) return u;
+  } catch {}
+  return DEFAULT_USER;
+}
+
+function setUsername(name) {
+  const clean = String(name || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 16);
+  if (!clean) return null;
+  try {
+    localStorage.setItem('drkl_username', clean);
+  } catch {}
+  return clean;
+}
 
 function resolvePath(p) {
   if (!p || p === '~' || p === '/') return ['~'];
@@ -497,7 +519,7 @@ function exitChatMode() {
   chatMode = false;
   chatHistory = [];
   refreshPrompt();
-  titleText.textContent = 'tomi@drkl: ~';
+  refreshTitle();
   print('<span class="muted">── exited chat mode ──</span>');
   print('');
 }
@@ -1047,6 +1069,7 @@ const HELP = {
   dashboard:'open the visual stats dashboard',
   clear:    'clear the screen',
   whoami:   'show current user',
+  username: 'show or set your username (saved in this browser)',
   uname:    'system info',
   sudo:     'run as root (will fail)',
   theme:    'switch theme (dark|light)',
@@ -1104,7 +1127,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
     const mem = navigator.deviceMemory ? `~${navigator.deviceMemory} GB` : null;
 
     const infoLines = [
-      `<span class="ok">tomi@drkl</span>`,
+      `<span class="ok">${esc(getUsername())}@drkl</span>`,
       `<span class="muted">------------------</span>`,
       `<span class="blue">OS</span>: drklOS 1.0.0`,
       `<span class="blue">Host</span>: drkl.net (web terminal)`,
@@ -1158,7 +1181,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
         else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) osName = 'iOS';
 
         const infoLines = [
-          `<span class="ok">tomi@drkl</span>`,
+          `<span class="ok">${esc(getUsername())}@drkl</span>`,
           `<span class="muted">------------------</span>`,
           `<span class="blue">OS</span>: ${osName}`,
           `<span class="blue">Host</span>: drkl.net (via Cloudflare edge)`,
@@ -1297,11 +1320,24 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
 
   clear() { log.innerHTML = ''; hideList(); renderSuggestion(); },
 
-  whoami() { print('tomi'); },
+  whoami() { print(esc(getUsername())); },
+
+  username(args) {
+    if (!args.length) {
+      print(`username: <span class="ok">${esc(getUsername())}</span> <span class="muted">(default: ${DEFAULT_USER})</span>`);
+      print('<span class="muted">usage: username &lt;name&gt; — 1-16 chars: a-z, 0-9, _ or -</span>');
+      return;
+    }
+    const clean = setUsername(args[0]);
+    if (!clean) { print('username: use 1-16 chars: a-z, 0-9, _ or -', 'err'); return; }
+    refreshPrompt();
+    refreshTitle();
+    print(`username set to <span class="ok">${esc(clean)}</span>.`);
+  },
 
   uname() { print(`drklOS 1.0.0 — kernel drkl-sh 6.6.0 (${getTheme()})`); },
 
-  sudo() { print('tomi is not in the sudoers file. This incident will be reported.', 'err'); },
+  sudo() { print(`${esc(getUsername())} is not in the sudoers file. This incident will be reported.`, 'err'); },
 
   exit()  { print('logout — but you are still here. 😏 Type <span class="ok">clear</span> to start over.'); },
 
@@ -1755,6 +1791,7 @@ if (reducedMotion || hasSeenIntro) {
 }
 
 refreshPrompt();
+refreshTitle();
 loadChatModels();
 
 // ── Theme toggle ─────────────────────────────────────

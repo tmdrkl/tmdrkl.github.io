@@ -12,6 +12,7 @@ A terminal-style landing page with a built-in AI chatbot.
 - **Theme toggle** — dark/light Gruvbox theme with animated switch
 - **Tab autocomplete** — command and path completion
 - **History** — command history persists across sessions
+- **Username** — each visitor gets their own name (`username <name>` to change, saved in this browser)
 
 ## Terminal Commands
 
@@ -37,6 +38,7 @@ A terminal-style landing page with a built-in AI chatbot.
 | `dashboard` | Open the visual stats dashboard |
 | `clear` | Clear the screen |
 | `whoami` | Show current user |
+| `username` | Show or set your username (saved in this browser) |
 | `uname` | System info |
 | `sudo` | Run as root (will fail) |
 | `theme` | Switch theme (`dark` or `light`) |
