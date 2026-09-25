@@ -33,18 +33,18 @@ function browserName() {
 // ── Virtual FS ───────────────────────────────────────
 const BASE_FS = {
   'about.txt': 'Tomi — likes everything new and fun.',
-  'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.my.id',
-  'README.md': '# drkl.my.id\n\nA terminal with a built-in AI chat.\nType chat to start talking to the AI.',
+  'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.net',
+  'README.md': '# drkl.net\n\nA terminal with a built-in AI chat.\nType chat to start talking to the AI.',
   'projects': {
     'terminal': 'This is it — the web terminal you are using right now.',
   },
   'notes': {
     'todo.txt': '- push website\n- make a blog\n- have lunch',
-    'ide.txt':  'try making another game on drkl.my.id',
+    'ide.txt':  'try making another game on drkl.net',
   },
   'blog': {
     'mulai.md': [
-      '# Selamat datang di drkl.my.id',
+      '# Selamat datang di drkl.net',
       '',
       'Situs ini dimulai dari satu ide sederhana: membuat landing page personal',
       'yang tidak membosankan. Alih-alih halaman statis biasa, saya bikin terminal',
@@ -639,7 +639,7 @@ function exportChatLog() {
     print('<span class="muted">No messages to export.</span>');
     return;
   }
-  let log = `drkl.my.id chat log\nModel: ${chatModel}\nDate: ${new Date().toLocaleString()}\n${'='.repeat(40)}\n\n`;
+  let log = `drkl.net chat log\nModel: ${chatModel}\nDate: ${new Date().toLocaleString()}\n${'='.repeat(40)}\n\n`;
   chatHistory.forEach((msg) => {
     const t = msg.time ? `[${formatTime(msg.time)}] ` : '';
     const role = msg.role === 'user' ? 'you' : 'ai';
@@ -1076,7 +1076,7 @@ const commands = {
   links() {
     print(`GitHub: <a href="https://github.com/tmdrkl" target="_blank">github.com/tmdrkl</a>
 Telegram: <a href="https://t.me/tmdrkl" target="_blank">@tmdrkl</a>
-Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
+Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
   },
 
   async fastfetch(args) {
@@ -1107,7 +1107,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
       `<span class="ok">tomi@drkl</span>`,
       `<span class="muted">------------------</span>`,
       `<span class="blue">OS</span>: drklOS 1.0.0`,
-      `<span class="blue">Host</span>: drkl.my.id (web terminal)`,
+      `<span class="blue">Host</span>: drkl.net (web terminal)`,
       `<span class="blue">Kernel</span>: drkl-sh 6.6.0`,
       `<span class="blue">Uptime</span>: ${upStr}`,
       `<span class="blue">Shell</span>: drkl-sh`,
@@ -1161,7 +1161,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
           `<span class="ok">tomi@drkl</span>`,
           `<span class="muted">------------------</span>`,
           `<span class="blue">OS</span>: ${osName}`,
-          `<span class="blue">Host</span>: drkl.my.id (via Cloudflare edge)`,
+          `<span class="blue">Host</span>: drkl.net (via Cloudflare edge)`,
           `<span class="blue">IP</span>: ${esc(data.ip || 'Unknown')}`,
           `<span class="blue">Country</span>: ${esc(data.country || 'Unknown')}`,
           `<span class="blue">Uptime</span>: ${upStr}`,
@@ -1180,7 +1180,7 @@ Email: <a href="mailto:to@drkl.my.id">to@drkl.my.id</a>`);
 
   banner() {
     print(`<pre class="ok">${figlet('drkl')}</pre>`);
-    print('Welcome to <span class="ok">drkl.my.id</span>. Type <span class="ok">help</span> to get started.');
+    print('Welcome to <span class="ok">drkl.net</span>. Type <span class="ok">help</span> to get started.');
   },
 
   date() {
@@ -1716,7 +1716,7 @@ let hasSeenIntro = false;
 try { hasSeenIntro = localStorage.getItem(SEEN_INTRO) === '1'; } catch {}
 
 const BOOT_LINES = [
-  'Welcome to <span class="ok">drkl.my.id</span>.',
+  'Welcome to <span class="ok">drkl.net</span>.',
   `<span class="muted">drklOS 1.0.0 — drkl-sh shell · ${getTheme()} theme</span>`,
   'Type <span class="ok">help</span> for commands. Type <span class="ok">chat</span> to talk to AI.',
 ];

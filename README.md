@@ -1,4 +1,4 @@
-# drkl.my.id
+# drkl.net
 
 A terminal-style landing page with a built-in AI chatbot.
 
