@@ -1130,12 +1130,119 @@ const HELP = {
   uname:    'system info',
   sudo:     'run as root (will fail)',
   theme:    'switch theme (dark|light)',
+  tictactoe:'play tic-tac-toe vs AI (tictactoe 1-9)',
+  ttt:      'alias of tictactoe',
   exit:     'exit the terminal',
   rm:       'delete files or directories (-r for recursive)',
   mkdir:    'create a directory',
   touch:    'create an empty file',
   edit:     'edit a file in the terminal text editor',
 };
+
+// ── Tic-tac-toe (you = X, AI = O) ────────────────────
+const TTT_LINES = [
+  [0, 1, 2], [3, 4, 5], [6, 7, 8],
+  [0, 3, 6], [1, 4, 7], [2, 5, 8],
+  [0, 4, 8], [2, 4, 6],
+];
+
+let tttBoard = null; // null = no active game, else Array(9) of '' | 'X' | 'O'
+let tttScore = { w: 0, l: 0, d: 0 };
+try {
+  const s = JSON.parse(localStorage.getItem('drkl_ttt'));
+  if (s && typeof s === 'object') {
+    tttScore = { w: s.w | 0, l: s.l | 0, d: s.d | 0 };
+  }
+} catch {}
+
+function tttSaveScore() {
+  try { localStorage.setItem('drkl_ttt', JSON.stringify(tttScore)); } catch {}
+}
+
+function tttWinner(b) {
+  for (const [a, c, d] of TTT_LINES) {
+    if (b[a] && b[a] === b[c] && b[a] === b[d]) return b[a];
+  }
+  return b.every((c) => c) ? 'draw' : null;
+}
+
+function tttBestMove(b) {
+  // 1. Win if possible, 2. block player win, 3. center, 4. random corner, 5. random side.
+  const empty = [];
+  for (let i = 0; i < 9; i++) if (!b[i]) empty.push(i);
+  for (const me of ['O', 'X']) {
+    for (const i of empty) {
+      b[i] = me;
+      const w = tttWinner(b);
+      b[i] = '';
+      if (w === me) return i;
+    }
+  }
+  if (!b[4]) return 4;
+  const corners = [0, 2, 6, 8].filter((i) => !b[i]);
+  if (corners.length) return corners[Math.floor(Math.random() * corners.length)];
+  return empty[Math.floor(Math.random() * empty.length)];
+}
+
+function tttCell(i) {
+  const v = tttBoard[i];
+  if (v === 'X') return '<span class="ok">X</span>';
+  if (v === 'O') return '<span class="blue">O</span>';
+  return `<span class="muted">${i + 1}</span>`;
+}
+
+function tttPrintBoard() {
+  print(`<pre> ${tttCell(0)} │ ${tttCell(1)} │ ${tttCell(2)}\n───┼───┼───\n ${tttCell(3)} │ ${tttCell(4)} │ ${tttCell(5)}\n───┼───┼───\n ${tttCell(6)} │ ${tttCell(7)} │ ${tttCell(8)}</pre>`);
+}
+
+function tttPrintScore() {
+  print(`<span class="muted">score — you ${tttScore.w} : ${tttScore.l} AI · ${tttScore.d} draws</span>`);
+}
+
+function tttNewGame() {
+  tttBoard = Array(9).fill('');
+  print('<span class="ok">Tic-tac-toe</span> <span class="muted">— you are X, AI is O. Move with</span> <span class="ok">tictactoe &lt;1-9&gt;</span>');
+  print('');
+  tttPrintBoard();
+  print('');
+  print('<span class="muted">Your move (1-9). Layout:</span>');
+  print('<pre> 1 │ 2 │ 3\n───┼───┼───\n 4 │ 5 │ 6\n───┼───┼───\n 7 │ 8 │ 9</pre>');
+}
+
+function tttFinish(result) {
+  if (result === 'X') {
+    tttScore.w++;
+    print('<span class="ok">You win! 🎉</span>');
+  } else if (result === 'O') {
+    tttScore.l++;
+    print('<span class="err">AI wins. Better luck next time.</span>');
+  } else {
+    tttScore.d++;
+    print('<span class="muted">Draw.</span>');
+  }
+  tttSaveScore();
+  tttBoard = null;
+  tttPrintScore();
+  print('<span class="muted">Type <span class="ok">tictactoe</span> for a rematch.</span>');
+}
+
+function tttPlay(pos) {
+  if (!tttBoard) {
+    tttBoard = Array(9).fill('');
+    print('<span class="ok">Tic-tac-toe</span> <span class="muted">— you are X, AI is O.</span>');
+    print('');
+  }
+  const i = pos - 1;
+  if (tttBoard[i]) { print(`tictactoe: cell ${pos} is already taken`, 'err'); tttPrintBoard(); return; }
+  tttBoard[i] = 'X';
+  let r = tttWinner(tttBoard);
+  if (r) { tttPrintBoard(); tttFinish(r); return; }
+  tttBoard[tttBestMove(tttBoard)] = 'O';
+  r = tttWinner(tttBoard);
+  tttPrintBoard();
+  if (r) tttFinish(r);
+  else print('<span class="muted">Your move (tictactoe &lt;1-9&gt;).</span>');
+}
 
 const commands = {
   help(args) {
@@ -1481,6 +1588,37 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
     themeRainBurst(t);
     print(`Theme set to <span class="ok">${t}</span>.`);
   },
+
+  tictactoe(args) {
+    const sub = (args[0] || '').toLowerCase();
+    if (!args.length) {
+      if (!tttBoard) tttNewGame();
+      else { tttPrintBoard(); print('<span class="muted">Your move (tictactoe &lt;1-9&gt;).</span>'); }
+      return;
+    }
+    if (sub === 'new') { tttNewGame(); return; }
+    if (sub === 'quit' || sub === 'exit' || sub === 'stop') {
+      if (!tttBoard) { print('tictactoe: no active game', 'muted'); return; }
+      tttBoard = null;
+      print('<span class="muted">Game abandoned. Type <span class="ok">tictactoe</span> to start a new one.</span>');
+      return;
+    }
+    if (sub === 'score') { tttPrintScore(); return; }
+    if (sub === 'help') {
+      print('usage: <span class="ok">tictactoe</span> | <span class="ok">tictactoe &lt;1-9&gt;</span> | <span class="ok">tictactoe new|score|quit</span>');
+      return;
+    }
+    const pos = parseInt(sub, 10);
+    if (!/^[1-9]$/.test(sub) || !(pos >= 1 && pos <= 9)) {
+      print(`tictactoe: invalid move "${esc(args[0])}" — pick 1-9`, 'err');
+      if (tttBoard) tttPrintBoard();
+      else print('usage: <span class="ok">tictactoe &lt;1-9&gt;</span> — type <span class="ok">tictactoe</span> to start');
+      return;
+    }
+    tttPlay(pos);
+  },
+
+  ttt(args) { return commands.tictactoe(args); },
 };
 
 // ── Autocomplete ─────────────────────────────────────
