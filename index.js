@@ -1184,15 +1184,48 @@ function tttBestMove(b) {
   return empty[Math.floor(Math.random() * empty.length)];
 }
 
-function tttCell(i) {
-  const v = tttBoard[i];
-  if (v === 'X') return '<span class="ok">X</span>';
-  if (v === 'O') return '<span class="blue">O</span>';
-  return `<span class="muted">${i + 1}</span>`;
+function tttWinLine() {
+  if (!tttBoard) return null;
+  for (const line of TTT_LINES) {
+    const [a, c, d] = line;
+    if (tttBoard[a] && tttBoard[a] === tttBoard[c] && tttBoard[a] === tttBoard[d]) return line;
+  }
+  return null;
 }
 
 function tttPrintBoard() {
-  print(`<pre> ${tttCell(0)} │ ${tttCell(1)} │ ${tttCell(2)}\n───┼───┼───\n ${tttCell(3)} │ ${tttCell(4)} │ ${tttCell(5)}\n───┼───┼───\n ${tttCell(6)} │ ${tttCell(7)} │ ${tttCell(8)}</pre>`);
+  const d = document.createElement('div');
+  d.className = 'row';
+  const grid = document.createElement('div');
+  grid.className = 'ttt-board';
+  grid.setAttribute('role', 'grid');
+  grid.setAttribute('aria-label', 'Tic-tac-toe board');
+  const win = tttWinLine();
+  const over = !!tttWinner(tttBoard);
+  tttBoard.forEach((v, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ttt-cell' + (v === 'X' ? ' x' : v === 'O' ? ' o' : '') + (win && win.includes(i) ? ' win' : '');
+    b.textContent = v || String(i + 1);
+    if (v || over) {
+      b.disabled = true;
+      if (v) b.setAttribute('aria-label', `${v} at cell ${i + 1}`);
+    } else {
+      b.setAttribute('aria-label', `Play cell ${i + 1}`);
+      b.addEventListener('click', (ev) => { ev.stopPropagation(); tttClick(i + 1); });
+    }
+    grid.appendChild(b);
+  });
+  d.appendChild(grid);
+  log.appendChild(d);
+  screen.scrollTop = screen.scrollHeight;
+}
+
+function tttClick(pos) {
+  if (!tttBoard) return;
+  print(`<span class="prompt">${esc(promptStr())}</span> <span class="cmd">${esc('tictactoe ' + pos)}</span>`);
+  tttPlay(pos);
+  if (!coarsePointer) input.focus({ preventScroll: true });
 }
 
 function tttPrintScore() {
@@ -1201,12 +1234,10 @@ function tttPrintScore() {
 
 function tttNewGame() {
   tttBoard = Array(9).fill('');
-  print('<span class="ok">Tic-tac-toe</span> <span class="muted">— you are X, AI is O. Move with</span> <span class="ok">tictactoe &lt;1-9&gt;</span>');
+  print('<span class="ok">Tic-tac-toe</span> <span class="muted">— you are X, AI is O. Click a cell or type</span> <span class="ok">tictactoe &lt;1-9&gt;</span>');
   print('');
   tttPrintBoard();
   print('');
-  print('<span class="muted">Your move (1-9). Layout:</span>');
-  print('<pre> 1 │ 2 │ 3\n───┼───┼───\n 4 │ 5 │ 6\n───┼───┼───\n 7 │ 8 │ 9</pre>');
 }
 
 function tttFinish(result) {
@@ -1241,7 +1272,7 @@ function tttPlay(pos) {
   r = tttWinner(tttBoard);
   tttPrintBoard();
   if (r) tttFinish(r);
-  else print('<span class="muted">Your move (tictactoe &lt;1-9&gt;).</span>');
+  else print('<span class="muted">Your move — click a cell or type tictactoe &lt;1-9&gt;.</span>');
 }
 
 const commands = {
@@ -1593,7 +1624,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
     const sub = (args[0] || '').toLowerCase();
     if (!args.length) {
       if (!tttBoard) tttNewGame();
-      else { tttPrintBoard(); print('<span class="muted">Your move (tictactoe &lt;1-9&gt;).</span>'); }
+      else { tttPrintBoard(); print('<span class="muted">Your move — click a cell or type tictactoe &lt;1-9&gt;.</span>'); }
       return;
     }
     if (sub === 'new') { tttNewGame(); return; }

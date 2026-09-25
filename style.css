@@ -345,6 +345,41 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
 .chat-help .cmd-name { color: var(--text); }
 .chat-help .cmd-desc { color: var(--muted); }
 
+/* --- Tic-tac-toe visual board --- */
+.ttt-board {
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  grid-auto-rows: 64px;
+  gap: 8px;
+  margin: 10px 0;
+  width: max-content;
+  max-width: 100%;
+}
+.ttt-cell {
+  font: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform .1s, border-color .15s, color .15s;
+}
+.ttt-cell:not(:disabled):hover {
+  border-color: var(--blue);
+  color: var(--text);
+  transform: scale(1.05);
+}
+.ttt-cell.x { color: var(--green); cursor: default; }
+.ttt-cell.o { color: var(--blue); cursor: default; }
+.ttt-cell:disabled { cursor: default; }
+.ttt-cell.win { border-color: var(--green); box-shadow: 0 0 10px var(--green); }
+
 /* --- Mobile --- */
 @media (max-width: 480px) {
   body {
@@ -391,6 +426,8 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
   .chat-welcome-cmds { font-size: 12px; gap: 3px 10px; }
   .chat-reply { font-size: 13px; line-height: 1.5; }
   .row { font-size: 13px; }
+  .ttt-board { grid-template-columns: repeat(3, 52px); grid-auto-rows: 52px; gap: 6px; }
+  .ttt-cell { font-size: 22px; border-radius: 6px; }
 }
 
 @media (max-width: 360px) {
