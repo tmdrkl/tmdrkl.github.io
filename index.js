@@ -1193,32 +1193,60 @@ function tttWinLine() {
   return null;
 }
 
+let tttGrid = null; // live board element for the active game — repainted in place
+
+function tttFreezeGrid() {
+  if (tttGrid) Array.from(tttGrid.children).forEach((b) => { b.disabled = true; });
+}
+
+function tttPaintGrid() {
+  // Repaint the live board in place. Returns false if there is no live
+  // board (e.g. after `clear`), so the caller can print a fresh one.
+  if (!tttGrid || !tttGrid.isConnected || !tttBoard) return false;
+  const win = tttWinLine() || [];
+  const over = !!tttWinner(tttBoard);
+  Array.from(tttGrid.children).forEach((b, i) => {
+    const v = tttBoard[i];
+    b.className = 'ttt-cell' + (v === 'X' ? ' x' : v === 'O' ? ' o' : '') + (win.includes(i) ? ' win' : '');
+    b.textContent = v || String(i + 1);
+    if (v || over) {
+      b.disabled = true;
+      b.removeAttribute('aria-label');
+      if (v) b.setAttribute('aria-label', `${v} at cell ${i + 1}`);
+    } else {
+      b.disabled = false;
+      b.setAttribute('aria-label', `Play cell ${i + 1}`);
+    }
+  });
+  return true;
+}
+
 function tttPrintBoard() {
+  tttFreezeGrid();
   const d = document.createElement('div');
   d.className = 'row';
   const grid = document.createElement('div');
   grid.className = 'ttt-board';
   grid.setAttribute('role', 'grid');
   grid.setAttribute('aria-label', 'Tic-tac-toe board');
-  const win = tttWinLine();
-  const over = !!tttWinner(tttBoard);
-  tttBoard.forEach((v, i) => {
+  for (let i = 0; i < 9; i++) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'ttt-cell' + (v === 'X' ? ' x' : v === 'O' ? ' o' : '') + (win && win.includes(i) ? ' win' : '');
-    b.textContent = v || String(i + 1);
-    if (v || over) {
-      b.disabled = true;
-      if (v) b.setAttribute('aria-label', `${v} at cell ${i + 1}`);
-    } else {
-      b.setAttribute('aria-label', `Play cell ${i + 1}`);
-      b.addEventListener('click', (ev) => { ev.stopPropagation(); tttClick(i + 1); });
-    }
+    b.className = 'ttt-cell';
+    const pos = i + 1;
+    b.addEventListener('click', (ev) => { ev.stopPropagation(); tttClick(pos); });
     grid.appendChild(b);
-  });
+  }
   d.appendChild(grid);
   log.appendChild(d);
   screen.scrollTop = screen.scrollHeight;
+  tttGrid = grid;
+  tttPaintGrid();
+}
+
+function tttRefreshBoard() {
+  if (!tttPaintGrid()) tttPrintBoard();
+  else if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
 }
 
 function tttClick(pos) {
@@ -1262,17 +1290,17 @@ function tttPlay(pos) {
     tttBoard = Array(9).fill('');
     print('<span class="ok">Tic-tac-toe</span> <span class="muted">— you are X, AI is O.</span>');
     print('');
+    tttPrintBoard();
   }
   const i = pos - 1;
-  if (tttBoard[i]) { print(`tictactoe: cell ${pos} is already taken`, 'err'); tttPrintBoard(); return; }
+  if (tttBoard[i]) { print(`tictactoe: cell ${pos} is already taken`, 'err'); return; }
   tttBoard[i] = 'X';
   let r = tttWinner(tttBoard);
-  if (r) { tttPrintBoard(); tttFinish(r); return; }
+  if (r) { tttRefreshBoard(); tttFinish(r); return; }
   tttBoard[tttBestMove(tttBoard)] = 'O';
   r = tttWinner(tttBoard);
-  tttPrintBoard();
+  tttRefreshBoard();
   if (r) tttFinish(r);
-  else print('<span class="muted">Your move — click a cell or type tictactoe &lt;1-9&gt;.</span>');
 }
 
 const commands = {
@@ -1624,13 +1652,14 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
     const sub = (args[0] || '').toLowerCase();
     if (!args.length) {
       if (!tttBoard) tttNewGame();
-      else { tttPrintBoard(); print('<span class="muted">Your move — click a cell or type tictactoe &lt;1-9&gt;.</span>'); }
+      else tttRefreshBoard();
       return;
     }
     if (sub === 'new') { tttNewGame(); return; }
     if (sub === 'quit' || sub === 'exit' || sub === 'stop') {
       if (!tttBoard) { print('tictactoe: no active game', 'muted'); return; }
       tttBoard = null;
+      tttFreezeGrid();
       print('<span class="muted">Game abandoned. Type <span class="ok">tictactoe</span> to start a new one.</span>');
       return;
     }
@@ -1642,8 +1671,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
     const pos = parseInt(sub, 10);
     if (!/^[1-9]$/.test(sub) || !(pos >= 1 && pos <= 9)) {
       print(`tictactoe: invalid move "${esc(args[0])}" — pick 1-9`, 'err');
-      if (tttBoard) tttPrintBoard();
-      else print('usage: <span class="ok">tictactoe &lt;1-9&gt;</span> — type <span class="ok">tictactoe</span> to start');
+      if (!tttBoard) print('usage: <span class="ok">tictactoe &lt;1-9&gt;</span> — type <span class="ok">tictactoe</span> to start');
       return;
     }
     tttPlay(pos);
