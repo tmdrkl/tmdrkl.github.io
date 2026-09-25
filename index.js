@@ -43,7 +43,64 @@ const BASE_FS = {
     'ide.txt':  'try making another game on drkl.net',
   },
   'blog': {
-    'mulai.md': [
+    'welcome.md': [
+      '# Welcome to drkl.net',
+      '',
+      'This site started from one simple idea: making a personal landing page',
+      'that is not boring. Instead of a plain static page, I built an interactive',
+      'web terminal you can actually use — complete with a virtual filesystem.',
+      '',
+      '## Features',
+      '',
+      '- **Terminal** — `ls`, `cd`, `cat`, `tree`, `fastfetch`, and more',
+      '- **AI Chat** — type `chat` to talk with the AI (Groq)',
+      '- **Themes** — dark/light, follows system preference or manual',
+      '- **History** — command history saved across sessions',
+      '',
+      'This site runs 100% client-side. The backend is only used for AI chat.',
+      '',
+      'Happy exploring. Type `help` for a list of commands.'
+    ].join('\n'),
+    'ai-chat.md': [
+      '# Behind the AI chat',
+      '',
+      'When you type `chat`, your browser talks to a Cloudflare Worker that',
+      'forwards your questions to the Groq API. All answers are streamed so it',
+      'feels like typing.',
+      '',
+      '## Keeping costs sane',
+      '',
+      '- **Rate limit** — 50 conversations per IP per 24 hours',
+      '- **Usage tracking** — chat & token counts stored in a Durable Object',
+      '- **Owner PIN** — `/login <PIN>` lifts the limit & `/stats` for the owner',
+      '',
+      '## Try it yourself',
+      '',
+      'Type `chat`, then `/help` to see the available commands.',
+      '`/stats` shows usage statistics (owner only, must be logged in).'
+    ].join('\n'),
+    'stack.md': [
+      '# Stack',
+      '',
+      'This site is built without frameworks:',
+      '',
+      '| Part       | Technology                   |',
+      '|------------|------------------------------|',
+      '| Frontend   | Vanilla HTML/CSS/JS          |',
+      '| Colors     | Gruvbox Material             |',
+      '| AI chat    | Groq via Cloudflare Worker   |',
+      '| Storage    | Durable Objects (Cloudflare) |',
+      '| Hosting    | GitHub Pages                 |',
+      '',
+      '## Roadmap',
+      '',
+      '- Blog (done: `blog` + `read`)',
+      '- Visual stats dashboard (`dashboard`)',
+      '- One more small game',
+      '',
+      'See the code at [github.com/tmdrkl](https://github.com/tmdrkl).'
+    ].join('\n'),
+    'welcome.id.md': [
       '# Selamat datang di drkl.net',
       '',
       'Situs ini dimulai dari satu ide sederhana: membuat landing page personal',
@@ -61,7 +118,7 @@ const BASE_FS = {
       '',
       'Selamat menjelajah. Ketik `help` untuk daftar perintah.'
     ].join('\n'),
-    'ai-chat.md': [
+    'ai-chat.id.md': [
       '# Di balik AI chat',
       '',
       'Ketika kamu ketik `chat`, browser berbicara ke Cloudflare Worker yang',
@@ -79,7 +136,7 @@ const BASE_FS = {
       'Ketik `chat`, lalu `/help` untuk melihat perintah yang tersedia.',
       '`/stats` menampilkan statistik pemakaian (khusus pemilik yang sudah login).'
     ].join('\n'),
-    'stack.md': [
+    'stack.id.md': [
       '# Stack',
       '',
       'Situs ini dibangun tanpa framework:',
@@ -1286,15 +1343,25 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
     const names = Object.keys(FS.blog);
     if (!names.length) { print('(empty)', 'muted'); return; }
     print('<span class="ok">Blog posts</span> — use <span class="ok">read &lt;n&gt;</span> or <span class="ok">read &lt;name.md&gt;</span>');
+    print('<span class="muted">English + Bahasa Indonesia available (*.id.md = Indonesian).</span>');
     print('');
-    names.forEach((name, i) => {
-      const title = (String(FS.blog[name]).match(/^#\s+(.+)$/m) || [])[1] || name;
-      print(`  <span class="ok">${i + 1}.</span> ${esc(title)} <span class="muted">(${esc(name)})</span>`);
-    });
+    const isID = (n) => n.endsWith('.id.md');
+    const listGroup = (label, filter) => {
+      const group = names.filter(filter);
+      if (!group.length) return;
+      print(`<span class="blue">${label}</span>`);
+      group.forEach((name) => {
+        const idx = names.indexOf(name) + 1;
+        const title = (String(FS.blog[name]).match(/^#\s+(.+)$/m) || [])[1] || name;
+        print(`  <span class="ok">${idx}.</span> ${esc(title)} <span class="muted">(${esc(name)})</span>`);
+      });
+    };
+    listGroup('English', (n) => !isID(n));
+    listGroup('Bahasa Indonesia', isID);
   },
 
   read(args) {
-    if (chatMode) { print('read: keluar dari chat mode dulu (/exit)', 'err'); return; }
+    if (chatMode) { print('read: exit chat mode first (/exit)', 'err'); return; }
     if (!args.length) { print('read: usage: read <n> | read <name>', 'err'); return; }
     const names = Object.keys(FS.blog);
     let name = null;

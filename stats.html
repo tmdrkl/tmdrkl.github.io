@@ -70,29 +70,29 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;text-align:center}
 <body>
 <header>
   <h1>drkl<span>.net</span> — dashboard stats</h1>
-  <a class="back" href="/">&larr; kembali ke terminal</a>
+  <a class="back" href="/">&larr; back to terminal</a>
   <button class="theme-btn" id="themeToggle" type="button" aria-label="Switch to light theme">☀️</button>
 </header>
 
 <div id="err" class="err" hidden></div>
 
 <section class="grid">
-  <div class="card"><div class="k">Total chats</div><div class="v" id="chats">—</div><div class="s">percakapan AI</div></div>
+  <div class="card"><div class="k">Total chats</div><div class="v" id="chats">—</div><div class="s">AI conversations</div></div>
   <div class="card"><div class="k">Total tokens</div><div class="v" id="tokens">—</div><div class="s"><span id="pt">—</span> prompt · <span id="ct">—</span> completion</div></div>
   <div class="card"><div class="k">Avg tokens/chat</div><div class="v" id="avg">—</div></div>
   <div class="card"><div class="k">Top model</div><div class="v" id="top">—</div><div class="s" id="topsub"></div></div>
 </section>
 
-<h2>Chat per hari</h2>
-<div id="byday" class="bars"><span class="empty">Belum ada data.</span></div>
+<h2>Chats per day</h2>
+<div id="byday" class="bars"><span class="empty">No data yet.</span></div>
 
 <h2>Model</h2>
 <div class="tablewrap"><table id="models"></table></div>
 
-<h2>History login (IP + waktu)</h2>
+<h2>Login history (IP + time)</h2>
 <div class="tablewrap"><table id="logins"></table></div>
 
-<footer>Data diambil langsung dari Cloudflare Worker — hanya untuk pemilik yang sudah login.</footer>
+<footer>Data fetched directly from the Cloudflare Worker — owner only, login required.</footer>
 
 <script>
 const WORKER_URL = 'https://groq-chat.tomx13.workers.dev';
@@ -103,15 +103,15 @@ function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
 
 async function main(){
   const token = sessionStorage.getItem('drkl_chat_token') || '';
-  if (!token) return fail('Belum login. Ketik <code>chat</code> lalu <code>/login &lt;PIN&gt;</code> di terminal, buka kembali halaman ini.');
+  if (!token) return fail('Not logged in. Type <code>chat</code> then <code>/login &lt;PIN&gt;</code> in the terminal, then reopen this page.');
   let s;
   try {
     const res = await fetch(WORKER_URL + '/stats', { headers: { Authorization: 'Bearer ' + token } });
-    if (res.status === 401) return fail('Sesi login berakhir atau IP berubah. Login ulang di terminal: <code>chat</code> → <code>/login &lt;PIN&gt;</code>.');
-    if (!res.ok) return fail('Fetch stats gagal (HTTP ' + res.status + ').');
+    if (res.status === 401) return fail('Login session expired or IP changed. Log in again in the terminal: <code>chat</code> → <code>/login &lt;PIN&gt;</code>.');
+    if (!res.ok) return fail('Failed to fetch stats (HTTP ' + res.status + ').');
     s = await res.json();
   } catch (e) {
-    return fail('Tidak bisa mencapai worker: ' + esc(e.message));
+    return fail('Cannot reach worker: ' + esc(e.message));
   }
 
   $('chats').textContent = fmt(s.totalChats);
@@ -123,7 +123,7 @@ async function main(){
   const byDay = (s.byDay || []).slice(0, 14);
   const box = $('byday');
   box.innerHTML = '';
-  if (!byDay.length) { box.innerHTML = '<span class="empty">Belum ada data.</span>'; }
+  if (!byDay.length) { box.innerHTML = '<span class="empty">No data yet.</span>'; }
   else {
     const max = Math.max(...byDay.map(d => d.chats), 1);
     byDay.forEach(d => {
@@ -146,16 +146,16 @@ async function main(){
   mt.innerHTML = models.length ? (
     '<tr><th>Model</th><th>Chats</th><th>Prompt</th><th>Completion</th></tr>' +
     models.map(m => `<tr><td>${esc(m.model)}</td><td>${fmt(m.count)}</td><td>${fmt(m.ptok)}</td><td>${fmt(m.ctok)}</td></tr>`).join('')
-  ) : '<tr><td class="empty">Belum ada data.</td></tr>';
+  ) : '<tr><td class="empty">No data yet.</td></tr>';
 
   if (models[0]) { $('top').textContent = models[0].model; $('topsub').textContent = models[0].count + ' chats'; }
 
   const logins = s.logins || [];
   const lt = $('logins');
   lt.innerHTML = logins.length ? (
-    '<tr><th>IP</th><th>Country</th><th>Waktu (UTC)</th></tr>' +
+    '<tr><th>IP</th><th>Country</th><th>Time (UTC)</th></tr>' +
     logins.map(l => `<tr><td>${esc(l.ip)}</td><td>${esc(l.country || '—')}</td><td>${esc(l.time)}</td></tr>`).join('')
-  ) : '<tr><td class="empty">Belum ada login tercatat.</td></tr>';
+  ) : '<tr><td class="empty">No logins recorded.</td></tr>';
 }
 
 function fail(msg){ const e=$('err'); e.innerHTML=msg; e.hidden=false; }
