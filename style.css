@@ -446,17 +446,17 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
     -webkit-user-select: none;
   }
   .mkey:active { background: var(--border); color: var(--text); }
-  #cmdInput { font-size: 16px; padding: 8px 0; }
-  #inputline { padding: 0; gap: 8px; font-size: 16px; }
-  #inputline .prompt { max-width: 38vw; font-size: 16px; }
+  #cmdInput { font-size: 14px; padding: 8px 0; }
+  #inputline { padding: 0; gap: 8px; font-size: 14px; }
+  #inputline .prompt { max-width: 38vw; font-size: 14px; }
   .term { border-radius: 0; border-left: none; border-right: none; border-bottom: none; }
   pre { font-size: 11px; padding: 6px 8px; }
   .chat-help { font-size: 12px; gap: 2px 10px; }
   .chat-welcome { padding: 10px 12px; }
   .chat-welcome-title { font-size: 14px !important; }
   .chat-welcome-cmds { font-size: 12px; gap: 3px 10px; }
-  .chat-reply { font-size: 16px; line-height: 1.5; }
-  .row { font-size: 16px; }
+  .chat-reply { font-size: 14px; line-height: 1.5; }
+  .row { font-size: 14px; }
   .ttt-board { grid-template-columns: repeat(3, 52px); grid-auto-rows: 52px; gap: 6px; }
   .ttt-cell { font-size: 22px; border-radius: 6px; }
 }
@@ -466,7 +466,7 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
   .site .brand { font-size: 13px; }
   #screen { padding: 10px; }
   #cmdInput { font-size: 16px; }
-  #inputline .prompt { max-width: 32vw; font-size: 16px; }
+  #inputline .prompt { max-width: 32vw; font-size: 14px; }
   .titlebar { padding: 6px 10px; }
   .titlebar span { font-size: 10px; }
   .dot { width: 8px; height: 8px; }
@@ -537,9 +537,12 @@ input[placeholder*="Editing mode"] {
   border-bottom: 2px solid var(--blue);
 }
 
-/* Prevent zoom on input focus (iOS) */
+/* iOS Safari auto-zooms on focus when an input's font-size is < 16px.
+   Keep 16px there (plus matching ghost text) so iPhones don't zoom;
+   everywhere else the unified 14px applies (Android doesn't force-zoom). */
 @media screen and (max-width: 768px) {
-  #cmdInput {
-    font-size: 16px !important;
+  @supports (-webkit-touch-callout: none) {
+    #cmdInput { font-size: 16px; }
+    #suggest { font-size: 16px; }
   }
 }
