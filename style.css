@@ -267,14 +267,13 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
   }
 }
 
-/* --- Input (sticky footer outside the scroll area) --- */
+/* --- Input lives inside the scrollback, like a real terminal --- */
 #inputbar {
-  border-top: 1px solid var(--border);
-  background: var(--panel);
-  padding: 10px 20px 12px;
-  flex-shrink: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
-#inputline { display: flex; align-items: center; gap: 6px; }
+#inputline { display: flex; align-items: center; gap: 6px; min-height: 1.45em; }
 #inputline .prompt {
   flex-shrink: 0;
   min-width: 0;
@@ -294,6 +293,9 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
   color: var(--muted); opacity: .6; pointer-events: none;
   white-space: pre; overflow: hidden; visibility: hidden;
 }
+
+/* --- Mobile key toolbar (Tab + arrows) — hidden on desktop --- */
+.mobile-keys { display: none; }
 
 /* --- Suggestion list --- */
 #suggestList {
@@ -409,12 +411,30 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
   .titlebar span { display: inline; font-size: 11px; }
   .dot { width: 9px; height: 9px; }
   #inputbar {
-    position: sticky;
-    bottom: 0;
-    padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
-    padding-left: max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
+    padding: 0;
+    background: transparent;
+    border: none;
   }
+  .mobile-keys {
+    display: flex;
+    gap: 6px;
+    padding-bottom: 8px;
+  }
+  .mkey {
+    flex: 1;
+    font: inherit;
+    font-size: 13px;
+    min-height: 36px;
+    background: var(--panel2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .mkey:active { background: var(--border); color: var(--text); }
   #cmdInput { font-size: 16px; padding: 8px 0; }
   #inputline { padding: 0; gap: 8px; }
   #inputline .prompt { max-width: 38vw; font-size: 13px; }
@@ -439,6 +459,25 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
   .titlebar { padding: 6px 10px; }
   .titlebar span { font-size: 10px; }
   .dot { width: 8px; height: 8px; }
+}
+
+@media (pointer: coarse) and (min-width: 481px) {
+  .mobile-keys { display: flex; gap: 6px; padding-bottom: 8px; }
+  .mkey {
+    flex: 1;
+    font: inherit;
+    font-size: 13px;
+    min-height: 36px;
+    background: var(--panel2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .mkey:active { background: var(--border); color: var(--text); }
 }
 
 @media (prefers-reduced-motion: reduce) {

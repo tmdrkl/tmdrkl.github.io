@@ -1823,6 +1823,43 @@ function goHistory(dir) {
   hideList();
 }
 
+// ── Mobile key toolbar (Tab + arrows) ──────────────────
+// pointerdown is cancelled so the buttons never steal focus /
+// dismiss the on-screen keyboard; click then reuses the same
+// handlers as the physical keyboard.
+document.querySelectorAll('.mkey').forEach((btn) => {
+  btn.addEventListener('pointerdown', (e) => e.preventDefault());
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.key;
+    input.focus({ preventScroll: true });
+    if (editorMode) {
+      if (key === 'Tab') {
+        const before = editorContent.slice(0, editorCursor);
+        const after = editorContent.slice(editorCursor);
+        editorContent = before + '  ' + after;
+        editorCursor += 2;
+        renderEditor();
+        return;
+      }
+      input.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+      return;
+    }
+    if (key === 'Tab') { doTab(); return; }
+    if (key === 'ArrowUp') { goHistory(-1); return; }
+    if (key === 'ArrowDown') { goHistory(1); return; }
+    if (key === 'ArrowLeft' || key === 'ArrowRight') {
+      if (key === 'ArrowRight' && input.selectionStart === input.value.length) {
+        const before = input.value;
+        acceptSuggestion();
+        if (input.value !== before) return;
+      }
+      const pos = input.selectionStart ?? input.value.length;
+      const next = key === 'ArrowLeft' ? Math.max(0, pos - 1) : Math.min(input.value.length, pos + 1);
+      try { input.setSelectionRange(next, next); } catch {}
+    }
+  });
+});
+
 // ── Input events ─────────────────────────────────────
 input.addEventListener('input', () => { hideList(); renderSuggestion(); });
 
