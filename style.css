@@ -392,7 +392,7 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
     min-height: 100vh;
     min-height: 100dvh;
   }
-  .wrap { max-width: 100%; flex: 1; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; min-width: 0; }
+  .wrap { max-width: 100%; flex: 1; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; min-width: 0; padding-bottom: 60px; }
   header.site { padding: 8px 12px 0; padding-left: max(12px, env(safe-area-inset-left)); margin-bottom: 8px; }
   footer.site { padding: 0 12px 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); margin-top: 8px; gap: 12px; }
   header.site nav { gap: 8px; }
@@ -418,7 +418,17 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
   .mobile-keys {
     display: flex;
     gap: 6px;
-    padding-bottom: 8px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    padding: 8px 12px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    background: var(--panel);
+    border-top: 1px solid var(--border);
   }
   .mkey {
     flex: 1;
@@ -462,7 +472,21 @@ pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
 }
 
 @media (pointer: coarse) and (min-width: 481px) {
-  .mobile-keys { display: flex; gap: 6px; padding-bottom: 8px; }
+  .mobile-keys {
+    display: flex;
+    gap: 6px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    padding: 8px 12px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+  }
   .mkey {
     flex: 1;
     font: inherit;

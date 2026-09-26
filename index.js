@@ -2032,17 +2032,35 @@ document.getElementById('term').addEventListener('click', (e) => {
 // ── Mobile keyboard / viewport handling ──
 // visualViewport shrinks when the on-screen keyboard opens — keep the latest
 // output visible without relying on fragile 100dvh - Npx hacks.
+const mobileKeys = document.querySelector('.mobile-keys');
+function placeMobileKeys() {
+  if (!mobileKeys) return;
+  // Desktop with a physical keyboard has no toolbar — leave it alone.
+  if (!coarsePointer && window.innerWidth > 480) { mobileKeys.style.bottom = ''; return; }
+  try {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    // Overlay keyboards (iOS Safari) don't resize the layout viewport, so the
+    // fixed toolbar would sit behind the keyboard — lift it by the overlap.
+    const kb = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
+    mobileKeys.style.bottom = kb + 'px';
+  } catch {}
+}
 if (window.visualViewport) {
   let vvT = null;
   window.visualViewport.addEventListener('resize', () => {
     clearTimeout(vvT);
     vvT = setTimeout(() => {
+      placeMobileKeys();
       if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
     }, 50);
   });
+  window.visualViewport.addEventListener('scroll', placeMobileKeys);
 }
 input.addEventListener('focus', () => {
+  placeMobileKeys();
   setTimeout(() => {
+    placeMobileKeys();
     if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
   }, 150);
 });
