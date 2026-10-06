@@ -200,7 +200,7 @@ let cwd = ['~'];
 function pwdStr()    { return '~' + (cwd.length > 1 ? '/' + cwd.slice(1).join('/') : ''); }
 function promptStr() { return `${getUsername()}@drkl:${pwdStr()}$`; }
 function refreshPrompt() { promptEl.textContent = promptStr(); }
-function refreshTitle()  { titleText.textContent = `${getUsername()}@drkl: ~`; }
+function refreshTitle()  { titleText.textContent = `${getUsername()}@drkl: ${pwdStr()}`; }
 
 // ── Visitor username (per-browser, stored in localStorage) ──
 const DEFAULT_USER = 'guest';
@@ -247,34 +247,41 @@ function getNode(path) {
 }
 
 function setNode(path, value) {
-  const merged = getMergedFS();
-  let node = merged;
+  // Store only the delta in userFS so base FS updates still shine through
+  // and localStorage doesn't balloon with a full copy of BASE_FS.
+  let node = userFS;
   for (let i = 1; i < path.length - 1; i++) {
     const seg = path[i];
-    if (!node[seg] || typeof node[seg] !== 'object') node[seg] = {};
+    if (!node[seg] || typeof node[seg] !== 'object' || node[seg] === null) {
+      node[seg] = {};
+    }
+    // If the base already has this dir, start from a copy of neither —
+    // keep userFS sparse; getMergedFS() merges with BASE_FS at read time.
     node = node[seg];
   }
   node[path[path.length - 1]] = value;
-  userFS = merged;
   saveUserFS();
   FS = getMergedFS();
 }
 
 function deleteNode(path) {
-  const merged = getMergedFS();
-  let node = merged;
+  const target = getNode(path);
+  if (target === undefined) return false;
+  // Walk/create the sparse userFS branch, then tombstone with null
+  // (deepMerge deletes nulls) or delete a user-only key outright.
+  let node = userFS;
   for (let i = 1; i < path.length - 1; i++) {
     const seg = path[i];
-    if (!node[seg] || typeof node[seg] !== 'object') return false;
+    if (!node[seg] || typeof node[seg] !== 'object' || node[seg] === null) node[seg] = {};
     node = node[seg];
   }
-  const last = path[path.length - 1];
-  if (!(last in node)) return false;
-  delete node[last];
-  userFS = merged;
+  node[path[path.length - 1]] = null;
+  // Prune: if this branch now only tombstones user-only paths, keep it —
+  // getMergedFS() resolves correctly either way.
   saveUserFS();
   FS = getMergedFS();
-  return true;
+  // Confirm the merged view no longer has it (tombstoned or removed).
+  return getNode(path) === undefined;
 }
 
 function isDir(n) { return !!n && typeof n === 'object'; }
@@ -285,6 +292,33 @@ let editorFile = '';
 let editorContent = '';
 let editorCursor = 0;
 let editorLines = [];
+// Index in #log where the editor UI starts — lets us repaint the editor
+// without wiping the scrollback above it.
+let editorStart = 0;
+
+function trimLogTo(n) {
+  while (log.children.length > n) log.removeChild(log.lastChild);
+}
+
+function paintEditor() {
+  trimLogTo(editorStart);
+  print('');
+  print('<span class="ok">─'.repeat(50) + '</span>');
+  print(`<span class="ok">EDITOR</span> — <span class="blue">${esc(editorFile)}</span> <span class="muted">(${editorLines.length} lines)</span>`);
+  print('<span class="muted">Type your content. Press <span class="ok">Ctrl+S</span> to save, <span class="ok">Ctrl+X</span> to exit.</span>');
+  print('<span class="ok">─'.repeat(50) + '</span>');
+  print('');
+
+  // Show content with line numbers
+  editorLines.forEach((line, i) => {
+    const num = String(i + 1).padStart(3);
+    print(`<span class="muted">${num}</span> <span class="editor-line">${esc(line)}</span>`);
+  });
+
+  // Show cursor position
+  print(`<span class="muted">${String(editorLines.length + 1).padStart(3)}</span> <span class="editor-cursor">▋</span>`);
+  screen.scrollTop = screen.scrollHeight;
+}
 
 function openEditor(filename, content) {
   editorMode = true;
@@ -292,22 +326,9 @@ function openEditor(filename, content) {
   editorContent = content;
   editorLines = content.split('\n');
   editorCursor = editorContent.length;
-  
-  print('');
-  print('<span class="ok">─'.repeat(50) + '</span>');
-  print(`<span class="ok">EDITOR</span> — <span class="blue">${esc(filename)}</span> <span class="muted">(${editorLines.length} lines)</span>`);
-  print('<span class="muted">Type your content. Press <span class="ok">Ctrl+S</span> to save, <span class="ok">Ctrl+X</span> to exit.</span>');
-  print('<span class="ok">─'.repeat(50) + '</span>');
-  print('');
-  
-  // Show content with line numbers
-  editorLines.forEach((line, i) => {
-    const num = String(i + 1).padStart(3);
-    print(`<span class="muted">${num}</span> <span class="editor-line">${esc(line)}</span>`);
-  });
-  
-  // Show cursor position
-  print(`<span class="muted">${String(editorLines.length + 1).padStart(3)}</span> <span class="editor-cursor">▋</span>`);
+  editorStart = log.children.length;
+
+  paintEditor();
   
   // Change input handler
   input.placeholder = 'Editing mode — Ctrl+S save, Ctrl+X exit';
@@ -321,6 +342,7 @@ function closeEditor(saved) {
   editorContent = '';
   editorLines = [];
   editorCursor = 0;
+  editorStart = 0;
   input.placeholder = '';
   input.setAttribute('aria-label', 'Terminal command');
   input.style.background = 'transparent';
@@ -440,22 +462,17 @@ function handleEditorInput(e) {
 
 function renderEditor() {
   editorLines = editorContent.split('\n');
-  // Clear the screen and re-render
-  log.innerHTML = '';
+  // Repaint only the editor section — keep the scrollback above intact.
+  trimLogTo(editorStart);
   print('');
   print('<span class="ok">─'.repeat(50) + '</span>');
   print(`<span class="ok">EDITOR</span> — <span class="blue">${esc(editorFile)}</span> <span class="muted">(${editorLines.length} lines)</span>`);
   print('<span class="muted">Type your content. Press <span class="ok">Ctrl+S</span> to save, <span class="ok">Ctrl+X</span> to exit.</span>');
   print('<span class="ok">─'.repeat(50) + '</span>');
   print('');
-  
-  editorLines.forEach((line, i) => {
-    const num = String(i + 1).padStart(3);
-    print(`<span class="muted">${num}</span> <span class="editor-line">${esc(line)}</span>`);
-  });
-  
-  // Show cursor position
-  const lines = editorContent.split('\n');
+
+  // Find which line the cursor is on.
+  const lines = editorLines;
   let pos = 0;
   let cursorLine = 0;
   for (let i = 0; i < lines.length; i++) {
@@ -464,17 +481,19 @@ function renderEditor() {
       break;
     }
     pos += lines[i].length + 1;
+    if (i === lines.length - 1) cursorLine = i;
   }
   const cursorCol = editorCursor - pos;
-  const cursorLineNum = String(cursorLine + 1).padStart(3);
-  print(`<span class="muted">${cursorLineNum}</span> <span class="editor-line">${esc(lines[cursorLine].slice(0, cursorCol))}<span class="editor-cursor">▋</span>${esc(lines[cursorLine].slice(cursorCol))}</span>`);
-  
-  // Show remaining lines if cursor is not on last line
-  for (let i = cursorLine + 1; i < lines.length; i++) {
+
+  lines.forEach((line, i) => {
     const num = String(i + 1).padStart(3);
-    print(`<span class="muted">${num}</span> <span class="editor-line">${esc(lines[i])}</span>`);
-  }
-  
+    if (i === cursorLine) {
+      print(`<span class="muted">${num}</span> <span class="editor-line">${esc(line.slice(0, cursorCol))}<span class="editor-cursor">▋</span>${esc(line.slice(cursorCol))}</span>`);
+    } else {
+      print(`<span class="muted">${num}</span> <span class="editor-line">${esc(line)}</span>`);
+    }
+  });
+
   screen.scrollTop = screen.scrollHeight;
 }
 
@@ -1477,6 +1496,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
     if (!isDir(node))       { print(`cd: not a directory: ${esc(args[0])}`, 'err'); return; }
     cwd = target;
     refreshPrompt();
+    refreshTitle();
   },
 
   pwd() { print(pwdStr()); },
@@ -1500,7 +1520,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
   },
 
   history(args) {
-    if (args[0] === '-c') { hist = []; histIdx = -1; sessionStorage.removeItem('drkl_hist'); print('history cleared', 'muted'); return; }
+    if (args[0] === '-c') { hist = []; histIdx = -1; localStorage.removeItem('drkl_hist'); print('history cleared', 'muted'); return; }
     if (!hist.length)     { print('history is empty', 'muted'); return; }
     print(hist.map((h, i) => `${String(i + 1).padStart(3)}  ${esc(h)}`).join('\n'));
   },
@@ -1686,7 +1706,11 @@ const suggestList = document.getElementById('suggestList');
 const commandList = Object.keys(commands);
 const PATH_CMDS   = { cd: true, ls: true, cat: true, tree: true, read: true, rm: true, mkdir: true, touch: true, edit: true };
 let hist = [];
-try { const h = JSON.parse(sessionStorage.getItem('drkl_hist')); if (Array.isArray(h)) hist = h; } catch {}
+try { const h = JSON.parse(localStorage.getItem('drkl_hist')); if (Array.isArray(h)) hist = h; } catch {}
+if (!hist.length) {
+  // One-time migration from the old session-only history.
+  try { const h = JSON.parse(sessionStorage.getItem('drkl_hist')); if (Array.isArray(h)) { hist = h; localStorage.setItem('drkl_hist', JSON.stringify(hist.slice(-200))); } } catch {}
+}
 let histIdx = -1;
 let pendingHist = '';
 let tabIdx = -1;
@@ -1712,7 +1736,7 @@ function completePath(partial) {
   const dir  = resolvePath(dirPart || '~');
   const node = getNode(dir);
   if (!isDir(node)) return [];
-  return Object.keys(node).filter(k => k.startsWith(namePart)).map(k => dirPart + k);
+  return Object.keys(node).filter(k => k.startsWith(namePart)).map(k => dirPart + k + (isDir(node[k]) ? '/' : ''));
 }
 
 function getMatches(val) {
@@ -2005,7 +2029,7 @@ input.addEventListener('keydown', (e) => {
   print(`<span class="prompt">${esc(promptStr())}</span> <span class="cmd">${esc(raw)}</span>`);
   if (raw !== hist[hist.length - 1]) {
     hist.push(raw);
-    try { sessionStorage.setItem('drkl_hist', JSON.stringify(hist.slice(-200))); } catch {}
+    try { localStorage.setItem('drkl_hist', JSON.stringify(hist.slice(-200))); } catch {}
   }
   histIdx = -1;
   const parts = raw.split(/\s+/);
