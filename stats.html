@@ -103,11 +103,11 @@ function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
 
 async function main(){
   const token = sessionStorage.getItem('drkl_chat_token') || '';
-  if (!token) return fail('Not logged in. Type <code>chat</code> then <code>/login &lt;PIN&gt;</code> in the terminal, then reopen this page.');
+  if (!token) return fail('Not logged in. In the terminal run <code>sudo -v</code> (or <code>chat</code> then <code>/login &lt;PIN&gt;</code>), then reopen this page.');
   let s;
   try {
     const res = await fetch(WORKER_URL + '/stats', { headers: { Authorization: 'Bearer ' + token } });
-    if (res.status === 401) return fail('Login session expired or IP changed. Log in again in the terminal: <code>chat</code> → <code>/login &lt;PIN&gt;</code>.');
+    if (res.status === 401) return fail('Login session expired or IP changed. Log in again in the terminal: <code>sudo -v</code> (or <code>chat</code> → <code>/login &lt;PIN&gt;</code>).');
     if (!res.ok) return fail('Failed to fetch stats (HTTP ' + res.status + ').');
     s = await res.json();
   } catch (e) {

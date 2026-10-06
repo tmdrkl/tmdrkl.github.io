@@ -41,16 +41,18 @@ A terminal-style landing page with a built-in AI chatbot.
 | `chat` | Start AI chat mode |
 | `blog` | List blog posts (English + Bahasa Indonesia) |
 | `read` | Read a blog post: `read 1` or `read name.md` |
-| `dashboard` | Open the visual stats dashboard |
+| `dashboard` | Open the visual stats dashboard (needs `sudo -v` first for full access) |
 | `clear` | Clear the screen |
 | `whoami` | Show current user |
 | `username` | Show or set your username (saved in this browser) |
 | `uname` | System info |
-| `sudo` | Run as root (will fail) |
+| `sudo` | Run as root (Linux-like) — `[sudo] password for you:` replaces the shell prompt, masked input, 3 tries, cached 15 min. `sudo <cmd>`, `sudo -i`/`-s` shell, `sudo -v` validate, `sudo -l` list, `sudo -u user`, `sudo -n`, `sudo -k` drops credentials + locks dashboard |
+| `su` | Switch user — `su [-] [root]` (password required, `Password:` prompt) |
+| `logout` | Leave root + lock dashboard, or exit the terminal |
 | `theme` | Switch theme (`dark` or `light`) |
 | `tictactoe` | Play tic-tac-toe vs AI (`tictactoe 1-9`, `new`, `score`, `quit`) |
 | `ttt` | Alias of `tictactoe` |
-| `exit` | Exit the terminal |
+| `exit` | Leave root + lock dashboard, or exit the terminal |
 | `rm` | Delete files or directories (`-r` for recursive) |
 | `mkdir` | Create a directory |
 | `touch` | Create an empty file |

@@ -198,20 +198,282 @@ let FS = getMergedFS();
 let cwd = ['~'];
 
 function pwdStr()    { return '~' + (cwd.length > 1 ? '/' + cwd.slice(1).join('/') : ''); }
-function promptStr() { return `${getUsername()}@drkl:${pwdStr()}$`; }
+function promptStr() { const u = getUsername(); return `${u}@drkl:${pwdStr()}${u === 'root' ? '#' : '$'}`; }
 function refreshPrompt() { promptEl.textContent = promptStr(); }
 function refreshTitle()  { titleText.textContent = `${getUsername()}@drkl: ${pwdStr()}`; }
+
+// ── Fake root (like chat /login: session-only, stored in sessionStorage) ──
+let isRoot = false;
+try { isRoot = sessionStorage.getItem('drkl_sudo') === '1'; } catch {}
+
+function setRoot(on) {
+  isRoot = !!on;
+  try {
+    if (isRoot) sessionStorage.setItem('drkl_sudo', '1');
+    else sessionStorage.removeItem('drkl_sudo');
+  } catch {}
+  refreshPrompt();
+  refreshTitle();
+}
+
+// Leaving root also revokes dashboard access, so /stats and stats.html
+// stop working until the next sudo -v (or chat /login).
+function lockDashboard() {
+  try { sessionStorage.removeItem('drkl_chat_token'); } catch {}
+}
+
+function dropRoot() {
+  sudoForget();
+  lockDashboard();
+  setRoot(false);
+}
+
+// ── sudo auth (Linux-like: password prompt, timestamp, flags) ──
+// Like real sudo: the password is asked interactively (never as an argv),
+// stays cached for 15 minutes, and `sudo -k` drops it.
+const SUDO_TIMEOUT_MS = 15 * 60 * 1000;
+const SUDO_MAX_ATTEMPTS = 3;
+let sudoStamp = 0;
+try { sudoStamp = parseInt(sessionStorage.getItem('drkl_sudo_ts') || '0', 10) || 0; } catch {}
+// Active password request: { pending, attempts, busy } or null.
+let sudoPw = null;
+
+function sudoValid() {
+  return Date.now() - sudoStamp < SUDO_TIMEOUT_MS;
+}
+
+function sudoTouch() {
+  sudoStamp = Date.now();
+  try { sessionStorage.setItem('drkl_sudo_ts', String(sudoStamp)); } catch {}
+}
+
+function sudoForget() {
+  sudoStamp = 0;
+  try { sessionStorage.removeItem('drkl_sudo_ts'); } catch {}
+}
+
+function hasChatToken() {
+  try { return !!sessionStorage.getItem('drkl_chat_token'); } catch { return false; }
+}
+
+// Silent owner-PIN check for sudo/su (chat /login stays verbose).
+async function verifyPinSilent(pin) {
+  try {
+    const res = await fetch(`${WORKER_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    });
+    if (!res.ok) return false;
+    const d = await res.json();
+    if (!d || !d.token) return false;
+    try { sessionStorage.setItem('drkl_chat_token', d.token); } catch {}
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function sudoPromptText(custom) {
+  return custom || `[sudo] password for ${getRealUsername()}:`;
+}
+
+function enterPwMode(pending, customPrompt) {
+  sudoPw = { pending, attempts: 0, busy: false, prompt: sudoPromptText(customPrompt) };
+  // Like real sudo, the password request replaces the shell prompt —
+  // the guest@drkl line is hidden until auth finishes or is cancelled.
+  promptEl.textContent = sudoPw.prompt;
+  try {
+    input.type = 'password';
+    input.value = '';
+    input.setAttribute('aria-label', 'sudo password');
+  } catch {}
+  hideList();
+  renderSuggestion();
+  input.focus({ preventScroll: true });
+}
+
+function exitPwMode() {
+  sudoPw = null;
+  try {
+    input.type = 'text';
+    input.value = '';
+    input.setAttribute('aria-label', 'Terminal command');
+  } catch {}
+  refreshPrompt();
+  hideList();
+  renderSuggestion();
+  input.focus({ preventScroll: true });
+}
+
+async function submitPwAttempt(pw) {
+  const ctx = sudoPw;
+  if (!ctx || ctx.busy) return;
+  ctx.busy = true;
+  // Echo the prompt (never the password) into the scrollback, like a real tty.
+  print(esc(ctx.prompt));
+  try {
+    const ok = await verifyPinSilent(pw);
+    if (ok) {
+      const pending = ctx.pending;
+      exitPwMode();
+      sudoTouch();
+      await dispatchSudoPending(pending);
+      return;
+    }
+    ctx.attempts++;
+    ctx.busy = false;
+    if (ctx.attempts >= SUDO_MAX_ATTEMPTS) {
+      exitPwMode();
+      print('sudo: 3 incorrect password attempts', 'err');
+      return;
+    }
+    print('Sorry, try again.');
+  } catch {
+    ctx.busy = false;
+  }
+}
+
+function cancelPwMode(withCaret) {
+  if (!sudoPw) return;
+  const p = sudoPw.prompt;
+  exitPwMode();
+  if (withCaret) print(`${esc(p)} ^C`, 'muted');
+  else print('sudo: password prompt cancelled.', 'muted');
+}
+
+function printRootShellMsg() {
+  print('<span class="ok">root shell — you are now root.</span> <span class="muted">(<span class="ok">exit</span> or <span class="ok">sudo -k</span> to drop; leaving locks the dashboard)</span>');
+}
+
+async function runAsRoot(cmd, rest) {
+  const fn = commands[cmd];
+  if (!fn) { print(`sudo: ${esc(cmd)}: command not found`, 'err'); return; }
+  if (cmd === 'su') {
+    // `sudo su` runs su as root — su then needs no password and drops
+    // straight into a root shell. Don't pre-elevate here: su checks
+    // isRoot itself and would wrongly report "already root".
+    await fn(rest);
+    return;
+  }
+  const wasRoot = isRoot;
+  const prevRunAs = sudoRunAs;
+  setRoot(true);
+  try {
+    await fn(rest);
+  } finally {
+    sudoRunAs = prevRunAs;
+    if (!wasRoot) setRoot(false);
+    else { refreshPrompt(); refreshTitle(); }
+  }
+}
+
+async function dispatchSudoPending(pending) {
+  if (!pending) return;
+  if (pending.kind === 'shell') {
+    if (isRoot) { print('<span class="muted">already root.</span>'); return; }
+    setRoot(true);
+    printRootShellMsg();
+    return;
+  }
+  if (pending.kind === 'validate') return; // silent, like real `sudo -v`
+  if (pending.kind === 'list') { printSudoList(pending.cmd); return; }
+  if (pending.kind === 'run') {
+    sudoRunAs = pending.runAs || null;
+    await runAsRoot(pending.cmd, pending.rest);
+    return;
+  }
+}
+
+// `sudo -v` / `-l` / `-i` need auth first; `-k` never does.
+async function ensureSudoAuth(pending, opts) {
+  const o = opts || {};
+  if (isRoot) { await dispatchSudoPending(pending); return; }
+  // The cached timestamp alone is not enough: without the worker token the
+  // dashboard/stats calls would still fail, so re-prompt to restore both.
+  if (sudoValid() && hasChatToken()) { sudoTouch(); await dispatchSudoPending(pending); return; }
+  if (o.nonInteractive) { print('sudo: a password is required', 'err'); return; }
+  enterPwMode(pending, o.prompt);
+}
+
+function printSudoHelp() {
+  print(`usage: sudo [-hV] [-knv] [-p prompt] [-u user] [-i | -s] [command]
+<span class="muted"> -h, --help     this help
+ -V, --version  version
+ -v             validate credentials (no command)
+ -k, -K         drop credentials + lock dashboard
+ -l             list allowed commands
+ -n             non-interactive (fail instead of prompting)
+ -u user        run command as user
+ -p prompt      custom password prompt
+ -i, -s         root shell (like su)</span>`);
+}
+
+function printSudoList(onlyCmd) {
+  const u = getRealUsername();
+  print(`Matching Defaults entries for ${esc(u)} on drkl:
+    env_reset, timestamp_timeout=15
+
+User ${esc(u)} may run the following commands on drkl:
+    (ALL : ALL) ALL${onlyCmd ? `\n<span class="muted">checked: ${esc(onlyCmd)} — allowed</span>` : ''}`);
+}
+
+// Parse sudo argv into an action. Pure function (no DOM) — safe to test.
+function parseSudoArgs(argv) {
+  const out = { runAs: null, prompt: null, nonInteractive: false, mode: null, cmd: [], killed: false };
+  // Expand combined booleans: -kv → -k -v (u/p take values, so never split those).
+  const BOOLS = new Set(['k', 'K', 'v', 'l', 'n', 'i', 's', 'h', 'V']);
+  const toks = [];
+  for (const t of argv) {
+    if (/^-[kKvlnihsVhV]{2,}$/.test(t) && [...t.slice(1)].every((c) => BOOLS.has(c))) {
+      for (const c of t.slice(1)) toks.push('-' + c);
+    } else toks.push(t);
+  }
+  let i = 0;
+  while (i < toks.length) {
+    const a = toks[i];
+    if (a === '--') { out.cmd = toks.slice(i + 1); break; }
+    else if (a === '-h' || a === '--help') return { action: 'help' };
+    else if (a === '-V' || a === '--version') return { action: 'version' };
+    else if (a === '-k' || a === '-K') { out.killed = true; i++; continue; }
+    else if (a === '-v') { if (!out.mode) out.mode = 'validate'; i++; continue; }
+    else if (a === '-l') { out.mode = 'list'; i++; continue; }
+    else if (a === '-n') { out.nonInteractive = true; i++; continue; }
+    else if (a === '-i' || a === '-s') { out.mode = 'shell'; i++; continue; }
+    else if (a === '-u') {
+      if (!toks[i + 1]) return { action: 'error', error: 'sudo: option requires an argument -- u' };
+      out.runAs = toks[i + 1]; i += 2; continue;
+    } else if (a.startsWith('-u') && a.length > 2 && !a.startsWith('--')) {
+      out.runAs = a.slice(2); i++; continue;
+    } else if (a === '-p') {
+      if (i + 1 >= toks.length) return { action: 'error', error: 'sudo: option requires an argument -- p' };
+      out.prompt = toks[i + 1]; i += 2; continue;
+    } else if (a.startsWith('-')) {
+      return { action: 'error', error: `sudo: invalid option -- '${a.slice(1, 2) || '-'}'` };
+    } else { out.cmd = toks.slice(i); break; }
+  }
+  return { action: 'parsed', ...out };
+}
 
 // ── Visitor username (per-browser, stored in localStorage) ──
 const DEFAULT_USER = 'guest';
 const USER_RE = /^[a-z0-9_-]{1,16}$/;
 
-function getUsername() {
+function getRealUsername() {
   try {
     const u = localStorage.getItem('drkl_username');
     if (u && USER_RE.test(u)) return u;
   } catch {}
   return DEFAULT_USER;
+}
+
+// Effective user for one-shot `sudo -u user <cmd>`.
+let sudoRunAs = null;
+
+function getUsername() {
+  if (sudoRunAs) return sudoRunAs;
+  if (isRoot) return 'root';
+  return getRealUsername();
 }
 
 function setUsername(name) {
@@ -634,7 +896,7 @@ async function showModels() {
 async function chatLogin(pin) {
   if (!pin) {
     print('usage: <span class="ok">/login &lt;PIN&gt;</span>');
-    return;
+    return false;
   }
   print('<span class="muted">Verifying PIN...</span>');
   try {
@@ -650,8 +912,10 @@ async function chatLogin(pin) {
     const d = await res.json();
     sessionStorage.setItem('drkl_chat_token', d.token);
     print('<span class="ok">PIN verified — rate limit lifted for 24h.</span>');
+    return true;
   } catch (e) {
     print(`<span class="err">Login failed: ${esc(e.message)}</span>`);
+    return false;
   }
 }
 
@@ -1146,11 +1410,13 @@ const HELP = {
   whoami:   'show current user',
   username: 'show or set your username (saved in this browser)',
   uname:    'system info',
-  sudo:     'run as root (will fail)',
+  sudo:     'run as root — sudo [-hVknv] [-p prompt] [-u user] [-i|-s] [command]',
+  su:       'switch user — su [-] [root] (password required)',
+  logout:   'leave fake root, or exit the terminal',
   theme:    'switch theme (dark|light)',
   tictactoe:'play tic-tac-toe vs AI (tictactoe 1-9)',
   ttt:      'alias of tictactoe',
-  exit:     'exit the terminal',
+  exit:     'leave fake root, or exit the terminal',
   rm:       'delete files or directories (-r for recursive)',
   mkdir:    'create a directory',
   touch:    'create an empty file',
@@ -1561,7 +1827,13 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
   },
 
   dashboard() {
-    print('<span class="muted">Opening dashboard...</span>');
+    let token = '';
+    try { token = sessionStorage.getItem('drkl_chat_token') || ''; } catch {}
+    if (token) {
+      print('<span class="muted">Opening dashboard (full access)...</span>');
+    } else {
+      print('<span class="muted">Opening dashboard... (<span class="ok">sudo -v</span> first for full access)</span>');
+    }
     setTimeout(() => { location.href = 'stats.html'; }, 400);
   },
 
@@ -1577,6 +1849,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
       print('<span class="muted">usage: username &lt;name&gt; — 1-16 chars: a-z, 0-9, _ or -</span>');
       return;
     }
+    if (isRoot) { print('username: logout of root first (<span class="ok">sudo -k</span> or <span class="ok">exit</span>)', 'err'); return; }
     const clean = setUsername(args[0]);
     if (!clean) { print('username: use 1-16 chars: a-z, 0-9, _ or -', 'err'); return; }
     refreshPrompt();
@@ -1586,9 +1859,88 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
 
   uname() { print(`drklOS 1.0.0 — kernel drkl-sh 6.6.0 (${getTheme()})`); },
 
-  sudo() { print(`${esc(getUsername())} is not in the sudoers file. This incident will be reported.`, 'err'); },
+  async sudo(args) {
+    const parsed = parseSudoArgs(args);
+    if (parsed.action === 'help') { printSudoHelp(); return; }
+    if (parsed.action === 'version') { print('sudo version 1.9.15p5 (drkl-sh port)'); return; }
+    if (parsed.action === 'error') {
+      print(`${esc(parsed.error)}\nusage: sudo [-hV] [-knv] [-p prompt] [-u user] [-i | -s] [command]`, 'err');
+      return;
+    }
+    // -k drops credentials now; with a trailing command/request it acts like
+    // a fresh sudo afterwards (so it will prompt again).
+    if (parsed.killed) {
+      const wasRoot = isRoot;
+      if (wasRoot) dropRoot();
+      else { sudoForget(); lockDashboard(); }
+      const more = parsed.cmd.length || parsed.mode || parsed.runAs || parsed.nonInteractive || parsed.prompt;
+      if (!more) {
+        if (wasRoot) print(`<span class="muted">dropped back to ${esc(getUsername())} — dashboard locked.</span>`);
+        else print('<span class="muted">credentials dropped — dashboard locked.</span>');
+        return;
+      }
+      print('<span class="muted">credentials dropped.</span>');
+    }
+    const opts = { nonInteractive: parsed.nonInteractive, prompt: parsed.prompt };
+    if (!parsed.mode && !parsed.cmd.length) {
+      print('usage: sudo [-hV] [-knv] [-p prompt] [-u user] [-i | -s] [command]', 'err');
+      return;
+    }
+    if (parsed.mode === 'validate') {
+      await ensureSudoAuth({ kind: 'validate' }, opts);
+      return;
+    }
+    if (parsed.mode === 'list') {
+      await ensureSudoAuth({ kind: 'list', cmd: parsed.cmd[0] }, opts);
+      return;
+    }
+    if (parsed.mode === 'shell') {
+      await ensureSudoAuth({ kind: 'shell' }, opts);
+      return;
+    }
+    const [cmdName, ...rest] = parsed.cmd;
+    await ensureSudoAuth({ kind: 'run', cmd: cmdName.toLowerCase(), rest, runAs: parsed.runAs }, opts);
+  },
 
-  exit()  { print('logout — but you are still here. 😏 Type <span class="ok">clear</span> to start over.'); },
+  async su(args) {
+    if (args[0] === '-h' || args[0] === '--help') {
+      print('Usage: su [options] [LOGIN]\n<span class="muted"> -, -l        fresh shell (same here)\n no args → root shell (password required)</span>');
+      return;
+    }
+    const rest = args.slice();
+    while (rest.length && (rest[0] === '-' || rest[0] === '-l' || rest[0] === '--login')) rest.shift();
+    if (rest.length > 1) { print('su: too many arguments', 'err'); return; }
+    if (rest[0] && rest[0].startsWith('-')) { print(`su: invalid option '${esc(rest[0])}'`, 'err'); return; }
+    const target = rest[0] || 'root';
+    if (target !== 'root' && target !== getRealUsername()) { print(`su: user ${esc(target)} does not exist`, 'err'); return; }
+    if (!isRoot && target === getRealUsername()) { print(`<span class="muted">already ${esc(target)}.</span>`); return; }
+    if (isRoot && target === 'root') { print('<span class="muted">already root.</span>'); return; }
+    if (isRoot && target === getRealUsername()) {
+      dropRoot();
+      print(`<span class="muted">logout — back to ${esc(getUsername())} — dashboard locked.</span>`);
+      return;
+    }
+    if (sudoValid() && hasChatToken()) { sudoTouch(); setRoot(true); printRootShellMsg(); return; }
+    enterPwMode({ kind: 'shell' }, 'Password:');
+  },
+
+  logout() {
+    if (isRoot) {
+      dropRoot();
+      print(`<span class="muted">logout — back to ${esc(getUsername())} — dashboard locked.</span>`);
+    } else {
+      print('logout — but you are still here. 😏 Type <span class="ok">clear</span> to start over.');
+    }
+  },
+
+  exit()  {
+    if (isRoot) {
+      dropRoot();
+      print(`<span class="muted">logout — back to ${esc(getUsername())} — dashboard locked.</span>`);
+      return;
+    }
+    print('logout — but you are still here. 😏 Type <span class="ok">clear</span> to start over.');
+  },
 
   rm(args) {
     const recursive = args.includes('-r') || args.includes('-R');
@@ -1765,7 +2117,7 @@ function setInput(v) {
 }
 
 function renderSuggestion() {
-  if (chatMode) { suggestEl.textContent = ''; suggestEl.style.visibility = 'hidden'; return; }
+  if (chatMode || sudoPw) { suggestEl.textContent = ''; suggestEl.style.visibility = 'hidden'; return; }
   const val = input.value;
   const m = getMatches(val);
   let suffix = '';
@@ -1888,6 +2240,28 @@ input.addEventListener('keydown', (e) => {
   if (editorMode) {
     handleEditorInput(e);
     return;
+  }
+
+  // ── sudo/su password prompt (no echo, no history) ──
+  if (sudoPw) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (sudoPw.busy) return;
+      const pw = input.value;
+      input.value = '';
+      submitPwAttempt(pw);
+      return;
+    }
+    if (e.key === 'Escape') { e.preventDefault(); cancelPwMode(false); return; }
+    if (e.ctrlKey && e.key === 'c') { e.preventDefault(); input.value = ''; hideList(); renderSuggestion(); cancelPwMode(true); return; }
+    if (e.ctrlKey && e.key === 'u') { e.preventDefault(); input.value = ''; return; }
+    if (e.ctrlKey && e.key === 'w') {
+      e.preventDefault();
+      input.value = input.value.replace(/\S*\s*$/, '');
+      return;
+    }
+    if (e.key === 'Tab' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); hideList(); return; }
+    return; // printable keys + cursor movement go straight to the masked field
   }
 
   // Ctrl combos
@@ -2022,15 +2396,15 @@ input.addEventListener('keydown', (e) => {
   }
 
   // ── Terminal mode ──
+  const parts = raw.split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const args = parts.slice(1);
   print(`<span class="prompt">${esc(promptStr())}</span> <span class="cmd">${esc(raw)}</span>`);
   if (raw !== hist[hist.length - 1]) {
     hist.push(raw);
     try { localStorage.setItem('drkl_hist', JSON.stringify(hist.slice(-200))); } catch {}
   }
   histIdx = -1;
-  const parts = raw.split(/\s+/);
-  const cmd = parts[0].toLowerCase();
-  const args = parts.slice(1);
   if (commands[cmd]) commands[cmd](args);
   else print(`command not found: ${esc(raw)}. Type <span class="ok">help</span>.`, 'err');
 });
