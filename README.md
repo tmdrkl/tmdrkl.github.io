@@ -9,7 +9,7 @@ A terminal-style landing page with a built-in AI chatbot.
   - streaming answers you can interrupt with `Esc` / `/stop`
   - markdown + syntax-highlighted code blocks with a copy button
   - long chats keep the last 24 messages as context
-- **Theme toggle** — dark/light Gruvbox theme with animated switch
+- **Theme toggle** — dark/light Adwaita theme with animated switch
 - **Tab autocomplete** — command and path completion
 - **History** — command history persists across sessions
 - **Username** — each visitor gets their own name (`username <name>` to change, saved in this browser)
@@ -84,7 +84,7 @@ A terminal-style landing page with a built-in AI chatbot.
 |------|---------|
 | `index.html` | Terminal page markup |
 | `style.css` | Terminal styles |
-| `theme-tokens.css` | Shared Gruvbox Material tokens (terminal + dashboard) |
+| `theme-tokens.css` | Shared Adwaita tokens (terminal + dashboard) |
 | `theme.js` | Theme read/write, toggle button, rain-burst effect |
 | `index.js` | Virtual filesystem, commands, chat mode |
 | `stats.html` | Owner-only usage dashboard |
@@ -92,7 +92,7 @@ A terminal-style landing page with a built-in AI chatbot.
 ## Stack
 
 - Vanilla HTML/CSS/JS (no frameworks)
-- Gruvbox Material color theme (dark/light)
+- Adwaita color theme (dark/light)
 - Groq API for AI responses
 - Hosted on GitHub Pages
 

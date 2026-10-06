@@ -4,17 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>drkl — stats</title>
-<meta name="theme-color" content="#1d2021">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%23282828'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%23a9b665' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#222226">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%232e2e32'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%2362a0ea' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
 <script>
 (function(){try{var t=localStorage.getItem('drkl_theme');if(t!=='dark'&&t!=='light'){t=(matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
-<link rel="stylesheet" href="theme-tokens.css?v=1">
+<link rel="stylesheet" href="theme-tokens.css?v=3">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:var(--bg);color:var(--text);
-  font:14px/1.55 "JetBrains Mono","Iosevka",ui-monospace,Menlo,Consolas,monospace;
+  font:14px/1.55 "Adwaita Mono","JetBrains Mono","Iosevka",ui-monospace,Menlo,Consolas,monospace;
   padding:24px;
   padding-left:max(24px,env(safe-area-inset-left));
   padding-right:max(24px,env(safe-area-inset-right));
@@ -36,7 +36,7 @@ h1 span{color:var(--muted)}
 a.back{color:var(--blue);text-decoration:none;margin-left:auto}
 a.back:hover{text-decoration:underline}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px}
 .card .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 .card .v{font-size:24px;font-weight:700;color:var(--green);margin-top:4px;overflow-wrap:anywhere}
 .card .s{font-size:11px;color:var(--muted);margin-top:2px}
@@ -161,6 +161,6 @@ async function main(){
 function fail(msg){ const e=$('err'); e.innerHTML=msg; e.hidden=false; }
 main();
 </script>
-<script type="module" src="theme.js?v=2"></script>
+<script type="module" src="theme.js?v=3"></script>
 </body>
 </html>

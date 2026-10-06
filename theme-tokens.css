@@ -1,46 +1,51 @@
 /* ===========================
-   drkl.net — shared theme tokens (gruvbox material hard)
-   Loaded by index.html and stats.html so both pages stay in sync.
+   drkl.net — shared theme tokens (Adwaita)
+   Loaded by index.html, stats.html and 404.html so all pages stay in sync.
+   Values follow GNOME libadwaita / Adwaita palette:
+   window/view/headerbar/sidebar backgrounds, accent (blue #3584e4),
+   success / warning / error pairs, and palette shades for terminal colors.
+   Light standalone (fg-on-neutral) colors are darker for contrast;
+   dark standalone colors are lighter. See libadwaita doc/css-variables.md.
    =========================== */
 
-/* --- Gruvbox Material Dark (hard contrast) --- */
+/* --- Adwaita Dark --- */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #1d2021;
-  --panel: #282828;
-  --panel2: #32302f;
-  --border: #665c54;
-  --text: #d4be98;
-  --muted: #a89984;
-  --blue: #83a598;
-  --green: #b8bb26;
-  --yellow: #fe8019;
-  --red: #fb4934;
-  --cyan: #8ec07c;
-  --orange: #fe8019;
-  --purple: #d3869b;
-  --term-shadow: 0 20px 50px rgba(0,0,0,.6), 0 0 40px rgba(131,165,152,.15);
-  --code-bg: rgba(0,0,0,.5);
+  --bg: #222226;
+  --panel: #1d1d20;
+  --panel2: #2e2e32;
+  --border: rgba(255, 255, 255, 0.15);
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.55);
+  --blue: #62a0ea;
+  --green: #57e389;
+  --yellow: #f5c211;
+  --red: #f66151;
+  --cyan: #7bdff4;
+  --orange: #ffa348;
+  --purple: #dc8add;
+  --term-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(53, 132, 228, 0.12);
+  --code-bg: rgba(255, 255, 255, 0.08);
 }
 
-/* --- Gruvbox Material Light (hard contrast) --- */
+/* --- Adwaita Light --- */
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f9f5d7;
-  --panel: #fbf1c7;
-  --panel2: #ebdbb2;
-  --border: #a89984;
-  --text: #3c3836;
-  --muted: #7c6f64;
-  --blue: #076678;
-  --green: #98971a;
-  --yellow: #d65d0e;
-  --red: #cc241d;
-  --cyan: #427b58;
-  --orange: #d65d0e;
-  --purple: #8f3f71;
-  --term-shadow: 0 20px 50px rgba(0,0,0,.15);
-  --code-bg: rgba(0,0,0,.12);
+  --bg: #fafafb;
+  --panel: #ffffff;
+  --panel2: #ebebed;
+  --border: rgba(0, 0, 6, 0.15);
+  --text: rgba(0, 0, 6, 0.8);
+  --muted: rgba(0, 0, 6, 0.55);
+  --blue: #1c71d8;
+  --green: #26a269;
+  --yellow: #c88800;
+  --red: #e01b24;
+  --cyan: #007184;
+  --orange: #e66100;
+  --purple: #9141ac;
+  --term-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+  --code-bg: rgba(0, 0, 6, 0.06);
 }
 
 /* Fallback if data-theme never gets applied (e.g. scripts blocked) */

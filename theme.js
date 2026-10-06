@@ -1,5 +1,5 @@
 export const THEMES = ['dark', 'light'];
-export const THEME_META = { dark: '#1d2021', light: '#f9f5d7' };
+export const THEME_META = { dark: '#222226', light: '#fafafb' };
 
 export function getTheme() {
   const v = localStorage.getItem('drkl_theme');
@@ -36,8 +36,8 @@ export function themeRainBurst(theme) {
   const fs = 14;
   const cols = Math.floor(c.width / fs);
   const drops = Array.from({ length: cols }, () => Math.random() * -30);
-  const bg = theme === 'light' ? 'rgba(249,245,215,0.12)' : 'rgba(29,32,33,0.12)';
-  const fg = theme === 'light' ? 'rgba(7,102,120,0.85)' : 'rgba(131,165,152,0.85)';
+  const bg = theme === 'light' ? 'rgba(250,250,251,0.12)' : 'rgba(34,34,38,0.12)';
+  const fg = theme === 'light' ? 'rgba(28,113,216,0.85)' : 'rgba(98,160,234,0.85)';
   const t0 = performance.now();
   (function frame() {
     ctx.fillStyle = bg;

@@ -1,6 +1,8 @@
 /* ===========================
-   drkl.net — terminal theme
+   drkl.net — Adwaita theme
    Color tokens live in theme-tokens.css (shared with stats.html).
+   Follows GNOME Adwaita: window/view/headerbar surfaces, accent blue,
+   success/warning/error pairs, 12px window radius, Adwaita Mono first.
    =========================== */
 
 /* --- Base --- */
@@ -37,7 +39,7 @@ html, body {
   min-height: 100dvh;
   background: var(--bg);
   color: var(--text);
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: 'Adwaita Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 15px;
   transition: background .3s, color .3s;
   -webkit-text-size-adjust: 100%;
@@ -104,7 +106,7 @@ footer.site a:hover { color: var(--blue); }
   width: 100%;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: var(--term-shadow);
   overflow: hidden;
   display: flex;
