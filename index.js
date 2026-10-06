@@ -1127,7 +1127,6 @@ const HELP = {
   help:     'list available commands',
   about:    'a bit about me',
   links:    'contacts & github',
-  neofetch: 'system info in fastfetch style (alias of fastfetch)',
   fastfetch:'system info in fastfetch style',
   fetch:    'system info with geo/IP (via Cloudflare edge)',
   banner:   'display the drkl logo',
@@ -1384,9 +1383,6 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
     ];
     print(`<pre class="fastfetch">${renderFastfetch(asciiArt, infoLines)}</pre>`);
   },
-
-  // Backwards-compat alias: `neofetch` still works.
-  async neofetch(args) { return commands.fastfetch(args); },
 
   async fetch() {
     const up = Math.floor((Date.now() - loadTime) / 1000);

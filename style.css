@@ -158,25 +158,24 @@ footer.site a:hover { color: var(--blue); }
 .dir { color: var(--blue); }
 .blue { color: var(--blue); }
 pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-pre.neofetch, pre.fastfetch { font-size: 13px; line-height: 1.4; }
+pre.fastfetch { font-size: 13px; line-height: 1.4; }
 
-/* Fastfetch ASCII art coloring (pre.neofetch kept as alias) */
-[data-theme="dark"] pre.neofetch,
+/* Fastfetch ASCII art coloring */
 [data-theme="dark"] pre.fastfetch {
   background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
 }
-pre.neofetch .ascii-line-0, pre.fastfetch .ascii-line-0 { color: var(--blue); }
-pre.neofetch .ascii-line-1, pre.fastfetch .ascii-line-1 { color: var(--blue); }
-pre.neofetch .ascii-line-2, pre.fastfetch .ascii-line-2 { color: var(--cyan); }
-pre.neofetch .ascii-line-3, pre.fastfetch .ascii-line-3 { color: var(--cyan); }
-pre.neofetch .ascii-line-4, pre.fastfetch .ascii-line-4 { color: var(--green); }
-pre.neofetch .ascii-line-5, pre.fastfetch .ascii-line-5 { color: var(--green); }
-pre.neofetch .ascii-line-6, pre.fastfetch .ascii-line-6 { color: var(--yellow); }
-pre.neofetch .ascii-line-7, pre.fastfetch .ascii-line-7 { color: var(--yellow); }
-pre.neofetch .ascii-line-8, pre.fastfetch .ascii-line-8 { color: var(--orange); }
-pre.neofetch .ascii-line-9, pre.fastfetch .ascii-line-9 { color: var(--orange); }
-pre.neofetch .ascii-line-10, pre.fastfetch .ascii-line-10 { color: var(--red); }
-pre.neofetch .ascii-line-11, pre.fastfetch .ascii-line-11 { color: var(--red); }
+pre.fastfetch .ascii-line-0 { color: var(--blue); }
+pre.fastfetch .ascii-line-1 { color: var(--blue); }
+pre.fastfetch .ascii-line-2 { color: var(--cyan); }
+pre.fastfetch .ascii-line-3 { color: var(--cyan); }
+pre.fastfetch .ascii-line-4 { color: var(--green); }
+pre.fastfetch .ascii-line-5 { color: var(--green); }
+pre.fastfetch .ascii-line-6 { color: var(--yellow); }
+pre.fastfetch .ascii-line-7 { color: var(--yellow); }
+pre.fastfetch .ascii-line-8 { color: var(--orange); }
+pre.fastfetch .ascii-line-9 { color: var(--orange); }
+pre.fastfetch .ascii-line-10 { color: var(--red); }
+pre.fastfetch .ascii-line-11 { color: var(--red); }
 .chat-reply { color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.5; user-select: text; -webkit-user-select: text; }
 .chat-you { color: var(--green); font-weight: 700; }
 .chat-ai { color: var(--cyan); font-weight: 700; }
