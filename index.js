@@ -814,6 +814,10 @@ function figlet(word) {
 // ══════════════════════════════════════════════════════
 const WORKER_URL = 'https://groq-chat.tomx13.workers.dev';
 const DEFAULT_MODEL = 'openai/gpt-oss-120b';
+// The worker lists every model on the account, including speech (whisper,
+// orpheus) and guard/classifier models. Chat should only offer conversational
+// LLMs.
+const NON_CHAT_MODEL = /(whisper|orpheus|prompt-guard|safeguard)/i;
 // Models have a token limit and every message is billed, so long conversations
 // only send their most recent turns as context.
 const MAX_CONTEXT_MESSAGES = 24;
@@ -867,7 +871,8 @@ async function loadChatModels() {
     const res = await fetch(`${WORKER_URL}/models`);
     if (!res.ok) return;
     const data = await res.json();
-    chatModels = Array.isArray(data.models) ? data.models : [];
+    chatModels = (Array.isArray(data.models) ? data.models : [])
+      .filter(m => !NON_CHAT_MODEL.test(m));
     if (chatModels.length) {
       chatModel = chatModels.includes(DEFAULT_MODEL) ? DEFAULT_MODEL : chatModels[0];
     }
