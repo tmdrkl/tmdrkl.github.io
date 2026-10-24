@@ -164,23 +164,24 @@ pre.fastfetch { font-size: 13px; line-height: 1.4; }
 [data-theme="dark"] pre.fastfetch {
   background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
 }
-pre.fastfetch .ascii-line-0 { color: var(--green); }
-pre.fastfetch .ascii-line-1 { color: var(--green); }
-pre.fastfetch .ascii-line-2 { color: var(--green); }
-pre.fastfetch .ascii-line-3 { color: var(--green); }
-pre.fastfetch .ascii-line-4 { color: var(--green); }
-pre.fastfetch .ascii-line-5 { color: var(--green); }
-pre.fastfetch .ascii-line-6 { color: var(--green); }
-pre.fastfetch .ascii-line-7 { color: var(--green); }
-pre.fastfetch .ascii-line-8 { color: var(--green); }
-pre.fastfetch .ascii-line-9 { color: var(--yellow); }
-pre.fastfetch .ascii-line-10 { color: var(--yellow); }
-pre.fastfetch .ascii-line-11 { color: var(--yellow); }
-pre.fastfetch .ascii-line-12 { color: var(--yellow); }
-pre.fastfetch .ascii-line-13 { color: var(--yellow); }
-pre.fastfetch .ascii-line-14 { color: var(--yellow); }
-pre.fastfetch .ascii-line-15 { color: var(--yellow); }
-pre.fastfetch .ascii-line-16 { color: var(--yellow); }
+/* Green → yellow ramp, one step per ASCII line */
+pre.fastfetch .ascii-line-0  { color: color-mix(in srgb, var(--yellow) 0%,    var(--green)); }
+pre.fastfetch .ascii-line-1  { color: color-mix(in srgb, var(--yellow) 6.25%, var(--green)); }
+pre.fastfetch .ascii-line-2  { color: color-mix(in srgb, var(--yellow) 12.5%, var(--green)); }
+pre.fastfetch .ascii-line-3  { color: color-mix(in srgb, var(--yellow) 18.75%, var(--green)); }
+pre.fastfetch .ascii-line-4  { color: color-mix(in srgb, var(--yellow) 25%,   var(--green)); }
+pre.fastfetch .ascii-line-5  { color: color-mix(in srgb, var(--yellow) 31.25%, var(--green)); }
+pre.fastfetch .ascii-line-6  { color: color-mix(in srgb, var(--yellow) 37.5%, var(--green)); }
+pre.fastfetch .ascii-line-7  { color: color-mix(in srgb, var(--yellow) 43.75%, var(--green)); }
+pre.fastfetch .ascii-line-8  { color: color-mix(in srgb, var(--yellow) 50%,   var(--green)); }
+pre.fastfetch .ascii-line-9  { color: color-mix(in srgb, var(--yellow) 56.25%, var(--green)); }
+pre.fastfetch .ascii-line-10 { color: color-mix(in srgb, var(--yellow) 62.5%, var(--green)); }
+pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 68.75%, var(--green)); }
+pre.fastfetch .ascii-line-12 { color: color-mix(in srgb, var(--yellow) 75%,   var(--green)); }
+pre.fastfetch .ascii-line-13 { color: color-mix(in srgb, var(--yellow) 81.25%, var(--green)); }
+pre.fastfetch .ascii-line-14 { color: color-mix(in srgb, var(--yellow) 87.5%, var(--green)); }
+pre.fastfetch .ascii-line-15 { color: color-mix(in srgb, var(--yellow) 93.75%, var(--green)); }
+pre.fastfetch .ascii-line-16 { color: color-mix(in srgb, var(--yellow) 100%,  var(--green)); }
 .chat-reply { color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.5; user-select: text; -webkit-user-select: text; }
 .chat-you { color: var(--green); font-weight: 700; }
 .chat-ai { color: var(--cyan); font-weight: 700; }
