@@ -774,15 +774,32 @@ const ASCII_LOGO = [
   "       █",
 ];
 
-function renderFastfetch(ascii, info) {
-  // On narrow screens side-by-side ASCII + info overflows — stack vertically.
+// True on phones/tablets and whenever the terminal is too narrow for
+// the ASCII art + info column layout. Touch devices always stack so the
+// output stays readable in both portrait and landscape.
+function fastfetchShouldStack(maxAsciiWidth, maxInfoWidth) {
   try {
-    if (window.innerWidth && window.innerWidth < 480) {
-      const art = ascii.map((l, i) => `<span class="ascii-line-${i}">${l}</span>`).join('\n');
-      return art + '\n' + info.join('\n');
-    }
-  } catch {}
+    if (window.innerWidth < 600) return true;
+    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
+    const screenEl = document.getElementById('screen');
+    const available = (screenEl ? screenEl.clientWidth : window.innerWidth) - 24;
+    // Rough monospace advance at 13px JetBrains Mono (plus a safety margin).
+    const needed = (maxAsciiWidth + 2 + maxInfoWidth) * 7.8;
+    return available < needed;
+  } catch {
+    return window.innerWidth < 600;
+  }
+}
+
+function renderFastfetch(ascii, info) {
   const maxAsciiWidth = Math.max(...ascii.map(l => l.length));
+  const maxInfoWidth = Math.max(...info.map(l => l.replace(/<[^>]*>/g, '').length));
+
+  if (fastfetchShouldStack(maxAsciiWidth, maxInfoWidth)) {
+    const art = ascii.map((l, i) => `<span class="ascii-line-${i}">${l}</span>`).join('\n');
+    return art + '\n' + info.join('\n');
+  }
+
   const paddedAscii = ascii.map((l, i) => `<span class="ascii-line-${i}">${l}</span>` + ' '.repeat(maxAsciiWidth - l.length));
   const maxLines = Math.max(paddedAscii.length, info.length);
   const lines = [];

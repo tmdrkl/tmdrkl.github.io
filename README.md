@@ -18,7 +18,7 @@ A terminal-style landing page with a built-in AI chatbot.
 - **Tab autocomplete** — command and path completion with suggestion popup
 - **History** — command history persists across sessions (`localStorage`, last 200)
 - **Username** — per-visitor name (`username <name>`, saved in this browser)
-- **Mobile** — toolbar with tab/arrows keys, pinned above the keyboard
+- **Mobile** — minimal tab/arrows key strip, pinned above the keyboard
 
 ## Terminal Commands
 
@@ -82,7 +82,7 @@ A terminal-style landing page with a built-in AI chatbot.
 |----------|--------|
 | `Tab` | Autocomplete command / path |
 | `↑` / `↓` | Navigate command history |
-| `←` / `→` | Move cursor (also on mobile toolbar) |
+| `←` / `→` | Move cursor (also on mobile key strip) |
 | `Ctrl+L` | Clear screen |
 | `Ctrl+U` | Clear input line |
 | `Ctrl+W` | Delete word |

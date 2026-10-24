@@ -307,7 +307,42 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
 }
 
 /* --- Mobile key toolbar (Tab + arrows) — hidden on desktop --- */
-.mobile-keys { display: none; }
+.mobile-keys {
+  display: none;
+  gap: 4px;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding: 6px 10px;
+  padding-left: max(10px, env(safe-area-inset-left));
+  padding-right: max(10px, env(safe-area-inset-right));
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
+.mkey {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 36px;
+  font: inherit;
+  font-size: 13px;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background .12s, color .12s;
+}
+.mkey:active {
+  background: var(--panel2);
+  color: var(--text);
+}
 
 /* --- Suggestion list --- */
 #suggestList {
@@ -398,26 +433,52 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
 @media (max-width: 480px) {
   body {
     padding: 0;
-    padding-bottom: env(safe-area-inset-bottom);
     font-size: 14px;
     align-items: stretch;
     min-height: 100vh;
     min-height: 100dvh;
   }
-  .wrap { max-width: 100%; flex: 1; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; min-width: 0; padding-bottom: 60px; }
-  header.site { padding: 8px 12px 0; padding-left: max(12px, env(safe-area-inset-left)); margin-bottom: 8px; }
-  footer.site { padding: 0 12px 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); margin-top: 8px; gap: 12px; }
+  .wrap {
+    max-width: 100%;
+    flex: 1;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* Clear the minimal key toolbar so nothing hides behind it. */
+    padding-bottom: calc(52px + env(safe-area-inset-bottom));
+  }
+  header.site {
+    padding: 8px 12px 0;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    margin-bottom: 8px;
+  }
+  footer.site {
+    padding: 0 12px 8px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    margin-top: 8px;
+    gap: 4px 12px;
+    flex-wrap: wrap;
+  }
   header.site nav { gap: 8px; }
   .site .brand { font-size: 14px; }
   .site nav a { font-size: 12px; padding: 4px 0; }
-  footer.site a { font-size: 12px; }
+  footer.site a { font-size: 12px; padding: 6px 0; }
+  .theme-btn { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
   .term { flex: 1; min-height: 0; }
   #screen {
     flex: 1 1 auto;
     height: auto;
-    padding: 12px;
+    padding: 12px 12px 16px;
     min-height: 0;
     max-height: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
   .titlebar { padding: 8px 12px; flex-shrink: 0; }
   .titlebar span { display: inline; font-size: 11px; }
@@ -427,39 +488,18 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
     background: transparent;
     border: none;
   }
-  .mobile-keys {
-    display: flex;
-    gap: 6px;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 50;
-    padding: 8px 12px;
-    padding-left: max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-  }
-  .mkey {
-    flex: 1;
-    font: inherit;
-    font-size: 13px;
-    min-height: 36px;
-    background: var(--panel2);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .mkey:active { background: var(--border); color: var(--text); }
+  .mobile-keys { display: flex; }
   #cmdInput { font-size: 14px; padding: 8px 0; }
   #inputline { padding: 0; gap: 8px; font-size: 14px; }
   #inputline .prompt { max-width: 38vw; font-size: 14px; }
+  #suggestList { gap: 6px 8px; padding: 4px 0 8px; }
+  #suggestList span {
+    padding: 7px 9px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .copy-btn { min-height: 30px; padding: 5px 10px; font-size: 11px; }
   .term { border-radius: 0; border-left: none; border-right: none; border-bottom: none; }
   pre { font-size: 11px; padding: 6px 8px; }
   .chat-help { font-size: 12px; gap: 2px 10px; }
@@ -481,39 +521,14 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
   .titlebar { padding: 6px 10px; }
   .titlebar span { font-size: 10px; }
   .dot { width: 8px; height: 8px; }
+  .mobile-keys { gap: 2px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+  .mkey { font-size: 12px; }
 }
 
 @media (pointer: coarse) and (min-width: 481px) {
-  .mobile-keys {
-    display: flex;
-    gap: 6px;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 50;
-    padding: 8px 12px;
-    padding-left: max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-  }
-  .mkey {
-    flex: 1;
-    font: inherit;
-    font-size: 13px;
-    min-height: 36px;
-    background: var(--panel2);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .mkey:active { background: var(--border); color: var(--text); }
+  /* Key toolbar is shown on tablets too — keep content clear of it. */
+  body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+  .mobile-keys { display: flex; }
 }
 
 @media (prefers-reduced-motion: reduce) {
