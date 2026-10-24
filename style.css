@@ -164,18 +164,23 @@ pre.fastfetch { font-size: 13px; line-height: 1.4; }
 [data-theme="dark"] pre.fastfetch {
   background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
 }
-pre.fastfetch .ascii-line-0 { color: var(--blue); }
-pre.fastfetch .ascii-line-1 { color: var(--blue); }
-pre.fastfetch .ascii-line-2 { color: var(--cyan); }
-pre.fastfetch .ascii-line-3 { color: var(--cyan); }
+pre.fastfetch .ascii-line-0 { color: var(--green); }
+pre.fastfetch .ascii-line-1 { color: var(--green); }
+pre.fastfetch .ascii-line-2 { color: var(--green); }
+pre.fastfetch .ascii-line-3 { color: var(--green); }
 pre.fastfetch .ascii-line-4 { color: var(--green); }
 pre.fastfetch .ascii-line-5 { color: var(--green); }
-pre.fastfetch .ascii-line-6 { color: var(--yellow); }
-pre.fastfetch .ascii-line-7 { color: var(--yellow); }
-pre.fastfetch .ascii-line-8 { color: var(--orange); }
-pre.fastfetch .ascii-line-9 { color: var(--orange); }
-pre.fastfetch .ascii-line-10 { color: var(--red); }
-pre.fastfetch .ascii-line-11 { color: var(--red); }
+pre.fastfetch .ascii-line-6 { color: var(--green); }
+pre.fastfetch .ascii-line-7 { color: var(--green); }
+pre.fastfetch .ascii-line-8 { color: var(--green); }
+pre.fastfetch .ascii-line-9 { color: var(--yellow); }
+pre.fastfetch .ascii-line-10 { color: var(--yellow); }
+pre.fastfetch .ascii-line-11 { color: var(--yellow); }
+pre.fastfetch .ascii-line-12 { color: var(--yellow); }
+pre.fastfetch .ascii-line-13 { color: var(--yellow); }
+pre.fastfetch .ascii-line-14 { color: var(--yellow); }
+pre.fastfetch .ascii-line-15 { color: var(--yellow); }
+pre.fastfetch .ascii-line-16 { color: var(--yellow); }
 .chat-reply { color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.5; user-select: text; -webkit-user-select: text; }
 .chat-you { color: var(--green); font-weight: 700; }
 .chat-ai { color: var(--cyan); font-weight: 700; }

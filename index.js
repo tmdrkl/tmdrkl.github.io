@@ -759,6 +759,26 @@ function renderEditor() {
   screen.scrollTop = screen.scrollHeight;
 }
 
+const ASCII_LOGO = [
+  "                 .▄▄█████▄.",
+  "               .████████████.",
+  "              ███████████████",
+  "   ===░░░░░░░████████████████░░░░░===",
+  "            ███████████████'",
+  "           ██████████████'",
+  "          █████████████'",
+  "         ████████████'",
+  "   ===░░█████████████░░░░░░░░░░░===",
+  "       ████████████'",
+  "       ▀▀█████████'",
+  "           ██████'",
+  "           █████'",
+  "           ████'",
+  "          ███'",
+  "         ██'",
+  "        █'",
+];
+
 function renderFastfetch(ascii, info) {
   // On narrow screens side-by-side ASCII + info overflows — stack vertically.
   try {
@@ -1620,20 +1640,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
       : up < 3600 ? `${Math.floor(up/60)} mins ${up%60} secs`
       : `${Math.floor(up/3600)} hours ${Math.floor((up%3600)/60)} mins`;
 
-    const asciiArt = [
-      '        ████████',
-      '      ████████████',
-      '    ████    ████████',
-      '  ████        ██████',
-      ' ████          ██████',
-      '████            ██████',
-      '████            ██████',
-      ' ████          ██████',
-      '  ████        ██████',
-      '    ████    ████████',
-      '      ████████████',
-      '        ████████',
-    ];
+    const asciiArt = ASCII_LOGO;
 
     const cores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} cores` : 'unknown';
     const mem = navigator.deviceMemory ? `~${navigator.deviceMemory} GB` : null;
@@ -1661,20 +1668,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
       : up < 3600 ? `${Math.floor(up/60)}m ${up%60}s`
       : `${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m`;
     
-    const asciiArt = [
-      '        ████████',
-      '      ████████████',
-      '    ████    ████████',
-      '  ████        ██████',
-      ' ████          ██████',
-      '████            ██████',
-      '████            ██████',
-      ' ████          ██████',
-      '  ████        ██████',
-      '    ████    ████████',
-      '      ████████████',
-      '        ████████',
-    ];
+    const asciiArt = ASCII_LOGO;
     
     try {
       const res = await fetch(`${WORKER_URL}/geo`);
