@@ -4,16 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>drkl — stats</title>
-<meta name="theme-color" content="#222226">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%232e2e32'/%3E%3Ctext x='50' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%2362a0ea' text-anchor='middle'%3E%7E%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#081512">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%230c1f1a'/%3E%3Cpath d='M60 8 28 55h19l-7 37 32-50H53z' fill='%23a3f05a'/%3E%3C/svg%3E">
 <script>
 (function(){try{var t=localStorage.getItem('drkl_theme');if(t!=='dark'&&t!=='light'){t=(matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
-<link rel="stylesheet" href="theme-tokens.css?v=3">
+<link rel="stylesheet" href="theme-tokens.css?v=4">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{
-  background:var(--bg);color:var(--text);
+  background:var(--page-bg,var(--bg));color:var(--text);
   font:14px/1.55 "Adwaita Mono","JetBrains Mono","Iosevka",ui-monospace,Menlo,Consolas,monospace;
   padding:24px;
   padding-left:max(24px,env(safe-area-inset-left));
@@ -161,6 +161,6 @@ async function main(){
 function fail(msg){ const e=$('err'); e.innerHTML=msg; e.hidden=false; }
 main();
 </script>
-<script type="module" src="theme.js?v=3"></script>
+<script type="module" src="theme.js?v=4"></script>
 </body>
 </html>
