@@ -2439,6 +2439,7 @@ function isMobileLayout() {
 function placeMobileKeys() {
   if (!isMobileLayout()) {
     rootEl.style.removeProperty('--app-height');
+    rootEl.classList.remove('compact');
     if (mobileKeys) mobileKeys.style.bottom = '';
     return;
   }
@@ -2447,6 +2448,9 @@ function placeMobileKeys() {
     if (!vv) return;
     // CSS uses this to size body/wrap to the area the user can actually see.
     rootEl.style.setProperty('--app-height', Math.round(vv.height) + 'px');
+    // Not enough room for the banner once the soft keyboard is open (or in
+    // landscape): hide it so the terminal keeps the space.
+    rootEl.classList.toggle('compact', vv.height < 600);
     if (!mobileKeys) return;
     // Overlay keyboards (iOS Safari) don't resize the layout viewport, so the
     // fixed toolbar would sit behind the keyboard — lift it by the overlap.

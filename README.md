@@ -14,6 +14,7 @@ A terminal-style landing page with a built-in AI chatbot.
 - **Blog** — bilingual posts (EN + ID), `blog` to list, `read <n|name>` to read
 - **Tic-tac-toe** — `tictactoe` / `ttt` vs AI, clickable board, persistent score
 - **Dashboard** — `dashboard` opens the visual stats dashboard (`stats.html`)
+- **Banner** — neon dar'Link artwork at the top of the page, responsive (WebP with JPEG fallback)
 - **Theme** — dark/light neon terminal theme (palette from the site banner), follows system preference, animated switch + `theme` command
 - **Tab autocomplete** — command and path completion with suggestion popup
 - **History** — command history persists across sessions (`localStorage`, last 200)
@@ -103,6 +104,7 @@ A terminal-style landing page with a built-in AI chatbot.
 | `404.html` | Custom not-found page |
 | `CNAME` | Custom domain for GitHub Pages |
 | `robots.txt` / `sitemap.xml` | SEO / crawling |
+| `banner.webp` / `banner.jpg` | Hero banner above the terminal (WebP + JPEG fallback) |
 | `og.png` | Social preview image |
 
 ## Stack

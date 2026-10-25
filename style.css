@@ -94,6 +94,21 @@ footer.site a { color: var(--muted); font-size: 13px; text-decoration: none; }
 footer.site a:hover { color: var(--blue); }
 .sep { color: var(--border); }
 
+/* --- Banner --- */
+.banner {
+  margin: 0 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--panel2);
+  box-shadow: var(--term-shadow);
+  line-height: 0;
+}
+.banner img { display: block; width: 100%; height: auto; }
+[data-theme="light"] .banner img { filter: saturate(0.9) brightness(1.03); }
+/* Narrow screen or soft keyboard open: the terminal needs the room. */
+html.compact .banner { display: none; }
+
 /* --- Theme button --- */
 .theme-btn {
   background: none; border: none; cursor: pointer; font-size: 18px;
@@ -456,6 +471,14 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
   }
   header.site,
   footer.site { flex-shrink: 0; }
+  .banner {
+    flex-shrink: 0;
+    margin: 0 0 8px;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
   header.site {
     padding: 8px 12px 0;
     padding-top: max(8px, env(safe-area-inset-top));
