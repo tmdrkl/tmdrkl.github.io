@@ -1,56 +1,61 @@
 /* ===========================
-   drkl.net — shared theme tokens (Adwaita, green accent)
+   drkl.net — shared theme tokens (Everforest)
    Loaded by index.html, stats.html and 404.html so all pages stay in sync.
-   Surfaces follow libadwaita's stock Adwaita window/view/headerbar colors and
-   the accent family uses Adwaita's green accent (#26a269) instead of blue.
+   Palette from sainnhe's Everforest (medium background) on top of the
+   Adwaita geometry. Dark uses the Everforest dark palette; light uses the
+   cream Everforest light palette with slightly darkened accents so normal
+   text keeps WCAG AA contrast.
    Token names (--blue, --green, …) are kept as terminal color roles so the
-   renderer in index.js keeps working; --blue is the green accent role.
+   renderer in index.js keeps working.
    =========================== */
 
-/* --- Adwaita dark --- */
+/* --- Everforest dark (medium) --- */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #222226;        /* window_bg_color */
-  --panel: #1d1d20;     /* view_bg_color */
-  --panel2: #2e2e32;    /* headerbar / sidebar */
-  --border: rgba(255, 255, 255, 0.15);
-  --text: #ffffff;      /* window_fg_color */
-  --muted: #9a9a9e;     /* dim label: white @ 55% */
+  --bg: #232a2e;        /* bg_dim */
+  --panel: #2d353b;     /* bg0 */
+  --panel2: #343f44;    /* bg1 */
+  --border: #475258;    /* bg3 */
+  --text: #d3c6aa;      /* fg */
+  --muted: #a3afa6;     /* grey2, lifted for header contrast */
 
-  /* Terminal color roles — Adwaita palette, green accent */
-  --blue: #78e9ab;      /* accent: links, dirs, selection */
-  --green: #8ff0a4;     /* prompt, success, “you” */
-  --yellow: #ffc13f;    /* warnings, headings, inline code */
-  --red: #ff877b;
-  --cyan: #7bdff4;
-  --orange: #ffa25c;
-  --purple: #fba7ff;
+  /* Terminal color roles — Everforest palette */
+  --blue: #7fbbb3;      /* accent: links, dirs, selection */
+  --green: #a7c080;     /* prompt, success, “you” */
+  --yellow: #dbbc7f;    /* warnings, headings, inline code */
+  --red: #e67e80;
+  --cyan: #83c092;
+  --orange: #e69875;
+  --purple: #d699b6;
 
-  --term-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
-  --code-bg: rgba(255, 255, 255, 0.08);
+  --selection: #425047; /* bg_green */
+  --term-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 14px 34px rgba(0, 0, 0, 0.35);
+  --code-bg: #343f44;   /* bg1 */
   --page-bg: var(--bg);
 }
 
-/* --- Adwaita light --- */
+/* --- Everforest light (medium) --- */
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #fafafb;        /* window_bg_color */
-  --panel: #ffffff;     /* view_bg_color */
-  --panel2: #ebebed;    /* sidebar / headerbar shade */
-  --border: rgba(0, 0, 6, 0.15);
-  --text: #2e2e32;      /* window_fg_color */
-  --muted: #707072;     /* dim label: black @ 55% */
+  --bg: #f4f0d9;        /* bg1 */
+  --panel: #fdf6e3;     /* bg0 */
+  --panel2: #efebd4;    /* bg2 */
+  --border: #e6e2cc;    /* bg3 */
+  --text: #5c6a72;      /* fg */
+  --muted: #616e75;
 
-  --blue: #007943;
-  --green: #007c3d;
-  --yellow: #905400;
-  --red: #c30000;
-  --cyan: #007184;
-  --orange: #b12e00;
-  --purple: #8939a4;
+  /* Everforest light accents, darkened for readable body text */
+  --blue: #2a6c90;
+  --green: #5e6c01;
+  --yellow: #845e00;
+  --red: #b33d3b;
+  --cyan: #247254;
+  --orange: #9d5018;
+  --purple: #9a4880;
 
-  --term-shadow: 0 0 0 1px rgba(0, 0, 6, 0.05), 0 8px 24px rgba(0, 0, 6, 0.12);
-  --code-bg: rgba(0, 0, 6, 0.06);
+  --selection: #f0f1d2; /* bg_green */
+  --term-shadow: 0 0 0 1px rgba(92, 106, 114, 0.08), 0 10px 26px rgba(92, 106, 114, 0.14);
+  --code-bg: #efebd4;   /* bg2 */
   --page-bg: var(--bg);
 }
 

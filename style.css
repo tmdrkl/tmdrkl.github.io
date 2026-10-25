@@ -1,8 +1,8 @@
 /* ===========================
-   drkl.net — Adwaita terminal theme
+   drkl.net — Everforest terminal theme
    Color tokens live in theme-tokens.css (shared with stats.html/404.html).
-   Uses stock Adwaita window surfaces, 12px radius and Adwaita Mono, with
-   the green accent color standing in for the usual Adwaita blue.
+   Keeps Adwaita geometry (window surfaces, 12px radius, Adwaita Mono) and
+   paints it with sainnhe's Everforest palette.
    =========================== */
 
 /* --- Base --- */
@@ -147,7 +147,7 @@ footer.site a:hover { color: var(--blue); }
 }
 #screen::-webkit-scrollbar { width: 8px; }
 #screen::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-::selection { background: color-mix(in srgb, var(--blue) 30%, transparent); color: var(--text); }
+::selection { background: var(--selection, color-mix(in srgb, var(--blue) 30%, transparent)); color: var(--text); }
 
 /* --- Terminal text --- */
 .row { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; max-width: 100%; }

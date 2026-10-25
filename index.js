@@ -1,4 +1,4 @@
-import { THEMES, getTheme, setTheme, themeRainBurst } from './theme.js?v=6';
+import { THEMES, getTheme, setTheme, themeRainBurst } from './theme.js?v=7';
 
 // ── DOM ──────────────────────────────────────────────
 const log       = document.getElementById('log');

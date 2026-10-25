@@ -14,7 +14,7 @@ A terminal-style landing page with a built-in AI chatbot.
 - **Blog** — bilingual posts (EN + ID), `blog` to list, `read <n|name>` to read
 - **Tic-tac-toe** — `tictactoe` / `ttt` vs AI, clickable board, persistent score
 - **Dashboard** — `dashboard` opens the visual stats dashboard (`stats.html`)
-- **Theme** — dark/light Adwaita theme with a green accent, follows system preference, animated switch + `theme` command
+- **Theme** — dark/light Everforest theme, follows system preference, animated switch + `theme` command
 - **Tab autocomplete** — command and path completion with suggestion popup
 - **History** — command history persists across sessions (`localStorage`, last 200)
 - **Username** — per-visitor name (`username <name>`, saved in this browser)
@@ -97,7 +97,7 @@ A terminal-style landing page with a built-in AI chatbot.
 | `index.html` | Terminal page markup |
 | `index.js` | Virtual filesystem, commands, chat mode, editor, games |
 | `style.css` | Terminal styles |
-| `theme-tokens.css` | Shared Adwaita theme tokens (terminal + dashboard) |
+| `theme-tokens.css` | Shared Everforest theme tokens (terminal + dashboard) |
 | `theme.js` | Theme read/write, toggle button, rain-burst effect |
 | `stats.html` | Usage dashboard (owner) |
 | `404.html` | Custom not-found page |
@@ -108,7 +108,7 @@ A terminal-style landing page with a built-in AI chatbot.
 ## Stack
 
 - Vanilla HTML/CSS/JS (no frameworks)
-- Adwaita color theme with a green accent (dark/light)
+- Everforest color theme (dark/light)
 - Groq API for AI responses via Cloudflare Worker
 - Cloudflare Durable Objects for chat usage tracking
 - Hosted on GitHub Pages
