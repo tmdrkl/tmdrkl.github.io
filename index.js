@@ -1,4 +1,4 @@
-import { THEMES, getTheme, setTheme, themeRainBurst } from './theme.js?v=4';
+import { THEMES, getTheme, setTheme, themeRainBurst } from './theme.js?v=5';
 
 // ── DOM ──────────────────────────────────────────────
 const log       = document.getElementById('log');
@@ -774,31 +774,20 @@ const ASCII_LOGO = [
   "       █",
 ];
 
-// True on phones/tablets and whenever the terminal is too narrow for
-// the ASCII art + info column layout. Touch devices always stack so the
-// output stays readable in both portrait and landscape.
-function fastfetchShouldStack(maxAsciiWidth, maxInfoWidth) {
-  try {
-    if (window.innerWidth < 600) return true;
-    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
-    const screenEl = document.getElementById('screen');
-    const available = (screenEl ? screenEl.clientWidth : window.innerWidth) - 24;
-    // Rough monospace advance at 13px JetBrains Mono (plus a safety margin).
-    const needed = (maxAsciiWidth + 2 + maxInfoWidth) * 7.8;
-    return available < needed;
-  } catch {
-    return window.innerWidth < 600;
-  }
+// Pick a font size that keeps the logo + info side by side at any width.
+// Desktop runs at the full 13px; narrow phones shrink only as much as needed
+// (never below 9px, where `pre` can scroll horizontally instead).
+function fastfetchFontSize(cols) {
+  const width = (screen && screen.clientWidth) || window.innerWidth || 360;
+  const available = Math.max(180, width - 40); // #screen + pre padding
+  const size = available / (cols * 0.62);      // monospace advance ≈ 0.6em
+  return Math.max(9, Math.min(13, Math.floor(size * 10) / 10));
 }
 
 function renderFastfetch(ascii, info) {
   const maxAsciiWidth = Math.max(...ascii.map(l => l.length));
   const maxInfoWidth = Math.max(...info.map(l => l.replace(/<[^>]*>/g, '').length));
-
-  if (fastfetchShouldStack(maxAsciiWidth, maxInfoWidth)) {
-    const art = ascii.map((l, i) => `<span class="ascii-line-${i}">${l}</span>`).join('\n');
-    return art + '\n' + info.join('\n');
-  }
+  const cols = maxAsciiWidth + 2 + maxInfoWidth;
 
   const paddedAscii = ascii.map((l, i) => `<span class="ascii-line-${i}">${l}</span>` + ' '.repeat(maxAsciiWidth - l.length));
   const maxLines = Math.max(paddedAscii.length, info.length);
@@ -808,7 +797,7 @@ function renderFastfetch(ascii, info) {
     const right = info[i] || '';
     lines.push(`${left}  ${right}`);
   }
-  return lines.join('\n');
+  return `<pre class="fastfetch" style="font-size:${fastfetchFontSize(cols)}px">${lines.join('\n')}</pre>`;
 }
 
 function treeWalk(node, prefix, lines, depth) {
@@ -1671,7 +1660,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
       ...(mem ? [`<span class="blue">Memory</span>: ${mem}`] : []),
       `<span class="blue">Theme</span>: ${getTheme()}`,
     ];
-    print(`<pre class="fastfetch">${renderFastfetch(asciiArt, infoLines)}</pre>`);
+    print(renderFastfetch(asciiArt, infoLines));
   },
 
   async fetch() {
@@ -1708,7 +1697,7 @@ Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
           `<span class="blue">Browser</span>: ${browserName()}`,
           `<span class="blue">Theme</span>: ${getTheme()}`,
         ];
-        print(`<pre class="fastfetch">${renderFastfetch(asciiArt, infoLines)}</pre>`);
+        print(renderFastfetch(asciiArt, infoLines));
         return;
       }
     } catch (e) {
@@ -2435,38 +2424,62 @@ document.getElementById('term').addEventListener('click', (e) => {
 });
 
 // ── Mobile keyboard / viewport handling ──
-// visualViewport shrinks when the on-screen keyboard opens — keep the latest
-// output visible without relying on fragile 100dvh - Npx hacks.
+// The soft keyboard overlays the page on iOS Safari (and, without
+// interactive-widget=resizes-content, on Android). Track the visualViewport so
+// the app shrinks to the visible area and the terminal scrolls its input into
+// view instead of hiding content behind the keyboard.
 const mobileKeys = document.querySelector('.mobile-keys');
+const rootEl = document.documentElement;
+let vvT = null;
+
+function isMobileLayout() {
+  return coarsePointer || window.innerWidth <= 480;
+}
+
 function placeMobileKeys() {
-  if (!mobileKeys) return;
-  // Desktop with a physical keyboard has no toolbar — leave it alone.
-  if (!coarsePointer && window.innerWidth > 480) { mobileKeys.style.bottom = ''; return; }
+  if (!isMobileLayout()) {
+    rootEl.style.removeProperty('--app-height');
+    if (mobileKeys) mobileKeys.style.bottom = '';
+    return;
+  }
   try {
     const vv = window.visualViewport;
     if (!vv) return;
+    // CSS uses this to size body/wrap to the area the user can actually see.
+    rootEl.style.setProperty('--app-height', Math.round(vv.height) + 'px');
+    if (!mobileKeys) return;
     // Overlay keyboards (iOS Safari) don't resize the layout viewport, so the
     // fixed toolbar would sit behind the keyboard — lift it by the overlap.
     const kb = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
     mobileKeys.style.bottom = kb + 'px';
   } catch {}
 }
+
+function keepInputVisible() {
+  // The input lives at the bottom of the scrollback; if it is focused (or the
+  // user was already at the bottom), keep it above the keyboard.
+  if (document.activeElement === input || isNearBottom()) {
+    screen.scrollTop = screen.scrollHeight;
+  }
+}
+
 if (window.visualViewport) {
-  let vvT = null;
   window.visualViewport.addEventListener('resize', () => {
+    placeMobileKeys();
     clearTimeout(vvT);
-    vvT = setTimeout(() => {
-      placeMobileKeys();
-      if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
-    }, 50);
+    vvT = setTimeout(keepInputVisible, 50);
   });
   window.visualViewport.addEventListener('scroll', placeMobileKeys);
 }
+window.addEventListener('resize', placeMobileKeys);
+window.addEventListener('orientationchange', () => setTimeout(placeMobileKeys, 200));
+placeMobileKeys();
+
 input.addEventListener('focus', () => {
   placeMobileKeys();
   setTimeout(() => {
     placeMobileKeys();
-    if (isNearBottom()) screen.scrollTop = screen.scrollHeight;
+    keepInputVisible();
   }, 150);
 });
 
@@ -2518,10 +2531,4 @@ refreshPrompt();
 refreshTitle();
 loadChatModels();
 
-// ── Theme toggle ─────────────────────────────────────
-document.getElementById('themeToggle').addEventListener('click', () => {
-  const cur  = getTheme();
-  const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
-  setTheme(next);
-  themeRainBurst(next);
-});
+// ── Theme toggle is wired up in theme.js (shared by every page) ──

@@ -435,20 +435,27 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
     padding: 0;
     font-size: 14px;
     align-items: stretch;
-    min-height: 100vh;
-    min-height: 100dvh;
+    /* --app-height tracks the visible area while the soft keyboard is open
+       (set from visualViewport in index.js). Falls back to dvh elsewhere. */
+    height: 100vh;
+    height: 100dvh;
+    height: var(--app-height, 100dvh);
+    min-height: 0;
+    overflow: hidden;
   }
   .wrap {
     max-width: 100%;
     flex: 1;
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     min-width: 0;
     /* Clear the minimal key toolbar so nothing hides behind it. */
     padding-bottom: calc(52px + env(safe-area-inset-bottom));
   }
+  header.site,
+  footer.site { flex-shrink: 0; }
   header.site {
     padding: 8px 12px 0;
     padding-top: max(8px, env(safe-area-inset-top));
@@ -529,6 +536,19 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
   /* Key toolbar is shown on tablets too — keep content clear of it. */
   body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
   .mobile-keys { display: flex; }
+}
+
+@media (pointer: coarse) {
+  /* Same visible-viewport sizing on tablets: the terminal shrinks with the
+     soft keyboard instead of letting its bottom slide underneath it. */
+  body {
+    height: var(--app-height, 100dvh);
+    min-height: 0;
+    overflow: hidden;
+  }
+  .wrap { min-height: 0; height: 100%; }
+  .term { flex: 1; min-height: 0; }
+  #screen { height: auto; max-height: none; min-height: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

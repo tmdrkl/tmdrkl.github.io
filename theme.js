@@ -24,6 +24,14 @@ export function setTheme(t) {
   if (meta) meta.content = THEME_META[t] || '#081512';
 }
 
+export function cycleTheme() {
+  const cur = getTheme();
+  const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+  setTheme(next);
+  themeRainBurst(next);
+  return next;
+}
+
 export function themeRainBurst(theme) {
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const c = document.createElement('canvas');
@@ -57,5 +65,8 @@ export function themeRainBurst(theme) {
   })();
 }
 
-// Init theme immediately
+// Init theme immediately, and wire up the toggle on every page that has one.
 setTheme(getTheme());
+
+const toggle = document.getElementById('themeToggle');
+if (toggle) toggle.addEventListener('click', cycleTheme);
