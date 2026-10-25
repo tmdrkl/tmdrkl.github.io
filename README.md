@@ -26,7 +26,7 @@ A terminal-style landing page with a built-in AI chatbot.
 |---------|-------------|
 | `help` | List available commands (`help <cmd>` for one) |
 | `about` | A bit about me |
-| `links` | Contact info & GitHub |
+| `links` | Contact info (GitHub, Telegram, Discord, email) |
 | `fastfetch` | System info in fastfetch style |
 | `fetch` | System info with geo/IP (via Cloudflare edge) |
 | `banner` | Display the drkl logo |

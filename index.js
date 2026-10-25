@@ -33,7 +33,7 @@ function browserName() {
 // ── Virtual FS ───────────────────────────────────────
 const BASE_FS = {
   'about.txt': 'Tomi — likes everything new and fun.',
-  'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nEmail: to@drkl.net',
+  'links.txt': 'GitHub: https://github.com/tmdrkl\nTelegram: https://t.me/tmdrkl\nDiscord: https://discord.com/users/1324026778104107070\nEmail: to@drkl.net',
   'README.md': '# drkl.net\n\nA terminal with a built-in AI chat.\nType chat to start talking to the AI.',
   'projects': {
     'terminal': 'This is it — the web terminal you are using right now.',
@@ -1632,6 +1632,7 @@ const commands = {
   links() {
     print(`GitHub: <a href="https://github.com/tmdrkl" target="_blank">github.com/tmdrkl</a>
 Telegram: <a href="https://t.me/tmdrkl" target="_blank">@tmdrkl</a>
+Discord: <a href="https://discord.com/users/1324026778104107070" target="_blank">discord</a>
 Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
   },
 
