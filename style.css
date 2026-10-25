@@ -1,9 +1,8 @@
 /* ===========================
-   drkl.net — neon terminal theme
+   drkl.net — Adwaita terminal theme
    Color tokens live in theme-tokens.css (shared with stats.html/404.html).
-   Keeps Adwaita geometry (window surfaces, 12px radius, Adwaita Mono first)
-   but recolors it from the banner: green-black glass, lime accent, acid
-   yellow highlights, soft terminal glow.
+   Uses stock Adwaita window surfaces, 12px radius and Adwaita Mono, with
+   the green accent color standing in for the usual Adwaita blue.
    =========================== */
 
 /* --- Base --- */
@@ -58,7 +57,6 @@ body {
   min-height: 100dvh;
   overflow-x: hidden;
   max-width: 100vw;
-  /* Banner-derived ambience: green wash from above, acid haze bottom-right. */
   background: var(--page-bg, var(--bg));
 }
 .wrap {
@@ -69,7 +67,7 @@ body {
   min-height: fit-content;
 }
 a { color: var(--blue); transition: color .15s; }
-a:hover { filter: brightness(1.2); }
+a:hover { text-decoration: underline; }
 
 /* --- Header --- */
 .site {
@@ -82,11 +80,6 @@ header.site { margin-bottom: 14px; }
 footer.site { margin-top: 14px; justify-content: center; gap: 18px; }
 .site .brand { color: var(--text); font-weight: 700; font-size: 15px; }
 .site .brand .dim { color: var(--muted); font-weight: 400; }
-[data-theme="dark"] .site .brand {
-  color: var(--blue);
-  text-shadow: 0 0 18px rgba(163, 240, 90, 0.32);
-}
-[data-theme="dark"] .site .brand .dim { color: var(--muted); text-shadow: none; }
 .site nav { display: flex; gap: 16px; align-items: center; }
 .site nav a { color: var(--muted); font-size: 13px; text-decoration: none; }
 .site nav a:hover { color: var(--blue); }
@@ -154,12 +147,11 @@ footer.site a:hover { color: var(--blue); }
 }
 #screen::-webkit-scrollbar { width: 8px; }
 #screen::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-::selection { background: var(--blue); color: var(--bg); }
+::selection { background: color-mix(in srgb, var(--blue) 30%, transparent); color: var(--text); }
 
 /* --- Terminal text --- */
 .row { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; max-width: 100%; }
 .prompt { color: var(--green); }
-[data-theme="dark"] .prompt { text-shadow: 0 0 12px rgba(94, 240, 138, 0.32); }
 .cmd { color: var(--text); }
 .muted { color: var(--muted); }
 .err { color: var(--red); }
@@ -170,9 +162,6 @@ pre { margin: 0 0 4px; font-family: inherit; font-size: 12px; line-height: 1.25;
 pre.fastfetch { font-size: 13px; line-height: 1.4; }
 
 /* Fastfetch ASCII art coloring */
-[data-theme="dark"] pre.fastfetch {
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
-}
 /* Green → yellow ramp, one step per ASCII line */
 pre.fastfetch .ascii-line-0  { color: color-mix(in srgb, var(--yellow) 0%,     var(--green)); }
 pre.fastfetch .ascii-line-1  { color: color-mix(in srgb, var(--yellow) 9.09%,  var(--green)); }
@@ -427,7 +416,7 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
 .ttt-cell.x { color: var(--green); cursor: default; }
 .ttt-cell.o { color: var(--blue); cursor: default; }
 .ttt-cell:disabled { cursor: default; }
-.ttt-cell.win { border-color: var(--green); box-shadow: 0 0 10px var(--green); }
+.ttt-cell.win { border-color: var(--green); box-shadow: inset 0 0 0 2px var(--green); }
 
 /* --- Mobile --- */
 @media (max-width: 480px) {

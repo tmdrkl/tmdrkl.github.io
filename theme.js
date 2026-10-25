@@ -1,5 +1,5 @@
 export const THEMES = ['dark', 'light'];
-export const THEME_META = { dark: '#081512', light: '#f3faf2' };
+export const THEME_META = { dark: '#222226', light: '#fafafb' };
 
 export function getTheme() {
   const v = localStorage.getItem('drkl_theme');
@@ -21,7 +21,7 @@ export function setTheme(t) {
     setTimeout(() => btn.classList.remove('switching'), 420);
   }
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = THEME_META[t] || '#081512';
+  if (meta) meta.content = THEME_META[t] || '#222226';
 }
 
 export function cycleTheme() {
@@ -44,8 +44,8 @@ export function themeRainBurst(theme) {
   const fs = 14;
   const cols = Math.floor(c.width / fs);
   const drops = Array.from({ length: cols }, () => Math.random() * -30);
-  const bg = theme === 'light' ? 'rgba(243,250,242,0.12)' : 'rgba(8,21,18,0.12)';
-  const fg = theme === 'light' ? 'rgba(28,122,75,0.85)' : 'rgba(163,240,90,0.85)';
+  const bg = theme === 'light' ? 'rgba(250,250,251,0.12)' : 'rgba(34,34,38,0.12)';
+  const fg = theme === 'light' ? 'rgba(0,121,67,0.85)' : 'rgba(120,233,171,0.85)';
   const t0 = performance.now();
   (function frame() {
     ctx.fillStyle = bg;

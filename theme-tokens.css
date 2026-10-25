@@ -1,60 +1,57 @@
 /* ===========================
-   drkl.net — shared theme tokens (neon terminal)
+   drkl.net — shared theme tokens (Adwaita, green accent)
    Loaded by index.html, stats.html and 404.html so all pages stay in sync.
-   Palette sampled from the site banner: deep green-black surfaces, lime
-   accents and acid-yellow highlights. Surfaces keep the Adwaita geometry
-   (window/view/headerbar/sidebar); colors follow the artwork instead of
-   the stock Adwaita blue.
+   Surfaces follow libadwaita's stock Adwaita window/view/headerbar colors and
+   the accent family uses Adwaita's green accent (#26a269) instead of blue.
    Token names (--blue, --green, …) are kept as terminal color roles so the
-   renderer in index.js keeps working; only the values change.
-   Light mode is a daylight variant: mint paper with forest-green accents.
+   renderer in index.js keeps working; --blue is the green accent role.
    =========================== */
 
-/* --- Neon dark --- */
+/* --- Adwaita dark --- */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #081512;
-  --panel: #0c1f1a;
-  --panel2: #113029;
-  --border: rgba(134, 255, 180, 0.18);
-  --text: #e9fff2;
-  --muted: #8fb8a2;
-  --blue: #a3f05a;   /* accent: links, dirs, selection */
-  --green: #5ef08a;  /* prompt, success, “you” */
-  --yellow: #eaf54a; /* warnings, headings, inline code */
-  --red: #ff6f61;
-  --cyan: #63f0d8;
-  --orange: #ffb15c;
-  --purple: #e08cff;
-  --term-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 44px rgba(94, 240, 138, 0.13);
-  --code-bg: rgba(134, 255, 180, 0.09);
-  --page-bg:
-    radial-gradient(1100px 560px at 50% -12%, rgba(126, 255, 130, 0.10), transparent 66%),
-    radial-gradient(820px 460px at 92% 108%, rgba(234, 245, 74, 0.055), transparent 62%),
-    var(--bg);
+  --bg: #222226;        /* window_bg_color */
+  --panel: #1d1d20;     /* view_bg_color */
+  --panel2: #2e2e32;    /* headerbar / sidebar */
+  --border: rgba(255, 255, 255, 0.15);
+  --text: #ffffff;      /* window_fg_color */
+  --muted: #9a9a9e;     /* dim label: white @ 55% */
+
+  /* Terminal color roles — Adwaita palette, green accent */
+  --blue: #78e9ab;      /* accent: links, dirs, selection */
+  --green: #8ff0a4;     /* prompt, success, “you” */
+  --yellow: #ffc13f;    /* warnings, headings, inline code */
+  --red: #ff877b;
+  --cyan: #7bdff4;
+  --orange: #ffa25c;
+  --purple: #fba7ff;
+
+  --term-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
+  --code-bg: rgba(255, 255, 255, 0.08);
+  --page-bg: var(--bg);
 }
 
-/* --- Neon light --- */
+/* --- Adwaita light --- */
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f3faf2;
-  --panel: #ffffff;
-  --panel2: #e4f1e2;
-  --border: rgba(15, 50, 30, 0.16);
-  --text: #0f241a;
-  --muted: #4f6b5b;
-  --blue: #1c7a4b;
-  --green: #1e7a3c;
-  --yellow: #7e6600;
-  --red: #b3261e;
-  --cyan: #0a6b5e;
-  --orange: #a35400;
-  --purple: #7a3b9e;
-  --term-shadow: 0 20px 50px rgba(20, 60, 35, 0.12);
-  --code-bg: rgba(15, 60, 35, 0.06);
-  --page-bg:
-    radial-gradient(900px 480px at 50% -12%, rgba(60, 160, 90, 0.10), transparent 66%),
-    var(--bg);
+  --bg: #fafafb;        /* window_bg_color */
+  --panel: #ffffff;     /* view_bg_color */
+  --panel2: #ebebed;    /* sidebar / headerbar shade */
+  --border: rgba(0, 0, 6, 0.15);
+  --text: #2e2e32;      /* window_fg_color */
+  --muted: #707072;     /* dim label: black @ 55% */
+
+  --blue: #007943;
+  --green: #007c3d;
+  --yellow: #905400;
+  --red: #c30000;
+  --cyan: #007184;
+  --orange: #b12e00;
+  --purple: #8939a4;
+
+  --term-shadow: 0 0 0 1px rgba(0, 0, 6, 0.05), 0 8px 24px rgba(0, 0, 6, 0.12);
+  --code-bg: rgba(0, 0, 6, 0.06);
+  --page-bg: var(--bg);
 }
 
 /* Fallback if data-theme never gets applied (e.g. scripts blocked) */
