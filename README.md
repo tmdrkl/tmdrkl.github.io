@@ -4,6 +4,8 @@ A terminal-style landing page with a built-in AI chatbot.
 
 ## Features
 
+- **Landing screen** — ASCII wordmark, one-line pitch, one primary action (`chat`), and quiet shortcuts (`help`, `about`, `blog`, `links`) so nothing has to be typed to get started; returning visitors get the short version
+- **AI chat button** — the `ai chat` pill in the header jumps straight into chat mode
 - **Terminal** — interactive shell with `ls`, `cd`, `cat`, `tree`, `fastfetch`, `fetch`, and more
 - **Virtual filesystem** — `mkdir`, `touch`, `rm`, `echo >`/`>>`, and an in-terminal `edit` editor (changes persist in `localStorage`)
 - **AI Chat** — type `chat` to enter chat mode, powered by Groq via Cloudflare Worker

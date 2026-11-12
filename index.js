@@ -7,6 +7,7 @@ const input     = document.getElementById('cmdInput');
 const promptEl  = document.getElementById('prompt');
 const titleText = document.getElementById('titleText');
 const loadTime  = Date.now();
+const INPUT_PLACEHOLDER = 'type a command — try help';
 
 // ── Helpers ──────────────────────────────────────────
 function print(html, cls) {
@@ -605,7 +606,7 @@ function closeEditor(saved) {
   editorLines = [];
   editorCursor = 0;
   editorStart = 0;
-  input.placeholder = '';
+  input.placeholder = INPUT_PLACEHOLDER;
   input.setAttribute('aria-label', 'Terminal command');
   input.style.background = 'transparent';
   print('<span class="ok">─'.repeat(50) + '</span>');
@@ -858,6 +859,7 @@ function enterChatMode() {
   lastPrompt = '';
   trimNoticeShown = false;
   promptEl.textContent = 'you>';
+  input.placeholder = 'ask anything';
   titleText.textContent = 'chat mode — /exit to leave';
   print('');
   const cmds = [
@@ -881,6 +883,7 @@ function enterChatMode() {
 function exitChatMode() {
   chatMode = false;
   chatHistory = [];
+  input.placeholder = INPUT_PLACEHOLDER;
   refreshPrompt();
   refreshTitle();
   print('<span class="muted">── exited chat mode ──</span>');
@@ -2489,11 +2492,65 @@ const SEEN_INTRO = 'drkl_seen_intro';
 let hasSeenIntro = false;
 try { hasSeenIntro = localStorage.getItem(SEEN_INTRO) === '1'; } catch {}
 
-const BOOT_LINES = [
-  'Welcome to <span class="ok">drkl.net</span>.',
-  `<span class="muted">drklOS 1.0.0 — drkl-sh shell · ${getTheme()} theme</span>`,
-  'Type <span class="ok">help</span> for commands. Type <span class="ok">chat</span> to talk to AI.',
+// ── Landing screen ───────────────────────────────────
+// One obvious thing to do first (talk to the AI), then the commands that
+// answer "what else is in here" — quiet, so the hero never turns into a menu.
+const PRIMARY_ACTION = ['chat', 'start a conversation with the AI'];
+const SHORTCUTS = [
+  ['help', 'list every command'],
+  ['about', 'who runs this'],
+  ['blog', 'read the posts'],
+  ['links', 'contact info'],
 ];
+
+// Run a line exactly as if it had been typed and submitted.
+function runCommandLine(line) {
+  if (editorMode || sudoPw) return;
+  input.focus({ preventScroll: true });
+  input.value = line;
+  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+}
+
+function shortcutButton([cmd, desc], cls) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'qa' + (cls ? ' ' + cls : '');
+  b.textContent = cmd;
+  b.title = desc;
+  b.setAttribute('aria-label', `${cmd} — ${desc}`);
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    finishBoot();
+    runCommandLine(cmd);
+  });
+  return b;
+}
+
+let shortcutsShown = false;
+function printShortcuts() {
+  if (shortcutsShown) return;
+  shortcutsShown = true;
+  const row = document.createElement('div');
+  row.className = 'row quick-actions';
+  row.appendChild(shortcutButton(PRIMARY_ACTION, 'qa-primary'));
+  const or = document.createElement('span');
+  or.className = 'qa-or';
+  or.textContent = 'or';
+  row.appendChild(or);
+  SHORTCUTS.forEach(item => row.appendChild(shortcutButton(item)));
+  log.appendChild(row);
+  screen.scrollTop = screen.scrollHeight;
+}
+
+const PITCH_STEPS = [
+  () => print(`<pre class="boot-logo" aria-hidden="true">${figlet('drkl')}</pre>`),
+  () => print('Tomi\'s corner of the web — a terminal you can actually use.'),
+];
+const KEY_HINT = () => print('<span class="muted hint-keys">↑↓ history · tab autocompletes · ctrl+l clears</span>');
+// Returning visitors already know what this is: skip the hero, keep the actions.
+const BOOT_STEPS = hasSeenIntro
+  ? [() => print('Welcome back. <span class="muted">Type <span class="ok">help</span> for everything.</span>'), printShortcuts, KEY_HINT]
+  : [...PITCH_STEPS, printShortcuts, KEY_HINT];
 
 let bootDone = false;
 let bootTimers = [];
@@ -2504,28 +2561,40 @@ function finishBoot() {
   bootDone = true;
   bootTimers.forEach(clearTimeout);
   bootTimers = [];
-  for (let i = bootIdx; i < BOOT_LINES.length; i++) print(BOOT_LINES[i]);
+  for (let i = bootIdx; i < BOOT_STEPS.length; i++) BOOT_STEPS[i]();
+  bootIdx = BOOT_STEPS.length;
   try { localStorage.setItem(SEEN_INTRO, '1'); } catch {}
 }
 
+input.placeholder = INPUT_PLACEHOLDER;
+
 if (reducedMotion || hasSeenIntro) {
-  bootDone = true;
-  BOOT_LINES.forEach(print);
-  try { localStorage.setItem(SEEN_INTRO, '1'); } catch {}
+  finishBoot();
 } else {
-  BOOT_LINES.forEach((html, i) => {
+  BOOT_STEPS.forEach((step, i) => {
     bootTimers.push(setTimeout(() => {
       bootIdx = i + 1;
-      print(html);
-      if (i === BOOT_LINES.length - 1) {
+      step();
+      if (i === BOOT_STEPS.length - 1) {
         bootDone = true;
         bootTimers = [];
         try { localStorage.setItem(SEEN_INTRO, '1'); } catch {}
       }
-    }, 120 + i * 240));
+    }, 120 + i * 200));
   });
   ['keydown', 'click', 'touchstart'].forEach(ev =>
     document.addEventListener(ev, finishBoot, { once: true, passive: true }));
+}
+
+// Header shortcut to the flagship feature, since `chat` is otherwise discoverable
+// only by reading the welcome text.
+const chatCta = document.getElementById('chatCta');
+if (chatCta) {
+  chatCta.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (chatMode) input.focus({ preventScroll: true });
+    else runCommandLine('chat');
+  });
 }
 
 refreshPrompt();
