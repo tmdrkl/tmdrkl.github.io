@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
   <link rel="stylesheet" href="theme-tokens.css?v=6">
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="style.css?v=26">
   <script>
     (function () {
       try {
@@ -63,6 +63,7 @@
   <header class="site">
     <div class="brand">drkl<span class="dim">.net</span></div>
     <nav aria-label="Site controls">
+      <button class="chat-cta" id="chatCta" type="button">ai chat</button>
       <button class="theme-btn" id="themeToggle" type="button" aria-label="Switch to light theme"></button>
     </nav>
   </header>
@@ -78,7 +79,7 @@
         <div class="row" id="inputline">
           <span class="prompt" id="prompt">guest@drkl:~$</span>
           <div class="inputwrap">
-            <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" enterkeyhint="send" autofocus aria-label="Terminal command">
+            <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" enterkeyhint="send" autofocus placeholder="type a command — try help" aria-label="Terminal command">
             <span id="suggest" aria-hidden="true"></span>
           </div>
         </div>
@@ -106,6 +107,6 @@
   </div>
 </div>
 
-<script type="module" src="index.js?v=36"></script>
+<script type="module" src="index.js?v=38"></script>
 </body>
 </html>

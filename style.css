@@ -87,6 +87,86 @@ footer.site a { color: var(--muted); font-size: 13px; text-decoration: none; }
 footer.site a:hover { color: var(--blue); }
 .sep { color: var(--border); }
 
+/* Header shortcut into AI chat — the feature people would otherwise have to
+   discover by typing. */
+.chat-cta {
+  font: inherit; font-size: 12px; letter-spacing: .04em;
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 40%, transparent);
+  border-radius: 999px;
+  padding: 4px 12px 5px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.chat-cta:hover {
+  background: color-mix(in srgb, var(--green) 20%, transparent);
+  border-color: var(--green);
+  color: var(--green);
+}
+.chat-cta:active { transform: translateY(1px); }
+
+/* --- Landing screen: wordmark + quick actions --- */
+pre.boot-logo {
+  margin: 0 0 14px;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: .02em;
+  background: linear-gradient(165deg, var(--green), var(--yellow));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--green);
+  -webkit-text-fill-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  pre.boot-logo { -webkit-text-fill-color: currentColor; color: var(--green); }
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 16px 0 10px;
+}
+/* Secondary actions: quiet, command-shaped, so the primary one leads. */
+.qa {
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  background: transparent;
+  color: var(--blue);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 7px 8px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s, transform .1s;
+}
+.qa:hover { background: var(--panel2); color: var(--cyan); }
+.qa:active { transform: translateY(1px); }
+.qa-primary {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  border-color: color-mix(in srgb, var(--green) 45%, transparent);
+  padding: 9px 16px;
+}
+.qa-primary:hover {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 24%, transparent);
+  border-color: var(--green);
+}
+.qa-or { color: var(--muted); font-size: 12px; margin-left: 2px; }
+@media (pointer: coarse) {
+  .qa { padding: 9px 10px; }
+  .qa-primary { padding: 11px 18px; }
+  /* Keyboard hints are noise on a touch keyboard. */
+  .hint-keys { display: none; }
+}
+
 /* --- Theme button --- */
 .theme-btn {
   background: none; border: none; cursor: pointer; font-size: 18px;
@@ -270,10 +350,14 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
 /* --- Input lives inside the scrollback, like a real terminal --- */
 #inputbar {
   padding: 0;
+  margin-top: 4px;
   background: transparent;
   border: none;
 }
-#inputline { display: flex; align-items: center; gap: 6px; min-height: 1.45em; }
+/* The markup is indented; inherited pre-wrap from .row would render that
+   indentation as blank lines and leave a tall gap above the prompt. */
+#inputline { display: flex; align-items: center; gap: 6px; min-height: 1.45em; white-space: nowrap; }
+.inputwrap { white-space: normal; }
 #inputline .prompt {
   flex-shrink: 0;
   min-width: 0;
@@ -282,11 +366,12 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
   white-space: nowrap;
 }
 .inputwrap { position: relative; flex: 1; min-width: 0; overflow: hidden; }
-#cmdInput {
-  width: 100%; padding: 0; background: transparent; border: none; outline: none;
-  color: var(--text); font-family: inherit; font-size: 15px; caret-color: var(--blue);
-  position: relative; z-index: 1;
-}
+  #cmdInput {
+    width: 100%; padding: 0; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: inherit; font-size: 15px; caret-color: var(--blue);
+    position: relative; z-index: 1;
+  }
+  #cmdInput::placeholder { color: var(--muted); opacity: .65; }
 #suggest {
   position: absolute; left: 0; top: 0; bottom: 0; z-index: 0;
   display: flex; align-items: center;
@@ -485,6 +570,11 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
     border: none;
   }
   .mobile-keys { display: flex; }
+  pre.boot-logo { font-size: 26px; margin-bottom: 12px; }
+  .quick-actions { gap: 6px; margin: 12px 0 4px; }
+  .qa { font-size: 13px; padding: 9px 9px; }
+  .qa-primary { font-size: 14px; padding: 10px 16px; }
+  .chat-cta { font-size: 12px; padding: 6px 11px; min-height: 32px; }
   #cmdInput { font-size: 14px; padding: 8px 0; }
   #inputline { padding: 0; gap: 8px; font-size: 14px; }
   #inputline .prompt { max-width: 38vw; font-size: 14px; }
