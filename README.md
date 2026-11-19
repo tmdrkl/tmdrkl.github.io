@@ -1,6 +1,6 @@
 # drkl.net
 
-A terminal-style landing page with a built-in AI chatbot.
+A terminal-style landing page with a built-in AI chatbot and a private contact form.
 
 ## Features
 
@@ -111,7 +111,7 @@ A terminal-style landing page with a built-in AI chatbot.
 
 ## Contact setup
 
-The `contact` command posts to `POST /contact` on the same Cloudflare Worker as the chat. The Worker forwards it to Telegram, so the bot token never reaches the browser.
+The `contact` command posts to `POST /contact` on the same Cloudflare Worker as the chat ([tmdrkl/groq-chat](https://github.com/tmdrkl/groq-chat)). The Worker forwards the message to Telegram, so the bot token never reaches the browser.
 
 1. Create a bot with [@BotFather](https://t.me/BotFather), then send it any message.
 2. Find your chat ID at `https://api.telegram.org/bot<TOKEN>/getUpdates`.
@@ -120,16 +120,22 @@ The `contact` command posts to `POST /contact` on the same Cloudflare Worker as 
    npx wrangler secret put TELEGRAM_BOT_TOKEN
    npx wrangler secret put TELEGRAM_CHAT_ID
    ```
-4. Deploy: `npx wrangler deploy`.
+4. Deploy from `web/`: `npx wrangler deploy`.
 
-`MAX_CONTACTS_PER_DAY` (default `5`) sets the per-IP limit.
+`MAX_CONTACTS_PER_DAY` (default `5`) sets the per-IP limit. Deploy from the Cloudflare account that owns the `tomx13` workers.dev subdomain — logging in with a different account creates a separate Worker with a different URL.
+
+## Deployment
+
+- **Site** — push to `main`; GitHub Pages serves it at [drkl.net](https://www.drkl.net).
+- **Worker** — `cd ../groq-chat/web && npx wrangler deploy`.
 
 ## Stack
 
 - Vanilla HTML/CSS/JS (no frameworks)
 - Everforest color theme (dark/light)
 - Groq API for AI responses via Cloudflare Worker
-- Cloudflare Durable Objects for chat usage tracking
+- Telegram Bot API for contact delivery (bot token stays server-side)
+- Cloudflare Durable Objects for chat and contact rate limiting
 - Hosted on GitHub Pages
 
 ## License
