@@ -1419,6 +1419,7 @@ async function sendChatMessage(text, isRetry = false) {
 const HELP = {
   help:     'list available commands',
   about:    'a bit about me',
+  contact:  'message me directly — nothing is posted publicly',
   links:    'contacts & github',
   fastfetch:'system info in fastfetch style',
   fetch:    'system info with geo/IP (via Cloudflare edge)',
@@ -1451,6 +1452,83 @@ const HELP = {
   touch:    'create an empty file',
   edit:     'edit a file in the terminal text editor',
 };
+
+// ══════════════════════════════════════════════════════
+//  CONTACT MODE — send me a message without leaving the page
+// ══════════════════════════════════════════════════════
+const CONTACT_MAX_CHARS = 2000;
+const CONTACT_MIN_GAP_MS = 30 * 1000;
+
+let contactStep = null;    // null | 'message' | 'reply'
+let contactMessage = '';
+let contactBusy = false;
+let contactSentAt = 0;
+
+function contactPromptText() {
+  promptEl.textContent = contactStep === 'reply' ? 'reply>' : 'msg>';
+}
+
+function startContactReplyStep() {
+  contactStep = 'reply';
+  contactPromptText();
+  input.placeholder = 'email or handle so I can answer — optional, Enter to skip';
+  titleText.textContent = 'contact — where can I reply?';
+  print(`<span class="muted">Message ready (${contactMessage.length}/${CONTACT_MAX_CHARS} chars). Leave a way for me to answer, or press Enter to send without one.</span>`);
+}
+
+function enterContactMode() {
+  contactStep = 'message';
+  contactMessage = '';
+  contactPromptText();
+  input.placeholder = 'your message — Enter to continue, Esc to cancel';
+  titleText.textContent = 'contact — message me directly';
+  print('<div class="chat-welcome"><div class="chat-welcome-title">Message me</div><div class="muted">Nothing is posted publicly — it goes straight to me. Press Esc to cancel.</div></div>');
+}
+
+function endContactMode() {
+  contactStep = null;
+  contactMessage = '';
+  contactBusy = false;
+  input.placeholder = INPUT_PLACEHOLDER;
+  refreshPrompt();
+  refreshTitle();
+}
+
+function cancelContactMode() {
+  endContactMode();
+  print('<span class="muted">── message cancelled ──</span>');
+  print('');
+}
+
+async function sendContact(replyTo) {
+  if (contactBusy) return;
+  contactBusy = true;
+  input.placeholder = 'sending…';
+  print('<span class="muted">sending message…</span>');
+  try {
+    const res = await fetch(`${WORKER_URL}/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: contactMessage, replyTo, page: location.pathname }),
+    });
+    const data = await res.json().catch(() => ({}));
+    endContactMode();
+    if (res.ok) {
+      contactSentAt = Date.now();
+      print(`<span class="ok">Message sent.</span> <span class="muted">Thanks — I'll get back to you${replyTo ? ' at ' + esc(replyTo) : ''}.</span>`);
+    } else if (res.status === 429) {
+      print('<span class="err">Too many messages from this connection today.</span> <span class="muted">Try again tomorrow.</span>');
+    } else {
+      print(`<span class="err">Could not send: ${esc(data.error || 'something went wrong')}</span>`);
+      print(`<span class="muted">Try again with <span class="ok">contact</span>.</span>`);
+    }
+    print('');
+  } catch {
+    endContactMode();
+    print('<span class="err">Could not send: network error.</span> <span class="muted">Try again in a moment.</span>');
+    print('');
+  }
+}
 
 // ── Tic-tac-toe (you = X, AI = O) ────────────────────
 const TTT_LINES = [
@@ -1632,11 +1710,33 @@ const commands = {
 
   about()  { print('Tomi — likes everything new and fun.'); },
 
+  contact(args) {
+    if (Date.now() - contactSentAt < CONTACT_MIN_GAP_MS) {
+      print('<span class="muted">Just sent a message — give it a moment before sending another.</span>');
+      return;
+    }
+    const msg = args.join(' ').trim();
+    if (msg.length > CONTACT_MAX_CHARS) {
+      print(`contact: message is too long (max ${CONTACT_MAX_CHARS} characters)`, 'err');
+      return;
+    }
+    // `contact <message>` skips the first prompt; either way there is room to
+    // leave a reply address before it is sent.
+    if (msg) {
+      contactMessage = msg;
+      startContactReplyStep();
+    } else {
+      enterContactMode();
+    }
+    input.focus({ preventScroll: true });
+  },
+
   links() {
     print(`GitHub: <a href="https://github.com/tmdrkl" target="_blank">github.com/tmdrkl</a>
 Telegram: <a href="https://t.me/tmdrkl" target="_blank">@tmdrkl</a>
 Discord: <a href="https://discord.com/users/1324026778104107070" target="_blank">discord</a>
-Email: <a href="mailto:to@drkl.net">to@drkl.net</a>`);
+Email: <a href="mailto:to@drkl.net">to@drkl.net</a>
+Message me here: type <span class="ok">contact</span> — it goes straight to me, no account needed.`);
   },
 
   async fastfetch(args) {
@@ -2121,7 +2221,7 @@ function setInput(v) {
 }
 
 function renderSuggestion() {
-  if (chatMode || sudoPw) { suggestEl.textContent = ''; suggestEl.style.visibility = 'hidden'; return; }
+  if (chatMode || sudoPw || contactStep) { suggestEl.textContent = ''; suggestEl.style.visibility = 'hidden'; return; }
   const val = input.value;
   const m = getMatches(val);
   let suffix = '';
@@ -2266,6 +2366,35 @@ input.addEventListener('keydown', (e) => {
     }
     if (e.key === 'Tab' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); hideList(); return; }
     return; // printable keys + cursor movement go straight to the masked field
+  }
+
+  // ── contact composer (multi-step, free text) ──
+  if (contactStep) {
+    if (e.key === 'Escape' || (e.ctrlKey && e.key === 'c')) {
+      e.preventDefault();
+      input.value = '';
+      if (!contactBusy) cancelContactMode();
+      return;
+    }
+    if (e.ctrlKey && e.key === 'u') { e.preventDefault(); input.value = ''; return; }
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (contactBusy) return;
+    const text = input.value.trim();
+    if (contactStep === 'message') {
+      if (!text) { print('contact: write a message first', 'err'); return; }
+      if (text.length > CONTACT_MAX_CHARS) {
+        print(`contact: message is too long (max ${CONTACT_MAX_CHARS} characters)`, 'err');
+        return;
+      }
+      contactMessage = text;
+      input.value = '';
+      startContactReplyStep();
+      return;
+    }
+    input.value = '';
+    sendContact(text);
+    return;
   }
 
   // Ctrl combos
@@ -2592,8 +2721,19 @@ const chatCta = document.getElementById('chatCta');
 if (chatCta) {
   chatCta.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (contactStep) cancelContactMode();
     if (chatMode) input.focus({ preventScroll: true });
     else runCommandLine('chat');
+  });
+}
+
+const contactCta = document.getElementById('contactCta');
+if (contactCta) {
+  contactCta.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (contactStep) { input.focus({ preventScroll: true }); return; }
+    if (chatMode) exitChatMode();
+    runCommandLine('contact');
   });
 }
 

@@ -13,6 +13,7 @@ A terminal-style landing page with a built-in AI chatbot.
   - markdown + syntax-highlighted code blocks with a copy button
   - long chats keep the last 24 messages as context
   - 50 conversations per IP per 24h; owner PIN lifts the limit
+- **Direct message** — type `contact` (or use the header button) to send me a private message from the page; it arrives in Telegram and needs no account. 5 messages per IP per 24h.
 - **Blog** — bilingual posts (EN + ID), `blog` to list, `read <n|name>` to read
 - **Tic-tac-toe** — `tictactoe` / `ttt` vs AI, clickable board, persistent score
 - **Dashboard** — `dashboard` opens the visual stats dashboard (`stats.html`)
@@ -28,6 +29,7 @@ A terminal-style landing page with a built-in AI chatbot.
 |---------|-------------|
 | `help` | List available commands (`help <cmd>` for one) |
 | `about` | A bit about me |
+| `contact` | Send me a private message (`contact <message>` to skip the first prompt) |
 | `links` | Contact info (GitHub, Telegram, Discord, email) |
 | `fastfetch` | System info in fastfetch style |
 | `fetch` | System info with geo/IP (via Cloudflare edge) |
@@ -106,6 +108,21 @@ A terminal-style landing page with a built-in AI chatbot.
 | `CNAME` | Custom domain for GitHub Pages |
 | `robots.txt` / `sitemap.xml` | SEO / crawling |
 | `og.png` | Social preview image |
+
+## Contact setup
+
+The `contact` command posts to `POST /contact` on the same Cloudflare Worker as the chat. The Worker forwards it to Telegram, so the bot token never reaches the browser.
+
+1. Create a bot with [@BotFather](https://t.me/BotFather), then send it any message.
+2. Find your chat ID at `https://api.telegram.org/bot<TOKEN>/getUpdates`.
+3. In the Worker project, set the secrets:
+   ```
+   npx wrangler secret put TELEGRAM_BOT_TOKEN
+   npx wrangler secret put TELEGRAM_CHAT_ID
+   ```
+4. Deploy: `npx wrangler deploy`.
+
+`MAX_CONTACTS_PER_DAY` (default `5`) sets the per-IP limit.
 
 ## Stack
 

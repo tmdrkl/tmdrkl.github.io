@@ -106,6 +106,18 @@ footer.site a:hover { color: var(--blue); }
 }
 .chat-cta:active { transform: translateY(1px); }
 
+/* Quieter sibling of the AI pill — a direct line to me, not a social link. */
+.contact-cta {
+  background: none;
+  border-color: var(--border);
+  color: var(--muted);
+}
+.contact-cta:hover {
+  background: color-mix(in srgb, var(--blue) 12%, transparent);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
 /* --- Landing screen: wordmark + quick actions --- */
 pre.boot-logo {
   margin: 0 0 14px;
