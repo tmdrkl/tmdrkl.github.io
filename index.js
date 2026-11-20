@@ -16,7 +16,7 @@ const INPUT_PLACEHOLDER = window.matchMedia('(max-width: 480px)').matches
 // ── Helpers ──────────────────────────────────────────
 function print(html, cls) {
   const d = document.createElement('div');
-  d.className = 'row' + (cls ? ' ' + cls : '');
+  d.className = 'row output-arrive' + (cls ? ' ' + cls : '');
   d.innerHTML = html;
   log.appendChild(d);
   screen.scrollTop = screen.scrollHeight;

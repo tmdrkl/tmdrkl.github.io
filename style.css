@@ -301,6 +301,11 @@ pre.boot-logo {
 
 /* --- Terminal text --- */
 .row { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; max-width: 100%; }
+.row.output-arrive { animation: output-arrive 260ms cubic-bezier(.2,.75,.25,1) both; }
+@keyframes output-arrive {
+  from { opacity: 0; transform: translateY(5px); filter: blur(1px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
 .prompt { color: var(--green); }
 .cmd { color: var(--text); }
 .muted { color: var(--muted); }
@@ -701,6 +706,7 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .row.output-arrive { animation: none; }
   .theme-btn.switching { animation: none; }
   .theme-menu { animation: none; }
 }
