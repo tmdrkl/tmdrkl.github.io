@@ -401,10 +401,10 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
   right: 0;
   bottom: 0;
   z-index: 50;
-  padding: 6px 10px;
-  padding-left: max(10px, env(safe-area-inset-left));
-  padding-right: max(10px, env(safe-area-inset-right));
-  padding-bottom: max(6px, env(safe-area-inset-bottom));
+  padding: 4px 8px;
+  padding-left: max(8px, env(safe-area-inset-left));
+  padding-right: max(8px, env(safe-area-inset-right));
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
   background: var(--panel);
   border-top: 1px solid var(--border);
 }
@@ -538,42 +538,42 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
     flex-direction: column;
     min-width: 0;
     /* Clear the minimal key toolbar so nothing hides behind it. */
-    padding-bottom: calc(52px + env(safe-area-inset-bottom));
+    padding-bottom: calc(48px + env(safe-area-inset-bottom));
   }
   header.site,
   footer.site { flex-shrink: 0; }
   header.site {
-    padding: 8px 12px 0;
-    padding-top: max(8px, env(safe-area-inset-top));
-    padding-left: max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
-    margin-bottom: 8px;
+    padding: 6px 10px 0;
+    padding-top: max(6px, env(safe-area-inset-top));
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+    margin-bottom: 6px;
   }
   footer.site {
-    padding: 0 12px 8px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-    padding-left: max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
-    margin-top: 8px;
-    gap: 4px 12px;
+    padding: 0 10px 2px;
+    padding-bottom: max(2px, env(safe-area-inset-bottom));
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+    margin-top: 4px;
+    gap: 0 10px;
     flex-wrap: wrap;
   }
-  header.site nav { gap: 8px; }
+  header.site nav { gap: 6px; }
   .site .brand { font-size: 14px; }
-  .site nav a { font-size: 12px; padding: 4px 0; }
+  .site nav a { font-size: 12px; padding: 3px 0; }
   footer.site a { font-size: 12px; padding: 6px 0; }
   .theme-btn { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
   .term { flex: 1; min-height: 0; }
   #screen {
     flex: 1 1 auto;
     height: auto;
-    padding: 12px 12px 16px;
+    padding: 10px 10px 12px;
     min-height: 0;
     max-height: none;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
-  .titlebar { padding: 8px 12px; flex-shrink: 0; }
+  .titlebar { padding: 6px 10px; flex-shrink: 0; }
   .titlebar span { display: inline; font-size: 11px; }
   .dot { width: 9px; height: 9px; }
   #inputbar {
@@ -582,41 +582,41 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
     border: none;
   }
   .mobile-keys { display: flex; }
-  pre.boot-logo { font-size: 26px; margin-bottom: 12px; }
-  .quick-actions { gap: 6px; margin: 12px 0 4px; }
-  .qa { font-size: 13px; padding: 9px 9px; }
-  .qa-primary { font-size: 14px; padding: 10px 16px; }
-  .chat-cta { font-size: 12px; padding: 6px 11px; min-height: 32px; }
-  #cmdInput { font-size: 14px; padding: 8px 0; }
-  #inputline { padding: 0; gap: 8px; font-size: 14px; }
+  pre.boot-logo { font-size: 22px; margin-bottom: 8px; }
+  .quick-actions { gap: 4px 6px; margin: 8px 0 2px; }
+  .qa { font-size: 13px; padding: 7px 8px; }
+  .qa-primary { font-size: 14px; padding: 8px 14px; }
+  .chat-cta { font-size: 12px; padding: 4px 10px; min-height: 28px; }
+  #cmdInput { font-size: 14px; padding: 5px 0; }
+  #inputline { padding: 0; gap: 6px; font-size: 14px; }
   #inputline .prompt { max-width: 38vw; font-size: 14px; }
-  #suggestList { gap: 6px 8px; padding: 4px 0 8px; }
+  #suggestList { gap: 4px 6px; padding: 2px 0 4px; }
   #suggestList span {
-    padding: 7px 9px;
+    padding: 5px 8px;
     background: var(--panel2);
     border: 1px solid var(--border);
     border-radius: 6px;
   }
-  .copy-btn { min-height: 30px; padding: 5px 10px; font-size: 11px; }
+  .copy-btn { min-height: 28px; padding: 4px 8px; font-size: 11px; }
   .term { border-radius: 0; border-left: none; border-right: none; border-bottom: none; }
-  pre { font-size: 11px; padding: 6px 8px; }
+  pre { font-size: 11px; padding: 4px 6px; }
   .chat-help { font-size: 12px; gap: 2px 10px; }
-  .chat-welcome { padding: 10px 12px; }
-  .chat-welcome-title { font-size: 14px !important; }
-  .chat-welcome-cmds { font-size: 12px; gap: 3px 10px; }
-  .chat-reply { font-size: 14px; line-height: 1.5; }
+  .chat-welcome { padding: 8px 10px; }
+  .chat-welcome-title { font-size: 14px !important; margin-bottom: 6px; }
+  .chat-welcome-cmds { font-size: 12px; gap: 2px 8px; }
+  .chat-reply { font-size: 14px; }
   .row { font-size: 14px; }
-  .ttt-board { grid-template-columns: repeat(3, 52px); grid-auto-rows: 52px; gap: 6px; }
-  .ttt-cell { font-size: 22px; border-radius: 6px; }
+  .ttt-board { grid-template-columns: repeat(3, 46px); grid-auto-rows: 46px; gap: 5px; }
+  .ttt-cell { font-size: 20px; border-radius: 6px; }
 }
 
 @media (max-width: 360px) {
   body { font-size: 13px; }
   .site .brand { font-size: 13px; }
-  #screen { padding: 10px; }
+  #screen { padding: 8px; }
   #cmdInput { font-size: 16px; }
   #inputline .prompt { max-width: 32vw; font-size: 14px; }
-  .titlebar { padding: 6px 10px; }
+  .titlebar { padding: 5px 8px; }
   .titlebar span { font-size: 10px; }
   .dot { width: 8px; height: 8px; }
   .mobile-keys { gap: 2px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
@@ -625,7 +625,7 @@ pre.fastfetch .ascii-line-11 { color: color-mix(in srgb, var(--yellow) 100%,   v
 
 @media (pointer: coarse) and (min-width: 481px) {
   /* Key toolbar is shown on tablets too — keep content clear of it. */
-  body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+  body { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
   .mobile-keys { display: flex; }
 }
 

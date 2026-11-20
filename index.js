@@ -7,7 +7,11 @@ const input     = document.getElementById('cmdInput');
 const promptEl  = document.getElementById('prompt');
 const titleText = document.getElementById('titleText');
 const loadTime  = Date.now();
-const INPUT_PLACEHOLDER = 'type a command — try help';
+// Narrow screens clip the longer hint mid-word (and iOS renders the input at
+// 16px), so phones get the short version.
+const INPUT_PLACEHOLDER = window.matchMedia('(max-width: 480px)').matches
+  ? 'type a command'
+  : 'type a command — try help';
 
 // ── Helpers ──────────────────────────────────────────
 function print(html, cls) {
