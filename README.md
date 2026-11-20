@@ -7,6 +7,7 @@ A terminal-style landing page with a built-in AI chatbot and a private contact f
 - **Landing screen** — ASCII wordmark, one-line pitch, one primary action (`chat`), and quiet shortcuts (`help`, `about`, `blog`, `links`) so nothing has to be typed to get started; returning visitors get the short version
 - **AI chat button** — the `ai chat` pill in the header jumps straight into chat mode
 - **Terminal** — interactive shell with `ls`, `cd`, `cat`, `tree`, `fastfetch`, `fetch`, and more
+- **Animated output** — command results fade in with a small motion; the effect respects reduced-motion preferences
 - **Virtual filesystem** — `mkdir`, `touch`, `rm`, `echo >`/`>>`, and an in-terminal `edit` editor (changes persist in `localStorage`)
 - **AI Chat** — type `chat` to enter chat mode, powered by Groq via Cloudflare Worker
   - streaming answers you can interrupt with `Esc` / `/stop`
@@ -17,7 +18,7 @@ A terminal-style landing page with a built-in AI chatbot and a private contact f
 - **Blog** — bilingual posts (EN + ID), `blog` to list, `read <n|name>` to read
 - **Tic-tac-toe** — `tictactoe` / `ttt` vs AI, clickable board, persistent score
 - **Dashboard** — `dashboard` opens the visual stats dashboard (`stats.html`)
-- **Theme** — dark/light Everforest theme, follows system preference, animated switch + `theme` command
+- **Themes** — Everforest Dark/Light, Gruvbox Dark/Light, and Catppuccin Mocha/Latte; the selection is saved in this browser and can be changed with the header picker or `theme <name>`
 - **Tab autocomplete** — command and path completion with suggestion popup
 - **History** — command history persists across sessions (`localStorage`, last 200)
 - **Username** — per-visitor name (`username <name>`, saved in this browser)
@@ -53,7 +54,7 @@ A terminal-style landing page with a built-in AI chatbot and a private contact f
 | `sudo` | Run as root (Linux-like) — `[sudo] password for you:` replaces the shell prompt, masked input, 3 tries, cached 15 min. `sudo <cmd>`, `sudo -i`/`-s` shell, `sudo -v` validate, `sudo -l` list, `sudo -u user`, `sudo -n`, `sudo -k` drops credentials + locks dashboard |
 | `su` | Switch user — `su [-] [root]` (password required, `Password:` prompt) |
 | `logout` | Leave root + lock dashboard, or exit the terminal |
-| `theme` | Switch theme (`dark` or `light`) |
+| `theme` | Switch theme: `dark`, `light`, `gruvbox`, `gruvbox-light`, `catppuccin`, or `catppuccin-latte` |
 | `tictactoe` | Play tic-tac-toe vs AI (`tictactoe 1-9`, `new`, `score`, `quit`) |
 | `ttt` | Alias of `tictactoe` |
 | `exit` | Leave root + lock dashboard, or exit the terminal |
