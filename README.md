@@ -110,21 +110,6 @@ A terminal-style landing page with a built-in AI chatbot and a private contact f
 | `robots.txt` / `sitemap.xml` | SEO / crawling |
 | `og.png` | Social preview image |
 
-## Contact setup
-
-The `contact` command posts to `POST /contact` on the same Cloudflare Worker as the chat ([tmdrkl/groq-chat](https://github.com/tmdrkl/groq-chat)). The Worker forwards the message to Telegram, so the bot token never reaches the browser.
-
-1. Create a bot with [@BotFather](https://t.me/BotFather), then send it any message.
-2. Find your chat ID at `https://api.telegram.org/bot<TOKEN>/getUpdates`.
-3. In the Worker project, set the secrets:
-   ```
-   npx wrangler secret put TELEGRAM_BOT_TOKEN
-   npx wrangler secret put TELEGRAM_CHAT_ID
-   ```
-4. Deploy from `web/`: `npx wrangler deploy`.
-
-`MAX_CONTACTS_PER_DAY` (default `5`) sets the per-IP limit. Deploy from the Cloudflare account that owns the `tomx13` workers.dev subdomain — logging in with a different account creates a separate Worker with a different URL.
-
 ## Deployment
 
 - **Site** — push to `main`; GitHub Pages serves it at [drkl.net](https://www.drkl.net).
@@ -141,4 +126,5 @@ The `contact` command posts to `POST /contact` on the same Cloudflare Worker as 
 
 ## License
 
-MIT
+- **Code** — [AGPL-3.0](LICENSE): you can use, modify, and share it, but modified versions that are distributed or run as a network service must publish their source under the same license.
+- **Content** — blog posts, images, and branding are [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/): share and adapt with attribution, under the same terms.
