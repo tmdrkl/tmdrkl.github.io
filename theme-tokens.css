@@ -59,6 +59,94 @@
   --page-bg: var(--bg);
 }
 
+/* Gruvbox Dark (medium) */
+[data-theme="gruvbox"] {
+  color-scheme: dark;
+  --bg: #282828;
+  --panel: #3c3836;
+  --panel2: #504945;
+  --border: #665c54;
+  --text: #ebdbb2;
+  --muted: #bdae93;
+  --blue: #83a598;
+  --green: #b8bb26;
+  --yellow: #fabd2f;
+  --red: #fb4934;
+  --cyan: #8ec07c;
+  --orange: #fe8019;
+  --purple: #d3869b;
+  --selection: #504945;
+  --term-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 14px 34px rgba(0,0,0,.35);
+  --code-bg: #504945;
+  --page-bg: var(--bg);
+}
+
+/* Gruvbox Light (medium) */
+[data-theme="gruvbox-light"] {
+  color-scheme: light;
+  --bg: #fbf1c7;
+  --panel: #f2e5bc;
+  --panel2: #ebdbb2;
+  --border: #d5c4a1;
+  --text: #3c3836;
+  --muted: #665c54;
+  --blue: #076678;
+  --green: #79740e;
+  --yellow: #b57614;
+  --red: #9d0006;
+  --cyan: #427b58;
+  --orange: #af3a03;
+  --purple: #8f3f71;
+  --selection: #d5c4a1;
+  --term-shadow: 0 0 0 1px rgba(60,56,54,.08), 0 10px 26px rgba(60,56,54,.14);
+  --code-bg: #ebdbb2;
+  --page-bg: var(--bg);
+}
+
+/* Catppuccin Mocha */
+[data-theme="catppuccin"] {
+  color-scheme: dark;
+  --bg: #1e1e2e;
+  --panel: #313244;
+  --panel2: #45475a;
+  --border: #585b70;
+  --text: #cdd6f4;
+  --muted: #a6adc8;
+  --blue: #89b4fa;
+  --green: #a6e3a1;
+  --yellow: #f9e2af;
+  --red: #f38ba8;
+  --cyan: #94e2d5;
+  --orange: #fab387;
+  --purple: #cba6f7;
+  --selection: #45475a;
+  --term-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 14px 34px rgba(0,0,0,.35);
+  --code-bg: #45475a;
+  --page-bg: var(--bg);
+}
+
+/* Catppuccin Latte */
+[data-theme="catppuccin-latte"] {
+  color-scheme: light;
+  --bg: #eff1f5;
+  --panel: #e6e9ef;
+  --panel2: #ccd0da;
+  --border: #bcc0cc;
+  --text: #4c4f69;
+  --muted: #6c6f85;
+  --blue: #1e66f5;
+  --green: #40a02b;
+  --yellow: #df8e1d;
+  --red: #d20f39;
+  --cyan: #179299;
+  --orange: #fe640b;
+  --purple: #8839ef;
+  --selection: #ccd0da;
+  --term-shadow: 0 0 0 1px rgba(76,79,105,.08), 0 10px 26px rgba(76,79,105,.14);
+  --code-bg: #ccd0da;
+  --page-bg: var(--bg);
+}
+
 /* Fallback if data-theme never gets applied (e.g. scripts blocked) */
 :root {
   color-scheme: dark;

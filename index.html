@@ -11,13 +11,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
-  <link rel="stylesheet" href="theme-tokens.css?v=6">
-  <link rel="stylesheet" href="style.css?v=30">
+  <link rel="stylesheet" href="theme-tokens.css?v=8">
+  <link rel="stylesheet" href="style.css?v=32">
   <script>
     (function () {
       try {
         var t = localStorage.getItem('drkl_theme');
-        if (t !== 'dark' && t !== 'light') {
+        if (!['dark', 'light', 'gruvbox', 'gruvbox-light', 'catppuccin', 'catppuccin-latte'].includes(t)) {
           t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
         }
         document.documentElement.setAttribute('data-theme', t);
@@ -65,7 +65,19 @@
     <nav aria-label="Site controls">
       <button class="chat-cta" id="chatCta" type="button">ai chat</button>
       <button class="chat-cta contact-cta" id="contactCta" type="button">contact</button>
-      <button class="theme-btn" id="themeToggle" type="button" aria-label="Switch to light theme"></button>
+      <div class="theme-picker">
+        <button class="theme-picker-toggle" id="themePickerToggle" type="button" aria-label="Choose color theme" aria-haspopup="true" aria-expanded="false" aria-controls="themePickerMenu">
+          <span aria-hidden="true">◐</span><span id="themePickerLabel">theme</span>
+        </button>
+        <div class="theme-menu" id="themePickerMenu" role="group" aria-label="Color themes" hidden>
+          <button type="button" class="theme-choice" data-theme-choice="dark"><span class="theme-swatch"></span>Everforest</button>
+          <button type="button" class="theme-choice" data-theme-choice="light"><span class="theme-swatch"></span>Everforest Light</button>
+          <button type="button" class="theme-choice" data-theme-choice="gruvbox"><span class="theme-swatch"></span>Gruvbox</button>
+          <button type="button" class="theme-choice" data-theme-choice="gruvbox-light"><span class="theme-swatch"></span>Gruvbox Light</button>
+          <button type="button" class="theme-choice" data-theme-choice="catppuccin"><span class="theme-swatch"></span>Mocha</button>
+          <button type="button" class="theme-choice" data-theme-choice="catppuccin-latte"><span class="theme-swatch"></span>Latte</button>
+        </div>
+      </div>
     </nav>
   </header>
 
@@ -108,6 +120,6 @@
   </div>
 </div>
 
-<script type="module" src="index.js?v=40"></script>
+<script type="module" src="index.js?v=42"></script>
 </body>
 </html>
